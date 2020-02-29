@@ -15,6 +15,8 @@
 		name,
 		shouldUse(ply, wep),  -- always passes through valid values
 		shouldDraw(ply, wep), -- always passes through valid values
+		onSet(ply, wep),	  -- when the check is picked as shouldUse returned true
+		onRemove(ply, wep),   -- when shouldUse returns false
 		enabled (optional, default=true)
 	)
 
@@ -47,7 +49,10 @@
 
 local UpdateVisibility = function() end
 local UpdateSWEPCheck = function() end
-local DefaultSWEPShouldDraw = function() return true end
+
+local DefaultCurrentCheck = {ShouldDraw=function() return true end}
+local currentCheck = DefaultCurrentCheck
+local DefaultSWEPShouldDraw = currentCheck.ShouldDraw
 local SWEPShouldDraw = DefaultSWEPShouldDraw
 
 local activeWeapon = nil
@@ -102,18 +107,39 @@ end
 UpdateSWEPCheck = function(ply, wep)
 	for i, check in pairs(SWEPChecks) do
 		if check.enabled and check.ShouldUse(ply, wep) then
+
+			if currentCheck.OnRemove != nil then
+				currentCheck.OnRemove(ply, wep)
+			end
+
 			SWEPShouldDraw = check.ShouldDraw
+			currentCheck = check
+
+			if currentCheck.OnSet != nil then
+				currentCheck.OnSet(ply, wep)
+			end
+
 			return
 		end
 	end
 	SWEPShouldDraw = DefaultSWEPShouldDraw
+	currentCheck = DefaultCurrentCheck
 end
 
-CrosshairDesigner.AddSwepCheck = function(name, shouldUseFunc, shouldDrawFunc, enabled)
+CrosshairDesigner.AddSwepCheck = function(
+	name,
+	shouldUseFunc,
+	shouldDrawFunc,
+	onSet,
+	onRemove,
+	enabled)
+
 	table.insert(SWEPChecks, {
 		name=name,
 		ShouldUse=shouldUseFunc,
 		ShouldDraw=shouldDrawFunc,
+		OnSet=onSet,
+		OnRemove=onRemove,
 		enabled=enabled ~= nil and enabled or true
 	})
 end

@@ -1,12 +1,14 @@
 CrosshairDesigner = CrosshairDesigner or {}
 
 if SERVER then
+	AddCSLuaFile("detours.lua")
 	AddCSLuaFile("fonts.lua")
 	AddCSLuaFile("db.lua")
 	AddCSLuaFile("hide.lua")
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
 else
+	include("detours.lua")
 	include("fonts.lua")
 	include("db.lua")
 	include("hide.lua")
@@ -221,12 +223,28 @@ else
 	CrosshairDesigner.AddSwepCheck(
 		"PhysicsGun", 
 		function(ply, wep) -- ShouldUse
-			return wep:GetClass() == "weapon_physgun"
+			if string.Left(wep:GetClass(), 4) == "fas2" then
+				return true
+			end
 		end,
 		function(ply, wep) -- ShouldDraw
-			return false
+			return wep.dt.Status ~= FAS_STAT_ADS
+		end,
+		function(ply, wep) -- OnSet
+			if CrosshairDesigner.GetBool("HideOnADS") then
+				CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
+			end
+		end,
+		function(ply, wep) -- OnRemove
+			CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
 		end
 	)
+
+	-- TFA
+
+	-- M9k
+
+	-- FA:S
 end
 
 hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)

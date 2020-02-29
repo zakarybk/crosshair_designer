@@ -70,7 +70,7 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 			
 			local adjusted = CrosshairDesigner.ClampConvar(convarData, oldVal, newVal)
 
-			if adjusted != tonumber(newVal) then
+			if adjusted ~= tonumber(newVal) then
 				hook.Run("CrosshairDesigner_ValueChanged", 
 					convarData.var,
 					tostring(adjusted)
@@ -93,7 +93,7 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 			CrosshairDesigner.SetValue(convarData.var, math.floor(tonumber(newVal)))
 		end
 		
-	elseif tonumber(convarData.default) != nil then -- number
+	elseif tonumber(convarData.default) ~= nil then -- number
 
 		if tonumber(newVal) == nil then
 			if tonumber(oldVal) == nil then
@@ -105,17 +105,17 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 		else
 			local clamped = tonumber(newVal)
 
-			if convarData.min != nil then
+			if convarData.min ~= nil then
 				clamped = math.max(clamped, convarData.min)
 			end
 
-			if convarData.max != nil then
+			if convarData.max ~= nil then
 				clamped = math.min(clamped, convarData.max)
 			end
 
 			clamped = math.floor(clamped)
 
-			if clamped != tonumber(newVal) then
+			if clamped ~= tonumber(newVal) then
 				CrosshairDesigner.SetValue(convarData.var, clamped)
 				newVal = clamped
 			end
@@ -126,15 +126,15 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 end
 
 CrosshairDesigner.GetValue = function(id)
-	return (convars[id] != nil and convars[id].var:GetString()) or "0"
+	return (convars[id] ~= nil and convars[id].var:GetString()) or "0"
 end
 
 CrosshairDesigner.GetInt = function(id)
-	return (convars[id] != nil and convars[id].var:GetInt()) or 0
+	return (convars[id] ~= nil and convars[id].var:GetInt()) or 0
 end
 
 CrosshairDesigner.GetBool = function(id)
-	return (convars[id] != nil and convars[id].var:GetBool()) or false
+	return (convars[id] ~= nil and convars[id].var:GetBool()) or false
 end
 
 CrosshairDesigner.SetValue = function(id, val)
@@ -142,11 +142,11 @@ CrosshairDesigner.SetValue = function(id, val)
 end
 
 CrosshairDesigner.GetLimitMin = function(id)
-	return (convars[id] != nil and convars[id].data.min) or 0
+	return (convars[id] ~= nil and convars[id].data.min) or 0
 end
 
 CrosshairDesigner.GetLimitMax = function(id)
-	return (convars[id] != nil and convars[id].data.max) or 0
+	return (convars[id] ~= nil and convars[id].data.max) or 0
 end
 
 CrosshairDesigner.GetConvarDatas = function()
