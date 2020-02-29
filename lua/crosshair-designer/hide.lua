@@ -4,9 +4,48 @@
 
 	The crosshair settings can control whether the external factors should
 	be a factor when deciding to hide the crosshair.
+
+
+
+	--- API quick doc
+
+	This is made to be used by other addons if they wish through
+
+	CrosshairDesigner.AddSwepCheck( -- see load.lua for examples
+		name,
+		shouldUse(ply, wep),  -- always passes through valid values
+		shouldDraw(ply, wep), -- always passes through valid values
+		enabled (optional, default=true)
+	)
+
+	shouldUse will be called whenever the player swaps SWEPs or changes
+	crosshair settings if the player and active SWEP are valid
+
+
+
+	Since only ever one of the SWEP checks will be used (first to return shouldUse=true),
+	you can modify the priority so that yours can be checked before the rest with
+
+	CrosshairDesigner.MakeSwepCheckTopPriority(
+		name
+	)
+
+
+
+	These can all be setup when CrosshairDesigner_FullyLoaded is called for example
+
+	hook.Add("CrosshairDesigner_FullyLoaded", "MyCustomHook", function(crossTbl)
+		crossTbl.AddSwepCheck(...)
+		crossTbl.AddSwepCheck(...)
+		crossTbl.AddSwepCheck(...)
+
+		crossTbl.MakeSwepCheckTopPriority(...)
+	end)
+	---
+
 ]]--
 
-local UpdateVisability = function() end
+local UpdateVisibility = function() end
 local UpdateSWEPCheck = function() end
 local DefaultSWEPShouldDraw = function() return true end
 local SWEPShouldDraw = DefaultSWEPShouldDraw
@@ -35,13 +74,13 @@ hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", function()
 			end
 		end
 
-		UpdateVisability(ply, wep)
+		UpdateVisibility(ply, wep)
 	end
 
 end)
 
 -- Update weapon on weapon change + update vis for every tick
-UpdateVisability = function(ply, wep)
+UpdateVisibility = function(ply, wep)
 
 	shouldDraw = true
 
@@ -100,8 +139,30 @@ CrosshairDesigner.SetSwepCheckEnabled = function(name, newVal)
 	end
 end
 
+CrosshairDesigner.MakeSwepCheckTopPriority = function(name) -- untested
+	local index = IndexOfSwepCheck(name)
+
+	if index then
+		local copy = table.Copy(SWEPChecks[index])
+		table.remove(SWEPChecks, index)
+		table.insert(SWEPChecks, 1, copy)
+	end
+end
+
 hook.Add("CrosshairDesigner_ShouldHideCross", "CrosshairDesigner_SWEPCheck", function()
 	if not shouldDraw then
 		return true
+	end
+end)
+
+hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function()
+	ply = LocalPlayer()
+
+	if IsValid(ply) then
+		wep = ply:GetActiveWeapon()
+
+		if IsValid(wep) then
+			UpdateSWEPCheck(ply, wep)
+		end
 	end
 end)
