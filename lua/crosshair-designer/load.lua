@@ -1,5 +1,7 @@
 CrosshairDesigner = CrosshairDesigner or {}
 
+print("Loading crosshair designer")
+
 if SERVER then
 	AddCSLuaFile("detours.lua")
 	AddCSLuaFile("fonts.lua")
@@ -210,6 +212,22 @@ else
 			help="Hide the crosshair when in a vehicle",
 			isBool=true
 		},
+
+		-- NEW
+		{
+			id="HideTTT",
+			var="crosshairdesigner_hidettt",
+			default="0",
+			help="Hide the TTT crosshair",
+			isBool=true
+		},
+		{
+			id="HideFAS",
+			var="crosshairdesigner_hidefas",
+			default="0",
+			help="Hide the FA:S crosshair",
+			isBool=true
+		},
 	})
 
 	--[[
@@ -229,14 +247,6 @@ else
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (CrosshairDesigner.GetBool("HideOnADS") and wep.dt.Status == FAS_STAT_ADS)
-		end,
-		function(ply, wep) -- OnSet
-			if CrosshairDesigner.GetBool("HideOnADS") then
-				CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
-			end
-		end,
-		function(ply, wep) -- OnRemove
-			CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
 		end
 	)
 

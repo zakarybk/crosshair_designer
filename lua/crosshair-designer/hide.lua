@@ -181,7 +181,7 @@ hook.Add("CrosshairDesigner_ShouldHideCross", "CrosshairDesigner_SWEPCheck", fun
 	end
 end)
 
-hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function()
+hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, newVal)
 	ply = LocalPlayer()
 
 	if IsValid(ply) then
@@ -189,6 +189,25 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function()
 
 		if IsValid(wep) then
 			UpdateSWEPCheck(ply, wep)
+		end
+	end
+
+	local id = CrosshairDesigner.GetConvarID(convar)
+
+	if id == "HideFAS" then
+		if CrosshairDesigner.GetBool("HideFAS") then
+			CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
+		else
+			CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
+		end
+
+	elseif id == "HideTTT" then
+		if engine.ActiveGamemode() == "terrortown" then
+			if CrosshairDesigner.GetBool("HideTTT") then
+				CrosshairDesigner.AddConvarDetour("ttt_disable_crosshair", 1)
+			else
+				CrosshairDesigner.RemoveConvarDetour("ttt_disable_crosshair")
+			end
 		end
 	end
 end)

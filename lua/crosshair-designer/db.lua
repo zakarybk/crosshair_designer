@@ -173,3 +173,8 @@ CrosshairDesigner.ConvarAtIndex = function(index) -- inefficient (duplicates in 
 
 	return found
 end
+
+-- The friendly readable one
+CrosshairDesigner.GetConvarID = function(convar)
+	return convars[convar] ~= nil and convars[convar].data.id or ""
+end

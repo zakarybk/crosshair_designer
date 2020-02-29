@@ -1,12 +1,19 @@
 --[[
 	Detours for client convars so that we don't change the users real settings
+
+	For example in TTT if we were to give them the option to disable the
+	crosshair through the menu (ttt_disable_crosshair), they would wonder 
+	why they couldn't see the TTT crosshair in other servers and become lost! 
+	This aims to make that a non-issue as no permanent changes will be made.
 ]]--
+
+CrosshairDesigner.Detours = CrosshairDesigner.Detours or {}
 
 local detours = {}		-- "convar" = original
 local returnValues = {} -- "convar" = value
 
 CrosshairDesigner.AddConvarDetour = function(convar, value)
-	returnValues[convar] = value
+	returnValues[convar] = tostring(value)
 
 	cvars.RemoveChangeCallback(convar, "CrosshairDesigner_DetourWarning")
 
@@ -28,11 +35,45 @@ end
 	Detours
 ]]--
 
-detours.GetConVarNumber = GetConVarNumber
+detours.GetConVarNumber = CrosshairDesigner.Detours.GetConVarNumber or GetConVarNumber
 
 GetConVarNumber = function(name)
 	if returnValues[name] != nil then
-		return returnValues[name]
+		return tonumber(returnValues[name])
 	end
 	return detours.GetConVarNumber(name)
 end
+
+-- Hacky detour to hide TTT crosshair without making permanent changes to the convar
+local convarCache = {}
+local convarMeta = FindMetaTable("ConVar")
+detours.CreateConVar = CrosshairDesigner.Detours.CreateConVar or CreateConVar
+
+CreateConVar = function(name, value, flags, helpText, min, max)
+	local convar = detours.CreateConVar(name, value, flags, helpText, min, max)
+
+	if name == "ttt_disable_crosshair" then
+		local wrapper = {}
+
+		for name, func in pairs(convarMeta) do
+			if name != "GetBool" then
+				wrapper[name] = func
+			end
+		end
+		wrapper.GetBool = function() return CrosshairDesigner.GetBool("HideTTT") end
+
+		cvars.AddChangeCallback(name, function(name, oldVal, newVal)
+	    	print("Thing convar is currently being detoured by CrosshairDesigner")
+	    	print("Since this detour is for ttt_disable_crosshair, it cannot be removed.")
+	    	print("If you wish to toggle the TTT crosshair, please use the crosshair designer menu.")
+		end,
+		"CrosshairDesigner_DetourWarning")
+
+		return wrapper
+	end
+
+	return convar
+end
+
+-- Always place at end
+CrosshairDesigner.Detours = detours

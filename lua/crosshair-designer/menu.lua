@@ -69,7 +69,7 @@ CrosshairDesigner.OpenMenu = function()
 	CrosshairDesigner.Menu:SetSize( frameW, frameH )
 	CrosshairDesigner.Menu:SetPos( frameX, frameY )
 	CrosshairDesigner.Menu:MakePopup()
-	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer" )
+	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer V2" )
 	CrosshairDesigner.Menu.btnClose.DoClick = function ( button ) CrosshairDesigner.Menu:Remove() end //CrosshairDesigner.ShowMenu(false) end
 
 	-- Use scroll bar parent
@@ -117,5 +117,5 @@ CrosshairDesigner.OpenMenu = function()
 
 end
 
-CrosshairDesigner.OpenMenu()
+--CrosshairDesigner.OpenMenu()
 

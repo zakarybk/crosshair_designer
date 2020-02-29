@@ -1,6 +1,6 @@
 if SERVER then
-	AddCSLuaFile("load.lua")
-	include("load.lua")
+	AddCSLuaFile("crosshair-designer/load.lua")
+	include("crosshair-designer/load.lua")
 else
-	include("load.lua")
+	include("crosshair-designer/load.lua")
 end
