@@ -11,18 +11,6 @@ else
 	include("draw.lua")
 	include("menu.lua")
 
-	/*
-	local convars = {}
-	convars.ShowHL2 = CreateClientConVar("toggle_crosshair_hide", 0, true, false, "Show the Half Life crosshair", 0, 1)
-	convars.HideCross = CreateClientConVar("toggle_crosshair", 1, true, false)
-	convars.HideOnADS = CreateClientConVar("cross_ads", 1, true, false)
-	convars.UseLine = CreateClientConVar("cross_line", 1, true, false)
-	convars.ColOnTarget = CreateClientConVar("hc_target_colour", 1, true, false)
-	convars.Dynamic = CreateClientConVar("hc_dynamic_cross", 1, true, false)
-	convars.HideInVeh = CreateClientConVar("hc_vehicle_cross", 1, true, false)
-	convars.
-	*/
-
 	CrosshairDesigner.SetUpConvars({ -- Needs to be in order since it's the read order from file
 		{
 			id="ShowHL2",
@@ -32,7 +20,7 @@ else
 			isBool=true
 		},
 		{
-			id="HideCross",
+			id="ShowCross",
 			var="toggle_crosshair", 
 			default="0", 
 			help="Hide the custom crosshair", 
@@ -94,7 +82,7 @@ else
 		},
 		{
 			id="Alpha",
-			var="cross_hud_color_b",
+			var="cross_hud_color_a",
 			default="255",
 			help="Change the transparency of the crosshair",
 			min=0,
@@ -216,9 +204,5 @@ else
 			isBool=true
 		},
 	})
-
-
-
-	hook.Add("CrosshairDesigner_ValueChanged", "test", print)
 end
 

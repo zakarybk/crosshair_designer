@@ -1,9 +1,34 @@
-CrosshairDesigner.Save = function(crossID, crossData)
 
+
+CrosshairDesigner.Save = function(crossID, crossData)
+	local crosshairsaves = "crosshair_designer/save_" .. Hc_whichsaveslot .. ".txt"
 end
 
-CrosshairDesigner.Load = function(crossID)
+CrosshairDesigner.Load = function(crossID) -- Needs testing
+	local crosshairloading = "crosshair_designer/save_" .. crossID .. ".txt" -- temporary
 
+	if file.Exists( crosshairloading, "DATA" ) then
+		local brokencrossstring = string.Explode( " ", file.Read( crosshairloading, "DATA" ) )
+
+		local hc_timer_i = 1
+		local hc_printerror = 1
+
+		timer.Create( "hc_load_cross", 0.1, hc_con_num, function()
+
+			local id = CrosshairDesigner.ConvarAtIndex(hc_timer_i)
+
+			if id then
+				CrosshairDesigner.SetValue(id, ( brokencrossstring[hc_timer_i] ))
+			end
+
+			hc_timer_i = hc_timer_i + 1  
+		end)
+
+	else
+		-- Hacky - remove?
+		file.Write( crosshairloading, "0 1 1 1 0 1 29 0 255 255 5 13 1 0 8 0 1 255 0 0 255 1 50 1" ) -- default config
+		CrosshairDesigner.Load(crossID)
+	end
 end
 
 local convars = {}
@@ -38,13 +63,14 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 		convarData.var,
 		function(convarName, oldVal, newVal)
 			
-			newVal = CrosshairDesigner.ClampConvar(convarData, oldVal, newVal)
+			local adjusted = CrosshairDesigner.ClampConvar(convarData, oldVal, newVal)
 
-			hook.Run("CrosshairDesigner_ValueChanged", 
-				convarData.var, 
-				tostring(oldVal), 
-				tostring(newVal)
-			)
+			if adjusted != tonumber(newVal) then
+				hook.Run("CrosshairDesigner_ValueChanged", 
+					convarData.var,
+					tostring(adjusted)
+				)
+			end
 		end,
 		"CrosshairDesigner." .. convarData.var
 	)
@@ -53,13 +79,13 @@ end
 CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 	if convarData.isBool then -- bool
 
-		if tobool(newVal) == nil then
+		if tobool(newVal) == nil or tonumber(newVal) == nil then
 			if tobool(oldVal) == nil then
 				newVal = convarData.default
 			else
 				newVal = oldVal
 			end
-			CrosshairDesigner.SetValue(convarData.var, newVal)
+			CrosshairDesigner.SetValue(convarData.var, math.floor(tonumber(newVal)))
 		end
 		
 	elseif tonumber(convarData.default) != nil then -- number
@@ -68,9 +94,9 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 			if tonumber(oldVal) == nil then
 				newVal = convarData.default
 			else
-				newVal = oldVal
+				newVal = math.floor(oldVal)
 			end
-			CrosshairDesigner.SetValue(convarData.var, newVal)
+			CrosshairDesigner.SetValue(convarData.var, math.floor(newVal))
 		else
 			local clamped = tonumber(newVal)
 
@@ -82,9 +108,12 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 				clamped = math.min(clamped, convarData.max)
 			end
 
+			clamped = math.floor(clamped)
+
 			if clamped != tonumber(newVal) then
 				CrosshairDesigner.SetValue(convarData.var, clamped)
 				newVal = clamped
+				print("Clamp applied")
 			end
 		end
 	end
@@ -105,7 +134,7 @@ CrosshairDesigner.GetBool = function(id)
 end
 
 CrosshairDesigner.SetValue = function(id, val)
-	RunConsoleCommand(convars[id].data.id, val)
+	RunConsoleCommand(convars[id].data.var, tostring(val))
 end
 
 CrosshairDesigner.GetLimitMin = function(id)
@@ -117,3 +146,16 @@ CrosshairDesigner.GetLimitMax = function(id)
 end
 
 CrosshairDesigner.GetConvars = function() return convars end
+
+CrosshairDesigner.ConvarAtIndex = function(index) -- inefficient (duplicates in tbl)
+	local found = false
+
+	for id, convarData in pairs(convars) do
+		if id.index == index then
+			found = id
+			break
+		end
+	end
+
+	return found
+end

@@ -43,6 +43,7 @@ CrosshairDesigner.IsMenuOpen = function()
 			CrosshairDesigner.Menu:IsVisible()
 end
 
+CrosshairDesigner.MenuWidgets = {}
 CrosshairDesigner.OpenMenu = function()
 
 	-- Make the frame seem the same size regardless of aspect ratio
@@ -57,6 +58,10 @@ CrosshairDesigner.OpenMenu = function()
 		-- Update size
 		CrosshairDesigner.Menu:SetSize( frameW, frameH )
 		CrosshairDesigner.Menu:SetPos( frameX, frameY )
+
+		for i, widget in pairs(CrosshairDesigner.MenuWidgets) do
+			widget.UpdateSize()
+		end
 		return
 	end
 
