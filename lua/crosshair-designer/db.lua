@@ -53,7 +53,6 @@ CrosshairDesigner.AddConvar = function(id, convarData)
 		convarData.min or nil,
 		convarData.max or nil
 	)
-	print(id, convars[id].index)
 	convars[convarData.var] = convars[id]
 end
 
@@ -113,7 +112,6 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 			if clamped != tonumber(newVal) then
 				CrosshairDesigner.SetValue(convarData.var, clamped)
 				newVal = clamped
-				print("Clamp applied")
 			end
 		end
 	end

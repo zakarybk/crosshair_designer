@@ -109,4 +109,20 @@ end
 
 hook.Add("HUDPaint","CustomCross",Crosshair)
 
+--[[
+	Hide HL2 crosshair
+]]--
+
+local hide = {
+	CHudCrosshair = true,
+}
+
+hook.Add( "HUDShouldDraw", "HideHUD", function( name )
+	if not CrosshairDesigner.GetBool("ShowHL2") then
+	if ( hide[ name ] ) then return false end
+	end
+
+	-- Don't return anything here, it may break other addons that rely on this hook.
+end )
+
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", print)

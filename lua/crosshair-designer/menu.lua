@@ -78,17 +78,35 @@ CrosshairDesigner.OpenMenu = function()
 
 	// https://wiki.garrysmod.com/page/Category:DMenuBar
 	local M1 = MB_topBar:AddMenu( "File" )
-	M1:AddOption( "New", function() Msg( "Chose File:New\n" ) end ):SetIcon( "icon16/page_white_go.png" )
-	M1:AddOption( "Open", function() Msg( "Chose File:Open\n" ) end ):SetIcon( "icon16/folder_go.png" )
-	local M2 = MB_topBar:AddMenu( "Edit" )
+	M1:AddOption( "Open", function() Msg( "Chose File:New\n" ) end ):SetIcon( "icon16/page_white_go.png" )
+	M1:AddOption( "Save", function() 
+	--Derma_Query("Enter save name", "Save", "Accept", function() print("saving...") end, "Cancel", function() print("cancel...") end)
+	Derma_StringRequest("Enter save nma", "Save", "Save 1", function(text) print("Saving..") end, function(text) print("cancel..") end)
+	end ):SetIcon( "icon16/folder_go.png" )
 	local M2 = MB_topBar:AddMenu( "Settings" )
-	M2:AddOption( "Save workspace", function() Msg( "Chose File:New\n" ) end ):SetIcon( "icon16/page_white_go.png" )
-	M2:AddOption( "Load workspace", function() Msg( "Chose File:Open\n" ) end ):SetIcon( "icon16/folder_go.png" )
-	local M3 = MB_topBar:AddMenu( "Window" )
-	M3:AddOption( "Settings", function() Msg( "Chose File:Open\n" ) end ):SetIcon( "icon16/folder_go.png" )
-	M3:AddOption( "Layers", function() Msg( "Chose File:Open\n" ) end ):SetIcon( "icon16/folder_go.png" )
-	local M4 = MB_topBar:AddMenu( "Help" )
+
+	local sheet = vgui.Create("DPropertySheet", CrosshairDesigner.Menu)
+    sheet:Dock( FILL )
+
+    local panel4 = vgui.Create( "DPanel", sheet )
+    panel4.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color(0, 0, 0, 0 ) ) end
+    sheet:AddSheet( "Crosshair Settings", panel4 )
+
+    local panel6 = vgui.Create( "DPanel", sheet )
+    panel6.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color(0, 0, 0, 0 ) ) end
+    sheet:AddSheet( "Colour", panel6 )
+
+    local panel5 = vgui.Create( "DPanel", sheet )
+    panel5.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color(0, 0, 0, 0 ) ) end
+    sheet:AddSheet( "Saving", panel5 )
+
+    local sub = M1:AddSubMenu( "Sub Menu" )
+	sub:SetDeleteSelf( false )
+	for i = 0, 5 do
+		sub:AddOption( "Option " .. i, function() MsgN( "Chose sub menu option " .. i ) end )
+	end
 
 end
 
---CrosshairDesigner.OpenMenu()
+CrosshairDesigner.OpenMenu()
+
