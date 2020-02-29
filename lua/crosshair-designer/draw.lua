@@ -21,10 +21,10 @@ end
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
-	if not CrosshairDesigner.GetBool("ShowCross") or 
-		LocalPlayer():Health() <= 0 or
-		not LocalPlayer():GetActiveWeapon():IsValid() then
-		return
+	local dontDraw = hook.Call("CrosshairDesigner_ShouldHideCross") or false
+
+	if dontDraw then
+		return true
 	end
 
 	-- todo weapon check (ads)
