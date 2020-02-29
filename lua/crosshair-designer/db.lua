@@ -64,6 +64,8 @@ end
 
 -- Verify convars edited by user
 CrosshairDesigner.AddConvarCallback = function(convarData)
+	cvars.RemoveChangeCallback(convarData.var, "CrosshairDesigner." .. convarData.var)
+
 	cvars.AddChangeCallback(
 		convarData.var,
 		function(convarName, oldVal, newVal)

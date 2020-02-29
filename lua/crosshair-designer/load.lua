@@ -221,14 +221,14 @@ else
 		any one of these will be called is once per frame
 	]]--
 	CrosshairDesigner.AddSwepCheck(
-		"PhysicsGun", 
+		"FA:S", 
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 4) == "fas2" then
 				return true
 			end
 		end,
 		function(ply, wep) -- ShouldDraw
-			return wep.dt.Status ~= FAS_STAT_ADS
+			return not (CrosshairDesigner.GetBool("HideOnADS") and wep.dt.Status == FAS_STAT_ADS)
 		end,
 		function(ply, wep) -- OnSet
 			if CrosshairDesigner.GetBool("HideOnADS") then
