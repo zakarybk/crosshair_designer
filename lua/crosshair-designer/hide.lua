@@ -105,13 +105,3 @@ hook.Add("CrosshairDesigner_ShouldHideCross", "CrosshairDesigner_SWEPCheck", fun
 		return true
 	end
 end)
-
-CrosshairDesigner.AddSwepCheck(
-	"PhysicsGun", 
-	function(ply, wep)
-		return wep:GetClass() == "weapon_physgun"
-	end,
-	function(ply, wep)
-		return false
-	end
-)

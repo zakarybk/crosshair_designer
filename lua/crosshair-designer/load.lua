@@ -13,6 +13,9 @@ else
 	include("draw.lua")
 	include("menu.lua")
 
+	--[[
+		Setup the client convars and callbacks to verify values
+	]]--
 	CrosshairDesigner.SetUpConvars({ -- Needs to be in order since it's the read order from file
 		{
 			id="ShowHL2",
@@ -206,6 +209,24 @@ else
 			isBool=true
 		},
 	})
+
+	--[[
+		SWEP should draw custom crosshair checks
+
+		ply and wep will always be valid
+
+		Only one of these can be valid at once so the most
+		any one of these will be called is once per frame
+	]]--
+	CrosshairDesigner.AddSwepCheck(
+		"PhysicsGun", 
+		function(ply, wep) -- ShouldUse
+			return wep:GetClass() == "weapon_physgun"
+		end,
+		function(ply, wep) -- ShouldDraw
+			return false
+		end
+	)
 end
 
 hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)
