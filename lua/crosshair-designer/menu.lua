@@ -86,4 +86,4 @@ CrosshairDesigner.OpenMenu = function()
 
 end
 
-CrosshairDesigner.OpenMenu()
+--CrosshairDesigner.OpenMenu()

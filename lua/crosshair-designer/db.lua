@@ -10,16 +10,17 @@ local convars = {}
 
 CrosshairDesigner.SetUpConvars = function(convars)
 	for i, convarData in pairs(convars) do
-		CrosshairDesigner.AddConvar(convarData)
+		CrosshairDesigner.AddConvar(convarData.id, convarData)
 		CrosshairDesigner.AddConvarCallback(convarData)
 	end
 end
 
-CrosshairDesigner.AddConvar = function (convarData)
-	convars[convarData.id] = {}
-	convars[convarData.id].data = convarData
-	convars[convarData.id].var = CreateClientConVar(
-		convarData.id, 
+CrosshairDesigner.AddConvar = function(id, convarData)
+	convars[id] = {}	-- Index ignores duplicates
+	convars[id].index = math.floor(table.Count(convars) / 2) + 1
+	convars[id].data = convarData
+	convars[id].var = CreateClientConVar(
+		convarData.var, 
 		convarData.default,
 		true, 
 		false,
@@ -27,23 +28,25 @@ CrosshairDesigner.AddConvar = function (convarData)
 		convarData.min or nil,
 		convarData.max or nil
 	)
+	print(id, convars[id].index)
+	convars[convarData.var] = convars[id]
 end
 
 -- Verify convars edited by user
 CrosshairDesigner.AddConvarCallback = function(convarData)
 	cvars.AddChangeCallback(
-		convarData.id,
+		convarData.var,
 		function(convarName, oldVal, newVal)
 			
 			newVal = CrosshairDesigner.ClampConvar(convarData, oldVal, newVal)
 
 			hook.Run("CrosshairDesigner_ValueChanged", 
-				convarData.id, 
+				convarData.var, 
 				tostring(oldVal), 
 				tostring(newVal)
 			)
 		end,
-		"CrosshairDesigner." .. convarData.id
+		"CrosshairDesigner." .. convarData.var
 	)
 end
 
@@ -56,7 +59,7 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 			else
 				newVal = oldVal
 			end
-			CrosshairDesigner.SetValue(convarData.id, newVal)
+			CrosshairDesigner.SetValue(convarData.var, newVal)
 		end
 		
 	elseif tonumber(convarData.default) != nil then -- number
@@ -67,7 +70,7 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 			else
 				newVal = oldVal
 			end
-			CrosshairDesigner.SetValue(convarData.id, newVal)
+			CrosshairDesigner.SetValue(convarData.var, newVal)
 		else
 			local clamped = tonumber(newVal)
 
@@ -80,7 +83,7 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 			end
 
 			if clamped != tonumber(newVal) then
-				CrosshairDesigner.SetValue(convarData.id, clamped)
+				CrosshairDesigner.SetValue(convarData.var, clamped)
 				newVal = clamped
 			end
 		end
@@ -91,6 +94,14 @@ end
 
 CrosshairDesigner.GetValue = function(id)
 	return (convars[id] != nil and convars[id].var:GetString()) or "0"
+end
+
+CrosshairDesigner.GetInt = function(id)
+	return (convars[id] != nil and convars[id].var:GetInt()) or 0
+end
+
+CrosshairDesigner.GetBool = function(id)
+	return (convars[id] != nil and convars[id].var:GetBool()) or false
 end
 
 CrosshairDesigner.SetValue = function(id, val)
