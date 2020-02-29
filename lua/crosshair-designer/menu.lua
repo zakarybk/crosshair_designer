@@ -30,7 +30,7 @@ CrosshairDesigner.CreateFonts(fontSize) -- Unused
 
 -- Check for resolution changes
 timer.Create("CrosshairDesigner.ResolutionChangeCheck", 1, 0, function()
-	if ScrW() != screenW or ScrH() != screenH then
+	if ScrW() ~= screenW or ScrH() ~= screenH then
 		if CrosshairDesigner.IsMenuOpen() then
 			CrosshairDesigner.OpenMenu() -- Updates menu size if already open
 		end
@@ -38,7 +38,7 @@ timer.Create("CrosshairDesigner.ResolutionChangeCheck", 1, 0, function()
 end)
 
 CrosshairDesigner.IsMenuOpen = function()
-	return CrosshairDesigner.Menu != nil and 
+	return CrosshairDesigner.Menu ~= nil and 
 			IsValid(CrosshairDesigner.Menu) and
 			CrosshairDesigner.Menu:IsVisible()
 end
@@ -72,6 +72,9 @@ CrosshairDesigner.OpenMenu = function()
 	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer" )
 	CrosshairDesigner.Menu.btnClose.DoClick = function ( button ) CrosshairDesigner.Menu:Remove() end //CrosshairDesigner.ShowMenu(false) end
 
+	-- Use scroll bar parent
+	-- Add/remove ones which are only enabled with toggle?
+
 	-- Move into custom vgui element
 	local MB_topBar = vgui.Create( "DMenuBar", CrosshairDesigner.Menu )
 	MB_topBar:DockMargin( -3, -6, -3, 0 )
@@ -84,6 +87,7 @@ CrosshairDesigner.OpenMenu = function()
 	Derma_StringRequest("Enter save nma", "Save", "Save 1", function(text) print("Saving..") end, function(text) print("cancel..") end)
 	end ):SetIcon( "icon16/folder_go.png" )
 	local M2 = MB_topBar:AddMenu( "Settings" )
+	M1:AddOption( "Reset", function() Msg( "Chose File:New\n" ) end ):SetIcon( "icon16/page_white_go.png" )
 
 	local sheet = vgui.Create("DPropertySheet", CrosshairDesigner.Menu)
     sheet:Dock( FILL )
@@ -105,6 +109,11 @@ CrosshairDesigner.OpenMenu = function()
 	for i = 0, 5 do
 		sub:AddOption( "Option " .. i, function() MsgN( "Chose sub menu option " .. i ) end )
 	end
+
+	-- :D
+	local convarDatas = CrosshairDesigner.GetConvarDatas()
+
+	-- create the menus!
 
 end
 

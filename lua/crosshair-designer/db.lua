@@ -1,4 +1,10 @@
+CrosshairDesigner.Directory = "crosshair_designer"
+CrosshairDesigner.FutureDirectory = "crosshair_designer/remastered" -- old crosshair has good file restriction so may not need new dir
+-- but it would make it more clear for users
 
+--[[
+	Needs to be forwards and backwards compatible since servers run different versions
+]]--
 
 CrosshairDesigner.Save = function(crossID, crossData)
 	local crosshairsaves = "crosshair_designer/save_" .. Hc_whichsaveslot .. ".txt"
@@ -13,7 +19,7 @@ CrosshairDesigner.Load = function(crossID) -- Needs testing
 		local hc_timer_i = 1
 		local hc_printerror = 1
 
-		timer.Create( "hc_load_cross", 0.1, hc_con_num, function()
+		timer.Create( "CrosshairDesigner_ApplySettings", 0.1, hc_con_num, function()
 
 			local id = CrosshairDesigner.ConvarAtIndex(hc_timer_i)
 
@@ -143,13 +149,21 @@ CrosshairDesigner.GetLimitMax = function(id)
 	return (convars[id] != nil and convars[id].data.max) or 0
 end
 
-CrosshairDesigner.GetConvars = function() return convars end
+CrosshairDesigner.GetConvarDatas = function()
+	local data = {}
+
+	for id, convarData in pairs(convars) do
+		data[convarData.index] = convarData.data
+	end
+
+	return data
+end
 
 CrosshairDesigner.ConvarAtIndex = function(index) -- inefficient (duplicates in tbl)
 	local found = false
 
 	for id, convarData in pairs(convars) do
-		if id.index == index then
+		if convarData.index == index then
 			found = id
 			break
 		end

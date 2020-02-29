@@ -206,3 +206,4 @@ else
 	})
 end
 
+hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)

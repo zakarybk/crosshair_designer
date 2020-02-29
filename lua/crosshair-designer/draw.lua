@@ -1,7 +1,7 @@
 local cachedCross = {} -- todo
 
 	
-local function drawingcircle( x, y, radius, seg )
+local drawingcircle = function( x, y, radius, seg )
 	
 	local cir = {}
 
@@ -18,7 +18,7 @@ local function drawingcircle( x, y, radius, seg )
 	
 end
  
-local function Crosshair()
+local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
 	if not CrosshairDesigner.GetBool("ShowCross") or 
