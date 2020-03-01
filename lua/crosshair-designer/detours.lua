@@ -33,6 +33,8 @@ end
 
 --[[
 	Detours
+
+	-- todo update with variable numbers of params
 ]]--
 
 detours.GetConVarNumber = CrosshairDesigner.Detours.GetConVarNumber or GetConVarNumber
@@ -61,13 +63,6 @@ CreateConVar = function(name, value, flags, helpText, min, max)
 			end
 		end
 		wrapper.GetBool = function() return CrosshairDesigner.GetBool("HideTTT") end
-
-		cvars.AddChangeCallback(name, function(name, oldVal, newVal)
-	    	print("Thing convar is currently being detoured by CrosshairDesigner")
-	    	print("Since this detour is for ttt_disable_crosshair, it cannot be removed.")
-	    	print("If you wish to toggle the TTT crosshair, please use the crosshair designer menu.")
-		end,
-		"CrosshairDesigner_DetourWarning")
 
 		return wrapper
 	end

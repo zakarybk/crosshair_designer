@@ -238,23 +238,56 @@ else
 		Only one of these can be valid at once so the most
 		any one of these will be called is once per frame
 	]]--
-	CrosshairDesigner.AddSwepCheck(
-		"FA:S", 
+	CrosshairDesigner.AddSwepCheck("FA:S", 
 		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 4) == "fas2" then
+			if string.Left(wep:GetClass(), 5) == "fas2_" then
+				if wep.dt != nil and wep.dt.Status ~= nil then
+					return true
+				end
+			end
+		end,
+		function(ply, wep) -- ShouldDraw
+			return not (
+				CrosshairDesigner.GetBool("HideOnADS") and 
+				wep.dt.Status == FAS_STAT_ADS
+			)
+		end
+	)
+
+	-- TFA -- hides with HUDShouldDraw CHudCrosshair
+	CrosshairDesigner.AddSwepCheck("TFA", 
+		function(ply, wep) -- ShouldUse
+			if string.Left(wep:GetClass(), 4) == "tfa_" then
 				return true
 			end
 		end,
 		function(ply, wep) -- ShouldDraw
-			return not (CrosshairDesigner.GetBool("HideOnADS") and wep.dt.Status == FAS_STAT_ADS)
+			return not (
+				CrosshairDesigner.GetBool("HideOnADS") and 
+				wep:GetIronSights()
+			)
 		end
 	)
 
-	-- TFA
-
 	-- M9k
-
-	-- FA:S
+	CrosshairDesigner.AddSwepCheck("M9K", 
+		function(ply, wep) -- ShouldUse
+			if string.Left(wep:GetClass(), 4) == "m9k_" then
+				if wep.GetIronsights ~= nil and
+					wep.IronSightsPos ~= nil and
+					wep.RunSightsPos ~= nil 
+					then return true
+				end
+			end
+		end,
+		function(ply, wep) -- ShouldDraw
+			return not (
+				CrosshairDesigner.GetBool("HideOnADS") and 
+				wep:GetIronsights() and -- returns true when running....
+				wep.IronSightsPos ~= wep.RunSightsPos -- so also check pos
+			)
+		end
+	)
 end
 
 hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)

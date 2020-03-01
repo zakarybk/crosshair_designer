@@ -21,9 +21,9 @@ end
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
-	local dontDraw = hook.Call("CrosshairDesigner_ShouldHideCross") or false
+	local shouldDraw = hook.Run("HUDShouldDraw", "CrosshairDesiger_Crosshair")
 
-	if dontDraw then
+	if not shouldDraw then
 		return true
 	end
 
