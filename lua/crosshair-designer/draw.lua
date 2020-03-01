@@ -77,7 +77,7 @@ local Crosshair = function()
 	local ply = LocalPlayer()
 
 	if not shouldDraw or not IsValid(ply) then
-		return false
+		return
 	end
 
 	-- Cross Colour

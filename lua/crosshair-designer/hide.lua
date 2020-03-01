@@ -176,8 +176,10 @@ CrosshairDesigner.MakeSwepCheckTopPriority = function(name) -- untested
 end
 
 hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
-	if name == "CrosshairDesiger_Crosshair" and not shouldDraw then
-		return false
+	if name == "CrosshairDesiger_Crosshair" then
+		if not shouldDraw then
+			return false
+		end
 	end
 end)
 
