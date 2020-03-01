@@ -85,14 +85,14 @@ hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", function()
 end)
 
 -- Update weapon on weapon change + update vis for every tick
-UpdateVisibility = function(ply, wep)
+UpdateVisibility = function(ply, wep) -- local
 
 	shouldDraw = true
 
 	if not CrosshairDesigner.GetBool("ShowCross") then
 		shouldDraw = false
 
-	elseif not shouldDraw or not ply:Alive() then
+	elseif not ply:Alive() then
 		shouldDraw = false
 
 	elseif not SWEPShouldDraw(ply, wep) then
@@ -104,7 +104,7 @@ UpdateVisibility = function(ply, wep)
 
 end
 
-UpdateSWEPCheck = function(ply, wep)
+UpdateSWEPCheck = function(ply, wep) -- local
 	for i, check in pairs(SWEPChecks) do
 		if check.enabled and check.ShouldUse(ply, wep) then
 

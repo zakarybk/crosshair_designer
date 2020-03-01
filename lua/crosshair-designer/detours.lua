@@ -1,5 +1,5 @@
 --[[
-	Detours for client convars so that we don't change the users real settings
+	Detours for client convars so that we don't change the user's real settings
 
 	For example in TTT if we were to give them the option to disable the
 	crosshair through the menu (ttt_disable_crosshair), they would wonder 
