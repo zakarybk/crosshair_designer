@@ -204,3 +204,11 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, n
 	-- TTT crosshair is being handled directly in detour.lua
 	-- TFA hides with HUDShouldDraw CHudCrosshair
 end)
+
+hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", function()
+	if CrosshairDesigner.GetBool("HideFAS") then
+		CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
+	else
+		CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
+	end
+end)

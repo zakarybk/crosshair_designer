@@ -65,8 +65,7 @@ CrosshairDesigner.Load = function(crossID, dataStr) -- Needs testing
 			i = i + 1
 
 			if i == count then
-				print("Fully laoded")
-				hook.Run("Crosshair_Designer_CrosshairLoaded")
+				hook.Run("CrosshairDesigner_CrosshairLoaded")
 			end
 		end)
 	else

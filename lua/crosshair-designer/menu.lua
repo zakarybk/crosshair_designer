@@ -65,9 +65,9 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	end
 
 	CrosshairDesigner.Menu = vgui.Create( "DFrame" )
-	CrosshairDesigner.Menu:SetSize( frameW, frameH )
-	CrosshairDesigner.Menu:SetPos( frameX, frameY )
-	CrosshairDesigner.Menu:MakePopup()
+	CrosshairDesigner.Menu:SetSize(frameW, frameH)
+	CrosshairDesigner.Menu:SetPos(frameX, frameY)
+	CrosshairDesigner.Menu:MakePopup(false)
 	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer V3" )
 	CrosshairDesigner.Menu.btnClose.DoClick = function(button) 
 		CrosshairDesigner.Menu:SetVisible(false)
@@ -281,7 +281,7 @@ concommand.Add("-crosshairs", function()
 	hook.Run("CrosshairDesigner_MenuClosed", CrosshairDesigner.Menu)
 end)
 
-hook.Add("Crosshair_Designer_CrosshairLoaded", "UpdateMenu", function()
+hook.Add("CrosshairDesigner_CrosshairLoaded", "UpdateMenu", function()
 	if CrosshairDesigner.Menu == nil or not IsValid(CrosshairDesigner.Menu) then
 		return
 	end
