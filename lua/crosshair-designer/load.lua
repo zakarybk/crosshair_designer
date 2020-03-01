@@ -254,6 +254,14 @@ else
 			title="Hide FA:S crosshair",
 			isBool=true
 		},
+		{
+			id="HideCW",
+			var="crosshairdesigner_hidecw",
+			default="0",
+			help="Hide the CW 2.0 crosshair",
+			title="Hide CW crosshair",
+			isBool=true
+		},
 	})
 
 	--[[
@@ -313,6 +321,23 @@ else
 				CrosshairDesigner.GetBool("HideOnADS") and 
 				wep:GetIronsights() and -- returns true when running....
 				wep.IronSightsPos ~= wep.RunSightsPos -- so also check pos
+			)
+		end
+	)
+
+	-- CW
+	CrosshairDesigner.AddSwepCheck("CW", 
+		function(ply, wep) -- ShouldUse
+			if string.Left(wep:GetClass(), 3) == "cw_" then
+				if wep.dt ~= nil and wep.dt.State != nil then
+					return true
+				end
+			end
+		end,
+		function(ply, wep) -- ShouldDraw
+			return not (
+				CrosshairDesigner.GetBool("HideOnADS") and 
+				wep.dt.State == CW_AIMING
 			)
 		end
 	)
