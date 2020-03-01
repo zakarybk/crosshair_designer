@@ -214,17 +214,14 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, n
 end)
 
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", function()
-	if id == "HideFAS" then
-		if CrosshairDesigner.GetBool("HideFAS") then
-			CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
-		else
-			CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
-		end
-	elseif id == "HideCW" then
-		if CrosshairDesigner.GetBool("HideCW") then
-			CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
-		else
-			CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
-		end
-	end 
+	if CrosshairDesigner.GetBool("HideFAS") then
+		CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
+	else
+		CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
+	end
+	if CrosshairDesigner.GetBool("HideCW") then
+		CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
+	else
+		CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
+	end
 end)
