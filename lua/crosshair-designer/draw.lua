@@ -24,7 +24,53 @@ local generateCircle = function(x, y, radius, seg)
 
 	return cir
 end
- 
+
+--[[
+	Smooth dynamic crosshair (mostly copied from old version)
+]]--
+local dynamic = 0
+local hc_shootingvalue = 0
+local hc_dynamiccorsshair = function()
+	
+	local ply = LocalPlayer()
+	
+	if not cachedCross["Dynamic"] then
+		timer.Destroy ("HC_SmoothDynamics")
+	end
+		
+	if cachedCross["Dynamic"] then
+		timer.Create( "HC_SmoothDynamics", 0.03, 0, function()
+			local hc_dynamicamount = cachedCross["DynamicSize"]
+			local speedzzz = ply:GetVelocity():Length()
+			
+			if ply:Health() > 0 and ply:GetActiveWeapon():IsValid() then
+				if ply:GetActiveWeapon():Clip1() > 0 then
+					if speedzzz / string.len( speedzzz )  < hc_dynamicamount and speedzzz / string.len( speedzzz ) > 3 then
+						dynamic = speedzzz / string.len( speedzzz ) 
+			
+					elseif speedzzz / string.len( speedzzz ) < 3 and ply:KeyDown( IN_ATTACK ) and hc_shootingvalue < hc_dynamicamount / 3 then
+						hc_shootingvalue = hc_shootingvalue + 0.5
+						dynamic = hc_shootingvalue
+			
+					elseif speedzzz / string.len( speedzzz ) < 3 and !ply:KeyDown( IN_ATTACK ) and hc_shootingvalue > 0 then
+						hc_shootingvalue = hc_shootingvalue - 0.5
+						dynamic = hc_shootingvalue
+			
+					elseif speedzzz / string.len( speedzzz ) < 4 and !ply:KeyDown( IN_ATTACK ) and hc_shootingvalue < 1 then  ---- IN_ATTACK1 instead
+						dynamic = speedzzz / string.len( speedzzz )
+					end
+				else
+					dynamic = 0
+				end
+			end
+		end)
+	end
+end
+	
+cvars.AddChangeCallback( "hc_dynamic_cross", function( convar_name, value_old, value_new )
+	hc_dynamiccorsshair()
+end )
+
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
@@ -61,8 +107,8 @@ local Crosshair = function()
 		local mx = ScrW() / 2
 		local my = ScrH() / 2
 
-		local gap = cachedCross["Gap"]
-		local length = cachedCross["Length"]
+		local gap = cachedCross["Gap"] + dynamic
+		local length = cachedCross["Length"] + dynamic
 		local stretch = cachedCross["Stretch"]
 
 		-- centre gap option? - link to thickness? -- conflict with draw poly
@@ -177,3 +223,21 @@ hook.Add("CrosshairDesigner_DetectedResolutionChange", "CenterCircle", function(
 		cachedCross["CircleSegments"]
 	)
 end)
+
+-- Start up
+local function Hc_startup()
+
+	if not file.IsDir( "crosshair_designer", "DATA" ) then
+		file.CreateDir( "crosshair_designer", "DATA" )
+	end
+
+	timer.Create("Hc_load_dynamic_startup", 1, 0, function()  
+		if LocalPlayer():IsValid() then
+			timer.Destroy( "Hc_load_dynamic_startup" )
+			hc_dynamiccorsshair()
+		end
+	end)
+
+end
+hook.Add("Initialize", "Hc_startup", Hc_startup)
+Hc_startup()
