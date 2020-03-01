@@ -110,44 +110,54 @@ local Crosshair = function()
 		local length = cachedCross["Length"] + gap
 		local stretch = cachedCross["Stretch"]
 
-		-- centre gap option? - link to thickness? -- conflict with draw poly
-		surface.DrawLine( mx-stretch - length, my+stretch, mx - gap, my ) -- Left
-		surface.DrawLine( mx+stretch + length, my-stretch, mx + gap, my ) -- Right
-		surface.DrawLine( mx-stretch, my - length-stretch, mx, my - gap ) -- Up
-		surface.DrawLine( mx+stretch, my + length+stretch, mx, my + gap ) -- Down
-
 		if cachedCross["UseArrow"] then
 			
 			--Arrows -- replace with draw poly? -- remove call overlay effect with low alpha
-			for i=1,cachedCross["Thickness"] do 
-				surface.DrawLine( mx-stretch - length, my+i+stretch, mx - gap, my )
-				surface.DrawLine( mx-stretch - length, my-i+stretch, mx - gap, my ) 
+			for i=1,cachedCross["Thickness"] do
+
+				if i%2==1 then
+					local iOffset = (i/2)
+
+					surface.DrawLine( mx-stretch - length, my-iOffset+stretch, mx - gap, my ) -- left.top
+					surface.DrawLine( mx+stretch + length, my-iOffset-stretch, mx + gap, my ) -- right.top
+
+					surface.DrawLine( mx+iOffset-stretch, my - length-stretch, mx, my - gap ) -- top.right
+					surface.DrawLine( mx+iOffset+stretch, my + length+stretch, mx, my + gap ) -- bottom.right
+
+				else
+					local iOffset = math.floor(i/2)
+
+					surface.DrawLine( mx-stretch - length, my+iOffset+stretch, mx - gap, my ) -- lef.bottom
+					surface.DrawLine( mx+stretch + length, my+iOffset-stretch, mx + gap, my ) -- right.bottom
+
+					surface.DrawLine( mx-iOffset-stretch, my - length-stretch, mx, my - gap ) -- top.left
+					surface.DrawLine( mx-iOffset+stretch, my + length+stretch, mx, my + gap ) -- bottom.left
+				end
 				
-				surface.DrawLine( mx+stretch + length, my+i-stretch, mx + gap, my )
-				surface.DrawLine( mx+stretch + length, my-i-stretch, mx + gap, my )
-				
-				surface.DrawLine( mx+i-stretch, my - length-stretch, mx, my - gap )
-				surface.DrawLine( mx-i-stretch, my - length-stretch, mx, my - gap )
-				
-				surface.DrawLine( mx+i+stretch, my + length+stretch, mx, my + gap )
-				surface.DrawLine( mx-i+stretch, my + length+stretch, mx, my + gap )
 			end 
 
 		else
 
 			--Thickness
 			for i=1,cachedCross["Thickness"] do 
-				surface.DrawLine( mx-stretch - length, my+i+stretch, mx - gap, my+i )
-				surface.DrawLine( mx-stretch - length, my-i+stretch, mx - gap, my-i ) 
+
+				if i%2==1 then
+					local iOffset = (i/2)
+
+					surface.DrawLine(mx-stretch - length, my+iOffset+stretch, mx - gap, my+iOffset)-- left.top
+					surface.DrawLine(mx+stretch + length, my+iOffset-stretch, mx + gap, my+iOffset) -- right.top
+
+					surface.DrawLine( mx+iOffset-stretch, my - length-stretch, mx+iOffset, my - gap ) -- top.right
+					surface.DrawLine( mx+iOffset+stretch, my + length+stretch, mx+iOffset, my + gap ) -- bottom.right
+				else
+					local iOffset = math.floor(i/2)
+
+					surface.DrawLine(mx-stretch - length, my-iOffset+stretch, mx - gap, my-iOffset)-- left.bottom
+					surface.DrawLine(mx+stretch + length, my-iOffset-stretch, mx + gap, my-iOffset) -- right.bottom
 				
-				surface.DrawLine( mx+stretch + length, my+i-stretch, mx + gap, my+i )
-				surface.DrawLine( mx+stretch + length, my-i-stretch, mx + gap, my-i )
-				
-				surface.DrawLine( mx+i-stretch, my - length-stretch, mx+i, my - gap )
-				surface.DrawLine( mx-i-stretch, my - length-stretch, mx-i, my - gap )
-				
-				surface.DrawLine( mx+i+stretch, my + length+stretch, mx+i, my + gap )
-				surface.DrawLine( mx-i+stretch, my + length+stretch, mx-i, my + gap )
+					surface.DrawLine(mx-iOffset-stretch, my - length-stretch, mx-iOffset, my - gap) -- top.left
+					surface.DrawLine(mx-iOffset+stretch, my + length+stretch, mx-iOffset, my + gap) -- bottom.left
+				end
 			end
 
 		end

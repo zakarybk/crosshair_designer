@@ -4,14 +4,12 @@ print("Loading crosshair designer (590788321)")
 
 if SERVER then
 	AddCSLuaFile("detours.lua")
-	--AddCSLuaFile("fonts.lua")
 	AddCSLuaFile("db.lua")
 	AddCSLuaFile("hide.lua")
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
 else
 	include("detours.lua")
-	--include("fonts.lua")
 	include("db.lua")
 	include("hide.lua")
 	include("draw.lua")
@@ -58,7 +56,7 @@ else
 			var="cross_arrow",
 			default="1",
 			help="Change the lines on the crosshair to be pointed",
-			title="Make lines arrows",
+			title="Make lines into arrows",
 			isBool=true,
 		},
 		{
@@ -74,7 +72,7 @@ else
 		{
 			id="Red",
 			var="cross_hud_color_r",
-			default="29",
+			default="50",
 			help="Change the amount of red in the crosshair",
 			min=0,
 			max=255,
@@ -83,7 +81,7 @@ else
 		{
 			id="Green",
 			var="cross_hud_color_g",
-			default="0",
+			default="250",
 			help="Change the amount of green in the crosshair",
 			min=0,
 			max=255,
@@ -92,7 +90,7 @@ else
 		{
 			id="Blue",
 			var="cross_hud_color_b",
-			default="255",
+			default="50",
 			help="Change the amount of blue in the crosshair",
 			min=0,
 			max=255,

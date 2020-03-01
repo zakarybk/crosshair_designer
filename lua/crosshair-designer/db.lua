@@ -39,7 +39,7 @@ CrosshairDesigner.Save = function(crossID)
 	file.Write(saveFile, CrosshairDesigner.CurrentToString())
 end
 
-CrosshairDesigner.Load = function(crossID, dataStr) -- Needs testing
+CrosshairDesigner.Load = function(crossID, dataStr)
 	local strings = false
 	local saveFile = "crosshair_designer/save_" .. crossID .. ".txt"
 
