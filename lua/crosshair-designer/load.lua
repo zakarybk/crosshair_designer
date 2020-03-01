@@ -22,7 +22,7 @@ else
 		{
 			id="ShowHL2",
 			var="toggle_crosshair_hide", 
-			default="1", 
+			default="0", 
 			help="Show the half life crosshair",
 			title="Show HL2/TFA crosshair",
 			isBool=true
@@ -30,7 +30,7 @@ else
 		{
 			id="ShowCross",
 			var="toggle_crosshair", 
-			default="0", 
+			default="1", 
 			help="Hide the custom crosshair",
 			title="Show custom crosshair",
 			isBool=true
@@ -54,7 +54,7 @@ else
 		{
 			id="UseArrow",
 			var="cross_arrow",
-			default="1",
+			default="0",
 			help="Change the lines on the crosshair to be pointed",
 			title="Make lines into arrows",
 			isBool=true,
@@ -110,7 +110,7 @@ else
 		{
 			id="Gap",
 			var="cross_gap",
-			default="5",
+			default="3",
 			help="Change size of the gap in the middle of the crosshair",
 			title="Gap in middle",
 			min=0,
@@ -119,7 +119,7 @@ else
 		{
 			id="Length",
 			var="cross_length",
-			default="13",
+			default="7",
 			help="Change the length of the lines in the crosshair",
 			title="Length of lines",
 			min=0,
@@ -128,7 +128,7 @@ else
 		{
 			id="Thickness",
 			var="cross_thickness",
-			default="1",
+			default="2",
 			help="Change the length of the lines in the crosshair",
 			title="Thickness of lines",
 			min=0,
@@ -174,7 +174,7 @@ else
 		{
 			id="TargetRed",
 			var="target_cross_hud_color_r",
-			default="255",
+			default="250",
 			help="Change the amount of red in the crosshair when aiming at a target",
 			min=0,
 			max=255,
@@ -183,7 +183,7 @@ else
 		{
 			id="TargetGreen",
 			var="target_cross_hud_color_g",
-			default="0",
+			default="46",
 			help="Change the amount of green in the crosshair when aiming at a target",
 			min=0,
 			max=255,
@@ -192,7 +192,7 @@ else
 		{
 			id="TargetBlue",
 			var="target_cross_hud_color_b",
-			default="0",
+			default="46",
 			help="Change the amount of blue in the crosshair when aiming at a target",
 			min=0,
 			max=255,
@@ -212,7 +212,7 @@ else
 		{
 			id="Dynamic",
 			var="hc_dynamic_cross",
-			default="1",
+			default="0",
 			help="Make the crosshair dynamic",
 			title="Make dynamic",
 			isBool=true
@@ -239,7 +239,7 @@ else
 		{
 			id="HideTTT",
 			var="crosshairdesigner_hidettt",
-			default="0",
+			default="1",
 			help="Hide the TTT crosshair",
 			title="Hide TTT crosshair",
 			isBool=true
@@ -247,7 +247,7 @@ else
 		{
 			id="HideFAS",
 			var="crosshairdesigner_hidefas",
-			default="0",
+			default="1",
 			help="Hide the FA:S crosshair",
 			title="Hide FA:S crosshair",
 			isBool=true
@@ -255,7 +255,7 @@ else
 		{
 			id="HideCW",
 			var="crosshairdesigner_hidecw",
-			default="0",
+			default="1",
 			help="Hide the CW 2.0 crosshair",
 			title="Hide CW crosshair",
 			isBool=true
