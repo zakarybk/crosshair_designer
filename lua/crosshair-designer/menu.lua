@@ -32,7 +32,7 @@ CrosshairDesigner.CreateFonts(fontSize) -- Unused
 timer.Create("CrosshairDesigner.ResolutionChangeCheck", 1, 0, function()
 	if ScrW() ~= screenW or ScrH() ~= screenH then
 		if CrosshairDesigner.IsMenuOpen() then
-			CrosshairDesigner.OpenMenu() -- Updates menu size if already open
+			CrosshairDesigner.OpenMenu(true) -- Updates menu size if already open
 			hook.Run("CrosshairDesigner_DetectedResolutionChange")
 		end
 	end
@@ -44,8 +44,7 @@ CrosshairDesigner.IsMenuOpen = function()
 			CrosshairDesigner.Menu:IsVisible()
 end
 
-CrosshairDesigner.MenuWidgets = {}
-CrosshairDesigner.OpenMenu = function()
+CrosshairDesigner.OpenMenu = function(resolutionChanged)
 
 	-- Make the frame seem the same size regardless of aspect ratio
 	screenW, screenH = ScrW(), ScrH()
@@ -57,12 +56,11 @@ CrosshairDesigner.OpenMenu = function()
 		CrosshairDesigner.Menu:SetVisible(true)
 
 		-- Update size
-		CrosshairDesigner.Menu:SetSize( frameW, frameH )
-		CrosshairDesigner.Menu:SetPos( frameX, frameY )
-
-		for i, widget in pairs(CrosshairDesigner.MenuWidgets) do
-			widget.UpdateSize()
+		if resolutionChanged then
+			CrosshairDesigner.Menu:SetSize( frameW, frameH )
+			CrosshairDesigner.Menu:SetPos( frameX, frameY )
 		end
+
 		return
 	end
 
@@ -71,10 +69,9 @@ CrosshairDesigner.OpenMenu = function()
 	CrosshairDesigner.Menu:SetPos( frameX, frameY )
 	CrosshairDesigner.Menu:MakePopup()
 	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer V3" )
-	CrosshairDesigner.Menu.btnClose.DoClick = function ( button ) CrosshairDesigner.Menu:Remove() end //CrosshairDesigner.ShowMenu(false) end
-
-	-- Use scroll bar parent
-	-- Add/remove ones which are only enabled with toggle?
+	CrosshairDesigner.Menu.btnClose.DoClick = function(button) 
+		CrosshairDesigner.Menu:SetVisible(false) 
+	end
 
 	-- Move into custom vgui element
 	local MB_topBar = vgui.Create( "DMenuBar", CrosshairDesigner.Menu )
@@ -89,11 +86,18 @@ CrosshairDesigner.OpenMenu = function()
 	end ):SetIcon( "icon16/folder_go.png" )
 	M1:AddOption( "Reset", function() Msg( "Chose File:New\n" ) end ):SetIcon( "icon16/page_white_go.png" )
 
-    local sub = M1:AddSubMenu( "Sub Menu" )
-	sub:SetDeleteSelf( false )
-	for i = 0, 5 do
-		sub:AddOption( "Option " .. i, function() MsgN( "Chose sub menu option " .. i ) end )
+	local sub -- more DermaMenu
+
+	local function createSubMenus()
+		if IsValid(sub) then sub:Remove() end
+	    sub = M1:AddSubMenu( "Open" )
+		sub:SetDeleteSelf( false )
+		for i = 1, 10 do
+			sub:AddOption( i .. ": SaveGG2 " .. tostring(CurTime()), function() MsgN( "Chose sub menu option " .. i ) end )
+		end
 	end
+	createSubMenus()
+	createSubMenus()
 
 	-- :D
 	local convarDatas = CrosshairDesigner.GetConvarDatas()
@@ -133,7 +137,7 @@ CrosshairDesigner.OpenMenu = function()
 	    end
 	end
 
-	-- Create colours
+	-- Colour picker for normal
 	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
     label:SetTextColor(Color(255, 255, 255, 255))
     label:SetText("Normal crosshair colour picker")
@@ -166,6 +170,7 @@ CrosshairDesigner.OpenMenu = function()
 	    CrosshairDesigner.SetValue("Alpha", colour.a)
 	end
 
+	-- Colour picker for target
 	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
     label:SetTextColor(Color(255, 255, 255, 255))
     label:SetText("On target crosshair colour picker")
@@ -200,7 +205,19 @@ CrosshairDesigner.OpenMenu = function()
 
 end
 
-concommand.Add("crosshairs", CrosshairDesigner.OpenMenu)
+concommand.Add("crosshairs", function()
+	if CrosshairDesigner.IsMenuOpen() then
+		CrosshairDesigner.Menu:SetVisible(false)
+	else
+		CrosshairDesigner.OpenMenu()
+	end
+end)
+concommand.Add("+crosshairs", function()
+	CrosshairDesigner.OpenMenu()
+end)
+concommand.Add("-crosshairs", function()
+	CrosshairDesigner.Menu:SetVisible(false)
+end)
 
 
 --[[
