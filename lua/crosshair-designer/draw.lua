@@ -1,4 +1,6 @@
-local cachedCross = {} -- todo
+local cachedCross = {}
+
+-- Fix crosshair thickness (adds two at once) - though will be troublesome with backwards compatibility
 
 local generateCircle = function(x, y, radius, seg)
 	local cir = {}
@@ -26,7 +28,8 @@ local generateCircle = function(x, y, radius, seg)
 end
 
 --[[
-	Smooth dynamic crosshair (mostly copied from old version)
+	Smooth dynamic crosshair (copied from old version)
+	todo - update
 ]]--
 local dynamic = 0
 local hc_shootingvalue = 0
@@ -34,7 +37,7 @@ local hc_dynamiccorsshair = function()
 	
 	local ply = LocalPlayer()
 	
-	if not cachedCross["Dynamic"] then
+	if not cachedCross["Dynamic"] or timer.Exists("HC_SmoothDynamics") then
 		timer.Destroy ("HC_SmoothDynamics")
 	end
 		
@@ -66,10 +69,6 @@ local hc_dynamiccorsshair = function()
 		end)
 	end
 end
-	
-cvars.AddChangeCallback( "hc_dynamic_cross", function( convar_name, value_old, value_new )
-	hc_dynamiccorsshair()
-end )
 
 local Crosshair = function()
 
@@ -108,7 +107,7 @@ local Crosshair = function()
 		local my = ScrH() / 2
 
 		local gap = cachedCross["Gap"] + dynamic
-		local length = cachedCross["Length"] + dynamic
+		local length = cachedCross["Length"] + gap
 		local stretch = cachedCross["Stretch"]
 
 		-- centre gap option? - link to thickness? -- conflict with draw poly
@@ -160,7 +159,6 @@ local Crosshair = function()
 		surface.DrawPoly(cachedCross.circle)
 	end
 
-
 end
 
 --[[
@@ -192,6 +190,17 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 			cachedCross["CircleRadius"], 
 			cachedCross["CircleSegments"]
 		)
+	end
+
+	if data.id == "Dynamic" then
+		if not CrosshairDesigner.GetBool(data.id) then
+			if timer.Exists("HC_SmoothDynamics") then
+				timer.Destroy("HC_SmoothDynamics")
+				dynamic = 0
+			end
+		else
+			hc_dynamiccorsshair()
+		end
 	end
 end)
 

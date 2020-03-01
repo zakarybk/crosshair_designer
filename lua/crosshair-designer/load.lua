@@ -20,33 +20,37 @@ else
 	--[[
 		Setup the client convars and callbacks to verify values
 	]]--
-	CrosshairDesigner.SetUpConvars({ -- Needs to be in order since it's the read order from file
+	CrosshairDesigner.SetUpConvars({ -- Must be in this order as it's the order the values are read from file
 		{
 			id="ShowHL2",
 			var="toggle_crosshair_hide", 
 			default="1", 
-			help="Show the half life crosshair", 
+			help="Show the half life crosshair",
+			title="Toggle HL2/TFA crosshair",
 			isBool=true
 		},
 		{
 			id="ShowCross",
 			var="toggle_crosshair", 
 			default="0", 
-			help="Hide the custom crosshair", 
+			help="Hide the custom crosshair",
+			title="Toggle custom crosshair",
 			isBool=true
 		},
 		{
 			id="HideOnADS",
 			var="cross_ads", 
 			default="1", 
-			help="Hide the custom crosshair when aiming down sights", 
+			help="Hide the custom crosshair when aiming down sights",
+			title="Hide when aiming down sights",
 			isBool=true
 		},
 		{
 			id="UseLine",
 			var="cross_line", 
-			default="1", 
-			help="Use the line style for the crosshair", 
+			default="1",
+			help="Use the line style for the crosshair",
+			title="Toggle crosshair lines",
 			isBool=true
 		},
 		{
@@ -54,6 +58,7 @@ else
 			var="cross_arrow",
 			default="1",
 			help="Change the lines on the crosshair to be pointed",
+			title="Make lines arrows",
 			isBool=true,
 		},
 		{
@@ -61,6 +66,7 @@ else
 			var="cross_circle",
 			default="0",
 			help="Add a circle to the middle of the crosshair",
+			title="Add circle crosshair",
 			isBool=true,
 		},
 
@@ -72,6 +78,7 @@ else
 			help="Change the amount of red in the crosshair",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 		{
 			id="Green",
@@ -80,6 +87,7 @@ else
 			help="Change the amount of green in the crosshair",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 		{
 			id="Blue",
@@ -88,6 +96,7 @@ else
 			help="Change the amount of blue in the crosshair",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 		{
 			id="Alpha",
@@ -96,6 +105,7 @@ else
 			help="Change the transparency of the crosshair",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 
 
@@ -104,30 +114,34 @@ else
 			var="cross_gap",
 			default="5",
 			help="Change size of the gap in the middle of the crosshair",
+			title="Gap in middle",
 			min=0,
-			max=50,
+			max=100,
 		},
 		{
 			id="Length",
 			var="cross_length",
 			default="13",
 			help="Change the length of the lines in the crosshair",
+			title="Length of lines",
 			min=0,
-			max=50,
+			max=100,
 		},
 		{
 			id="Thickness",
 			var="cross_thickness",
 			default="1",
 			help="Change the length of the lines in the crosshair",
+			title="Thickness of lines",
 			min=0,
-			max=50,
+			max=100,
 		},
 		{
 			id="Stretch",
 			var="cross_stretch",
 			default="0",
 			help="The amount to stretch the crosshair by",
+			title="Stretch of lines",
 			min=0,
 			max=360,
 		},
@@ -136,16 +150,18 @@ else
 			var="cross_radius",
 			default="0",
 			help="The radius for the circle if enabled with cross_circle",
+			title="Circle radius",
 			min=0,
-			max=50,
+			max=100,
 		},
 		{
 			id="CircleSegments",
 			var="cross_segments",
 			default="0",
 			help="The number of segments for the circle if enabled with cross_circle",
+			title="Circle segments",
 			min=0,
-			max=50,
+			max=100,
 		},
 
 
@@ -153,8 +169,9 @@ else
 			id="ColOnTarget",
 			var="hc_target_colour", 
 			default="1", 
-			help="Use the line style for the crosshair", 
-			isBool=true
+			help="Use the line style for the crosshair",
+			title="Change colour on target",
+			isBool=true,
 		},
 		{
 			id="TargetRed",
@@ -163,6 +180,7 @@ else
 			help="Change the amount of red in the crosshair when aiming at a target",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 		{
 			id="TargetGreen",
@@ -171,6 +189,7 @@ else
 			help="Change the amount of green in the crosshair when aiming at a target",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 		{
 			id="TargetBlue",
@@ -179,6 +198,7 @@ else
 			help="Change the amount of blue in the crosshair when aiming at a target",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 		{
 			id="TargetAlpha",
@@ -187,14 +207,16 @@ else
 			help="Change the transparency of the crosshair when aiming at a target",
 			min=0,
 			max=255,
+			isColour=true,
 		},
 
 
 		{
 			id="Dynamic",
 			var="hc_dynamic_cross",
-			default="0",
+			default="1",
 			help="Make the crosshair dynamic",
+			title="Make dynamic",
 			isBool=true
 		},
 		{
@@ -202,14 +224,16 @@ else
 			var="hc_dynamic_amount",
 			default="50",
 			help="The amount the dynamic crosshair will move when enabled with hc_dynamic_cross",
+			title="Dynamic effect size",
 			min=0,
-			max=50,
+			max=100,
 		},
 		{
 			id="HideInVeh",
 			var="hc_vehicle_cross",
 			default="1",
 			help="Hide the crosshair when in a vehicle",
+			title="Hide in vehicle",
 			isBool=true
 		},
 
@@ -219,6 +243,7 @@ else
 			var="crosshairdesigner_hidettt",
 			default="0",
 			help="Hide the TTT crosshair",
+			title="Hide TTT crosshair",
 			isBool=true
 		},
 		{
@@ -226,6 +251,7 @@ else
 			var="crosshairdesigner_hidefas",
 			default="0",
 			help="Hide the FA:S crosshair",
+			title="Hide FA:S crosshair",
 			isBool=true
 		},
 	})
@@ -254,7 +280,7 @@ else
 		end
 	)
 
-	-- TFA -- hides with HUDShouldDraw CHudCrosshair
+	-- TFA
 	CrosshairDesigner.AddSwepCheck("TFA", 
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 4) == "tfa_" then

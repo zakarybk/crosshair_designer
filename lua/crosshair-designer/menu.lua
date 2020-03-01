@@ -70,7 +70,7 @@ CrosshairDesigner.OpenMenu = function()
 	CrosshairDesigner.Menu:SetSize( frameW, frameH )
 	CrosshairDesigner.Menu:SetPos( frameX, frameY )
 	CrosshairDesigner.Menu:MakePopup()
-	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer V2" )
+	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer V3" )
 	CrosshairDesigner.Menu.btnClose.DoClick = function ( button ) CrosshairDesigner.Menu:Remove() end //CrosshairDesigner.ShowMenu(false) end
 
 	-- Use scroll bar parent
@@ -87,23 +87,7 @@ CrosshairDesigner.OpenMenu = function()
 	--Derma_Query("Enter save name", "Save", "Accept", function() print("saving...") end, "Cancel", function() print("cancel...") end)
 	Derma_StringRequest("Enter save nma", "Save", "Save 1", function(text) print("Saving..") end, function(text) print("cancel..") end)
 	end ):SetIcon( "icon16/folder_go.png" )
-	local M2 = MB_topBar:AddMenu( "Settings" )
 	M1:AddOption( "Reset", function() Msg( "Chose File:New\n" ) end ):SetIcon( "icon16/page_white_go.png" )
-
-	local sheet = vgui.Create("DPropertySheet", CrosshairDesigner.Menu)
-    sheet:Dock( FILL )
-
-    local panel4 = vgui.Create( "DPanel", sheet )
-    panel4.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color(0, 0, 0, 0 ) ) end
-    sheet:AddSheet( "Crosshair Settings", panel4 )
-
-    local panel6 = vgui.Create( "DPanel", sheet )
-    panel6.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color(0, 0, 0, 0 ) ) end
-    sheet:AddSheet( "Colour", panel6 )
-
-    local panel5 = vgui.Create( "DPanel", sheet )
-    panel5.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color(0, 0, 0, 0 ) ) end
-    sheet:AddSheet( "Saving", panel5 )
 
     local sub = M1:AddSubMenu( "Sub Menu" )
 	sub:SetDeleteSelf( false )
@@ -114,9 +98,120 @@ CrosshairDesigner.OpenMenu = function()
 	-- :D
 	local convarDatas = CrosshairDesigner.GetConvarDatas()
 
-	-- create the menus!
+	CrosshairDesigner.ScrollPanel = vgui.Create("DScrollPanel", CrosshairDesigner.Menu)
+	CrosshairDesigner.ScrollPanel:Dock( FILL )
+
+	-- Create toggles
+	for i, data in pairs(convarDatas) do
+		if data.isBool then
+			local checkBox = vgui.Create("DCheckBoxLabel", CrosshairDesigner.ScrollPanel)
+	        checkBox:SetText(data.title)
+	        checkBox:SetConVar(data.var)
+	        checkBox:Dock( TOP )
+			checkBox:DockMargin( 0, 5, 0, 0 )
+	    end
+	end
+	
+	-- Create sliders
+	for i, data in pairs(convarDatas) do
+		if not data.isBool and not data.isColour then
+			local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
+            label:SetTextColor(Color(255, 255, 255, 255))
+            label:SetText(data.title)
+            label:SetDark( 1 )
+            label:Dock(TOP)
+			label:DockMargin(0, 5, 0, 0)
+
+		    local slider = vgui.Create("Slider", CrosshairDesigner.ScrollPanel)
+            slider:SetMin(data.min)
+            slider:SetMax(data.max)
+            slider:SetDecimals(0)
+            slider:SetConVar(data.var)
+			slider:SetValue(CrosshairDesigner.GetInt(data.var))
+			slider:Dock(TOP)
+			slider:DockMargin(0, 0, 0, 0)
+	    end
+	end
+
+	-- Create colours
+	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
+    label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetText("Normal crosshair colour picker")
+    label:SetDark( 1 )
+    label:Dock(TOP)
+	label:DockMargin(0, 5, 0, 0)
+
+	local colourPicker = vgui.Create("DColorMixer", CrosshairDesigner.ScrollPanel)
+    colourPicker:SetPalette(true)
+    colourPicker:SetAlphaBar(true)
+    colourPicker:SetWangs(true)
+    colourPicker:Dock(TOP)
+	colourPicker:DockMargin(0, 5, 0, 0)
+    colourPicker:SetColor(Color(
+    	CrosshairDesigner.GetInt("Red"), 
+    	CrosshairDesigner.GetInt("Green"), 
+    	CrosshairDesigner.GetInt("Blue"), 
+    	CrosshairDesigner.GetInt("Alpha") 
+    ))
+
+    local confirm = vgui.Create("DButton", CrosshairDesigner.ScrollPanel)
+    confirm:SetText("Normal colour")
+    confirm:Dock(TOP)
+	confirm:DockMargin(0, 5, 0, 0)
+    confirm.DoClick = function()
+	    local colour = colourPicker:GetColor()
+	    CrosshairDesigner.SetValue("Red", colour.r)
+	    CrosshairDesigner.SetValue("Green", colour.g)
+	    CrosshairDesigner.SetValue("Blue", colour.b)
+	    CrosshairDesigner.SetValue("Alpha", colour.a)
+	end
+
+	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
+    label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetText("On target crosshair colour picker")
+    label:SetDark(1)
+    label:Dock(TOP)
+	label:DockMargin(0, 5, 0, 0)
+
+	local targetColourPicker = vgui.Create("DColorMixer", CrosshairDesigner.ScrollPanel)
+    targetColourPicker:SetPalette(true)
+    targetColourPicker:SetAlphaBar(true)
+    targetColourPicker:SetWangs(true)
+    targetColourPicker:Dock(TOP)
+	targetColourPicker:DockMargin(0, 5, 0, 0)
+    targetColourPicker:SetColor(Color(
+    	CrosshairDesigner.GetInt("TargetRed"), 
+    	CrosshairDesigner.GetInt("TargetGreen"),
+    	CrosshairDesigner.GetInt("TargetBlue"), 
+    	CrosshairDesigner.GetInt("TargetAlpha") 
+    ))
+
+    local targetConfirm = vgui.Create("DButton", CrosshairDesigner.ScrollPanel)
+    targetConfirm:SetText("Target colour")
+    targetConfirm:Dock(TOP)
+	targetConfirm:DockMargin(0, 5, 0, 0)
+    targetConfirm.DoClick = function()
+	    local colour = targetColourPicker:GetColor()
+	    CrosshairDesigner.SetValue("TargetRed", colour.r)
+	    CrosshairDesigner.SetValue("TargetGreen", colour.g)
+	    CrosshairDesigner.SetValue("TargetBlue", colour.b)
+	    CrosshairDesigner.SetValue("TargetAlpha", colour.a)
+	end
 
 end
 
---CrosshairDesigner.OpenMenu()
+concommand.Add("crosshairs", CrosshairDesigner.OpenMenu)
 
+
+--[[
+	Chat command
+]]--
+hook.Add("OnPlayerChat", "CrosshairDesigner_OpenMenu", function(ply, text, teamChat, isDead)
+	if ply == LocalPlayer() and not teamChat then
+		text = string.Trim(string.lower(text))
+
+		if text == "!cross" or text == "!crosshair" or text == "!crosshairs" then
+			CrosshairDesigner.OpenMenu()
+		end
+	end
+end)

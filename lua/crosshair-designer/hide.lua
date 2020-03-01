@@ -200,14 +200,7 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, n
 		else
 			CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
 		end
-
-	elseif id == "HideTTT" then
-		if engine.ActiveGamemode() == "terrortown" then
-			if CrosshairDesigner.GetBool("HideTTT") then
-				CrosshairDesigner.AddConvarDetour("ttt_disable_crosshair", 1)
-			else
-				CrosshairDesigner.RemoveConvarDetour("ttt_disable_crosshair")
-			end
-		end
 	end
+	-- TTT crosshair is being handled directly in detour.lua
+	-- TFA hides with HUDShouldDraw CHudCrosshair
 end)
