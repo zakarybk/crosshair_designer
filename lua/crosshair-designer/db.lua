@@ -21,7 +21,7 @@ CrosshairDesigner.Load = function(crossID) -- Needs testing
 
 		timer.Create( "CrosshairDesigner_ApplySettings", 0.1, hc_con_num, function()
 
-			local id = CrosshairDesigner.ConvarAtIndex(hc_timer_i)
+			local id = CrosshairDesigner.ConvarDataAtIndex(hc_timer_i)
 
 			if id then
 				CrosshairDesigner.SetValue(id, ( brokencrossstring[hc_timer_i] ))
@@ -38,6 +38,7 @@ CrosshairDesigner.Load = function(crossID) -- Needs testing
 end
 
 local convars = {}
+local indexed = {}
 
 CrosshairDesigner.SetUpConvars = function(convars)
 	for i, convarData in pairs(convars) do
@@ -60,6 +61,7 @@ CrosshairDesigner.AddConvar = function(id, convarData)
 		convarData.max or nil
 	)
 	convars[convarData.var] = convars[id]
+	indexed[convars[id].index] = convars[id]
 end
 
 -- Verify convars edited by user
@@ -154,24 +156,25 @@ end
 CrosshairDesigner.GetConvarDatas = function()
 	local data = {}
 
-	for id, convarData in pairs(convars) do
+	for i, convarData in pairs(indexed) do
 		data[convarData.index] = convarData.data
 	end
 
 	return data
 end
 
-CrosshairDesigner.ConvarAtIndex = function(index) -- inefficient (duplicates in tbl)
+CrosshairDesigner.ConvarDataAtIndex = function(index) -- inefficient (duplicates in tbl)
 	local found = false
 
-	for id, convarData in pairs(convars) do
-		if convarData.index == index then
-			found = id
-			break
-		end
+	if indexed[index] ~= nil then
+		found = indexed[index]
 	end
 
 	return found
+end
+
+CrosshairDesigner.GetConvarData = function(id)
+	return (convars[id] ~= nil and convars[id].data) or false
 end
 
 -- The friendly readable one

@@ -38,18 +38,18 @@ local Crosshair = function()
 
 	-- Cross Colour
 	surface.SetDrawColor(
-		CrosshairDesigner.GetInt("Red"),
-		CrosshairDesigner.GetInt("Green"),
-		CrosshairDesigner.GetInt("Blue"),
-		CrosshairDesigner.GetInt("Alpha")
+		cachedCross["Red"],
+		cachedCross["Green"],
+		cachedCross["Blue"],
+		cachedCross["Alpha"]
 	)
 
 	local mx = ScrW() / 2
 	local my = ScrH() / 2
 
-	local gap = CrosshairDesigner.GetInt("Gap")
-	local length = CrosshairDesigner.GetInt("Length")
-	local stretch = CrosshairDesigner.GetInt("Stretch")
+	local gap = cachedCross["Gap"]
+	local length = cachedCross["Length"]
+	local stretch = cachedCross["Stretch"]
 
 	-- centre gap option? - link to thickness? -- conflict with draw poly
 	surface.DrawLine( mx-stretch - length, my+stretch, mx - gap, my ) -- Left
@@ -57,10 +57,10 @@ local Crosshair = function()
 	surface.DrawLine( mx-stretch, my - length-stretch, mx, my - gap ) -- Up
 	surface.DrawLine( mx+stretch, my + length+stretch, mx, my + gap ) -- Down
 
-	if CrosshairDesigner.GetBool("UseArrow") then
+	if cachedCross["UseArrow"] then
 		
 		--Arrows -- replace with draw poly? -- remove call overlay effect with low alpha
-		for i=1,CrosshairDesigner.GetInt("Thickness") do 
+		for i=1,cachedCross["Thickness"] do 
 			surface.DrawLine( mx-stretch - length, my+i+stretch, mx - gap, my )
 			surface.DrawLine( mx-stretch - length, my-i+stretch, mx - gap, my ) 
 			
@@ -78,7 +78,7 @@ local Crosshair = function()
 	else
 
 		--Thickness
-		for i=1,CrosshairDesigner.GetInt("Thickness") do 
+		for i=1,cachedCross["Thickness"] do 
 			surface.DrawLine( mx-stretch - length, my+i+stretch, mx - gap, my+i )
 			surface.DrawLine( mx-stretch - length, my-i+stretch, mx - gap, my-i ) 
 			
@@ -94,35 +94,51 @@ local Crosshair = function()
 
 	end
 
-	if CrosshairDesigner.GetBool("UseCircle") then
+	if cachedCross["UseCircle"] then
 		draw.NoTexture()
 		drawingcircle(
 			mx, 
 			my, 
-			CrosshairDesigner.GetInt("CircleRadius"), 
-			CrosshairDesigner.GetInt("CircleSegments")
+			cachedCross["CircleRadius"], 
+			cachedCross["CircleSegments"]
 		)
 	end
 
 
 end
 
-hook.Add("HUDPaint","CustomCross",Crosshair)
-
 --[[
-	Hide HL2 crosshair
+	Hide HL2 (+TFA) crosshair
 ]]--
 
-local hide = {
-	CHudCrosshair = true,
-}
+hook.Add("HUDShouldDraw", "HideHUD", function(name)
+	if name == "CHudCrosshair" and 
+		not CrosshairDesigner.GetBool("ShowHL2") 
+		then
+		return false 
+	end
+end)
 
-hook.Add( "HUDShouldDraw", "HideHUD", function( name )
-	if not CrosshairDesigner.GetBool("ShowHL2") then
-	if ( hide[ name ] ) then return false end
+-- Update cached values
+hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, val)
+	local data = CrosshairDesigner.GetConvarData(convar)
+
+	if data.isBool then
+		cachedCross[data.id] = tobool(val)
+	else
+		cachedCross[data.id] = tonumber(val)
+	end
+end)
+
+-- Load cached values
+hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", function(tbl)
+	for i, data in pairs(CrosshairDesigner.GetConvarDatas()) do
+		if data.isBool then
+			cachedCross[data.id] = CrosshairDesigner.GetBool(data.id)
+		else
+			cachedCross[data.id] = CrosshairDesigner.GetInt(data.id)
+		end
 	end
 
-	-- Don't return anything here, it may break other addons that rely on this hook.
-end )
-
-hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", print)
+	hook.Add("HUDPaint", "CustomCross", Crosshair)
+end)

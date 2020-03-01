@@ -34,16 +34,15 @@ end
 --[[
 	Detours
 
-	-- todo update with variable numbers of params
 ]]--
 
 detours.GetConVarNumber = CrosshairDesigner.Detours.GetConVarNumber or GetConVarNumber
 
-GetConVarNumber = function(name)
+GetConVarNumber = function(name, ...)
 	if returnValues[name] != nil then
 		return tonumber(returnValues[name])
 	end
-	return detours.GetConVarNumber(name)
+	return detours.GetConVarNumber(name, ...)
 end
 
 -- Hacky detour to hide TTT crosshair without making permanent changes to the convar
@@ -51,8 +50,8 @@ local convarCache = {}
 local convarMeta = FindMetaTable("ConVar")
 detours.CreateConVar = CrosshairDesigner.Detours.CreateConVar or CreateConVar
 
-CreateConVar = function(name, value, flags, helpText, min, max)
-	local convar = detours.CreateConVar(name, value, flags, helpText, min, max)
+CreateConVar = function(name, ...)
+	local convar = detours.CreateConVar(name, ...)
 
 	if name == "ttt_disable_crosshair" then
 		local wrapper = {}

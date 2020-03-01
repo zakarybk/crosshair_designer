@@ -258,7 +258,9 @@ else
 	CrosshairDesigner.AddSwepCheck("TFA", 
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 4) == "tfa_" then
-				return true
+				if wep.GetIronSights ~= nil then
+					return true
+				end
 			end
 		end,
 		function(ply, wep) -- ShouldDraw
