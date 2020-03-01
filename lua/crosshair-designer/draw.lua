@@ -1,7 +1,5 @@
 local cachedCross = {}
 
--- Fix crosshair thickness (adds two at once) - though will be troublesome with backwards compatibility
-
 local generateCircle = function(x, y, radius, seg)
 	local cir = {}
 
