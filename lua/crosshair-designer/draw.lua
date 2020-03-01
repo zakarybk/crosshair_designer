@@ -110,13 +110,13 @@ local Crosshair = function()
 		local length = cachedCross["Length"]
 		local stretch = cachedCross["Stretch"]
 
+		local gapLeft = (gap/2)
+		local gapRight = math.floor(gap/2)
+
 		if cachedCross["UseArrow"] then
 			
 			--Arrows -- replace with draw poly? -- remove call overlay effect with low alpha
 			for i=1,cachedCross["Thickness"] do
-
-				local gapLeft = (gap/2)
-				local gapRight = math.floor(gap/2)
 
 				local iLeft = (i/2)
 				local iRight = math.floor(i/2)
@@ -131,7 +131,7 @@ local Crosshair = function()
 					surface.DrawLine(mx-stretch-length-gapRight, my-iLeft+stretch, mx-gapRight, my)-- left.top
 					surface.DrawLine(mx-iLeft+stretch, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom.left
 					
-					if cachedCross["Thickness"] % 2 == 0 and cachedCross["Thickness"] < 6 then
+					if cachedCross["Thickness"] % 2 == 0 and cachedCross["Thickness"] < 4 then
 						surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx, my-gapRight) -- top.right
 						surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my) -- right.top
 					else
@@ -146,9 +146,6 @@ local Crosshair = function()
 
 			--Thickness
 			for i=1,cachedCross["Thickness"] do
-
-				local gapLeft = (gap/2)
-				local gapRight = math.floor(gap/2)
 
 				local iLeft = (i/2)
 				local iRight = math.floor(i/2)
@@ -177,12 +174,16 @@ local Crosshair = function()
 	end
 
 	-- Middle of screen
-	surface.SetDrawColor(255,0,0,255)
-	surface.DrawLine(ScrW() / 2, ScrH() / 2, (ScrW() / 2)+1, (ScrH() / 2)+1)
+	--surface.SetDrawColor(255,0,0,255)
+	--surface.DrawLine(ScrW() / 2, ScrH() / 2, (ScrW() / 2)+1, (ScrH() / 2)+1)
 
 	if cachedCross["UseCircle"] then
-		draw.NoTexture()
-		surface.DrawPoly(cachedCross.circle)
+		if cachedCross["CircleRadius"] == 1 then
+			surface.DrawLine(ScrW() / 2, ScrH() / 2, (ScrW() / 2)+1, (ScrH() / 2)+1)
+		else
+			draw.NoTexture()
+			surface.DrawPoly(cachedCross.circle)
+		end
 	end
 
 end
