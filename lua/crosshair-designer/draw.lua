@@ -107,7 +107,7 @@ local Crosshair = function()
 		local my = ScrH() / 2
 
 		local gap = cachedCross["Gap"] + dynamic
-		local length = cachedCross["Length"] + gap
+		local length = cachedCross["Length"]
 		local stretch = cachedCross["Stretch"]
 
 		if cachedCross["UseArrow"] then
@@ -143,7 +143,7 @@ local Crosshair = function()
 				*/
 				if i%2==1 then
 					surface.DrawLine(mx-stretch-length, my+iRight+stretch, mx-gapRight, my)-- left.bottom
-					surface.DrawLine(mx+stretch+length, my+iLeft-stretch, mx+gapLeft, my) -- right.top
+					surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my) -- right.top
 
 					surface.DrawLine(mx+iRight-stretch, my-length-stretch, mx, my-gapRight) -- top.right
 					surface.DrawLine(mx+iRight+stretch, my+length+stretch, mx, my+gapRight) -- bottom.right
@@ -174,21 +174,21 @@ local Crosshair = function()
 				local iRight = math.floor(i/2)
 
 				if i%2==1 then
-					surface.DrawLine(mx-stretch-length, my+iRight+stretch, mx-gapRight, my+iRight)-- left.bottom
-					surface.DrawLine(mx+stretch+length, my+iLeft-stretch, mx+gapLeft, my+iLeft) -- right.top
+					surface.DrawLine(mx-stretch-length-gapRight, my+iRight+stretch, mx-gapRight, my+iRight)-- left.bottom
+					surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my+iLeft) -- right.top
 
-					surface.DrawLine(mx+iRight-stretch, my-length-stretch, mx+iRight, my-gapRight) -- top.right
-					surface.DrawLine(mx+iRight+stretch, my + length+stretch, mx+iRight, my + gapRight) -- bottom.right
+					surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx+iRight, my-gapRight) -- top.right
+					surface.DrawLine(mx+iRight+stretch, my+length+stretch+gapRight, mx+iRight, my + gapRight) -- bottom.right
 				else
-					surface.DrawLine(mx-stretch-length, my-iLeft+stretch, mx-gapRight, my-iLeft)-- left.top
-					surface.DrawLine(mx-iRight+stretch, my + length+stretch, mx-iRight, my + gapRight) -- bottom.left
+					surface.DrawLine(mx-stretch-length-gapRight, my-iLeft+stretch, mx-gapRight, my-iLeft)-- left.top
+					surface.DrawLine(mx-iRight+stretch, my+length+stretch+gapRight, mx-iRight, my + gapRight) -- bottom.left
 					
-					if cachedCross["Thickness"] % 2 == 0 then
-						surface.DrawLine(mx+iRight-stretch, my-length-stretch, mx+iRight, my-gapRight) -- top.right
-						surface.DrawLine(mx+stretch+length, my+iLeft-stretch, mx+gapLeft, my+iLeft) -- right.top
+					if cachedCross["Thickness"] % 2 == 0 and cachedCross["Thickness"] < 4  then
+						surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx+iRight, my-gapRight) -- top.right
+						surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my+iLeft) -- right.top
 					else
-						surface.DrawLine(mx-iLeft-stretch, my - length-stretch, mx-iLeft, my-gapRight) -- top.left
-						surface.DrawLine(mx+stretch+length, my-iRight-stretch, mx + gapRight, my-iRight) -- right.bottom
+						surface.DrawLine(mx-iLeft-stretch, my-length-stretch-gapRight, mx-iLeft, my-gapRight) -- top.left
+						surface.DrawLine(mx+stretch+length+gapLeft, my-iRight-stretch, mx + gapRight, my-iRight) -- right.bottom
 					end
 				end
 			end
