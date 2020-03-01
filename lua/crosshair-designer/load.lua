@@ -1,17 +1,17 @@
 CrosshairDesigner = CrosshairDesigner or {}
 
-print("Loading crosshair designer")
+print("Loading crosshair designer (590788321)")
 
 if SERVER then
 	AddCSLuaFile("detours.lua")
-	AddCSLuaFile("fonts.lua")
+	--AddCSLuaFile("fonts.lua")
 	AddCSLuaFile("db.lua")
 	AddCSLuaFile("hide.lua")
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
 else
 	include("detours.lua")
-	include("fonts.lua")
+	--include("fonts.lua")
 	include("db.lua")
 	include("hide.lua")
 	include("draw.lua")
@@ -26,7 +26,7 @@ else
 			var="toggle_crosshair_hide", 
 			default="1", 
 			help="Show the half life crosshair",
-			title="Toggle HL2/TFA crosshair",
+			title="Show HL2/TFA crosshair",
 			isBool=true
 		},
 		{
@@ -34,7 +34,7 @@ else
 			var="toggle_crosshair", 
 			default="0", 
 			help="Hide the custom crosshair",
-			title="Toggle custom crosshair",
+			title="Show custom crosshair",
 			isBool=true
 		},
 		{
@@ -50,7 +50,7 @@ else
 			var="cross_line", 
 			default="1",
 			help="Use the line style for the crosshair",
-			title="Toggle crosshair lines",
+			title="Show crosshair lines",
 			isBool=true
 		},
 		{
@@ -318,4 +318,5 @@ else
 	)
 end
 
+print("Finished loading crosshair designer (590788321)")
 hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)

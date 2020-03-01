@@ -2,43 +2,79 @@ CrosshairDesigner.Directory = "crosshair_designer"
 CrosshairDesigner.FutureDirectory = "crosshair_designer/remastered" -- old crosshair has good file restriction so may not need new dir
 -- but it would make it more clear for users
 
+-- Outdated - the way I handled crosshair naming back in 2016 
+-- so that it's forwards and backwards compatible
+local saveNameConvars = {}
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_1", "Save 1", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_2", "Save 2", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_3", "Save 3", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_4", "Save 4", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_5", "Save 5", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_6", "Save 6", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_7", "Save 7", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_8", "Save 8", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_9", "Save 9", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_10", "Save 10", true, false))
+
+local convars = {}
+local indexed = {}
+
 --[[
 	Needs to be forwards and backwards compatible since servers run different versions
 ]]--
 
-CrosshairDesigner.Save = function(crossID, crossData)
-	local crosshairsaves = "crosshair_designer/save_" .. Hc_whichsaveslot .. ".txt"
+CrosshairDesigner.CurrentToString = function()
+	local data = ""
+
+	for i, convarData in pairs(indexed) do
+		data = data .. tostring(CrosshairDesigner.GetInt(convarData.data.var)) .. " "
+	end
+
+	return data
 end
 
-CrosshairDesigner.Load = function(crossID) -- Needs testing
-	local crosshairloading = "crosshair_designer/save_" .. crossID .. ".txt" -- temporary
+CrosshairDesigner.Save = function(crossID)
+	local saveFile = "crosshair_designer/save_" .. crossID .. ".txt" -- temporary - if replacing watchout for duplicates
 
-	if file.Exists( crosshairloading, "DATA" ) then
-		local brokencrossstring = string.Explode( " ", file.Read( crosshairloading, "DATA" ) )
+	file.Write(saveFile, CrosshairDesigner.CurrentToString())
+end
 
-		local hc_timer_i = 1
-		local hc_printerror = 1
+CrosshairDesigner.Load = function(crossID, dataStr) -- Needs testing
+	local strings = false
+	local saveFile = "crosshair_designer/save_" .. crossID .. ".txt"
 
-		timer.Create( "CrosshairDesigner_ApplySettings", 0.1, hc_con_num, function()
+	if dataStr then
+		strings = string.Explode(" ", dataStr)
 
-			local id = CrosshairDesigner.ConvarDataAtIndex(hc_timer_i)
+	elseif file.Exists(saveFile, "DATA") then
+		strings = string.Explode(" ", file.Read(saveFile, "DATA"))
+	end
+
+	if strings then
+		local i = 1
+		local count = math.min(#strings, #indexed)
+
+		timer.Create( "CrosshairDesigner_StaggeredSettings", 0.05, count, function()
+
+			local id = CrosshairDesigner.ConvarDataAtIndex(i)
 
 			if id then
-				CrosshairDesigner.SetValue(id, ( brokencrossstring[hc_timer_i] ))
+				CrosshairDesigner.SetValue(id.data.var, strings[i])
 			end
 
-			hc_timer_i = hc_timer_i + 1  
-		end)
+			i = i + 1
 
+			if i == count then
+				print("Fully laoded")
+				hook.Run("Crosshair_Designer_CrosshairLoaded")
+			end
+		end)
 	else
 		-- Hacky - remove?
-		file.Write( crosshairloading, "0 1 1 1 0 1 29 0 255 255 5 13 1 0 8 0 1 255 0 0 255 1 50 1" ) -- default config
+		file.Write(saveFile, "0 1 1 1 0 1 29 0 255 255 5 13 1 0 8 0 1 255 0 0 255 1 50 1") -- default config
 		CrosshairDesigner.Load(crossID)
 	end
 end
-
-local convars = {}
-local indexed = {}
 
 CrosshairDesigner.SetUpConvars = function(convars)
 	for i, convarData in pairs(convars) do
@@ -163,7 +199,7 @@ CrosshairDesigner.GetConvarDatas = function()
 	return data
 end
 
-CrosshairDesigner.ConvarDataAtIndex = function(index) -- inefficient (duplicates in tbl)
+CrosshairDesigner.ConvarDataAtIndex = function(index)
 	local found = false
 
 	if indexed[index] ~= nil then
