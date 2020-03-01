@@ -237,6 +237,14 @@ else
 
 		-- NEW
 		{
+			id="HideInSpectate",
+			var="crosshairdesigner_hideinspectate",
+			default="1",
+			help="Hide the crosshair when spectating",
+			title="Hide when spectating",
+			isBool=true
+		},
+		{
 			id="HideTTT",
 			var="crosshairdesigner_hidettt",
 			default="1",

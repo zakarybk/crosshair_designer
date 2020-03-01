@@ -100,6 +100,10 @@ UpdateVisibility = function(ply, wep) -- local
 
 	elseif ply:InVehicle() and CrosshairDesigner.GetBool("HideInVeh") then
 		shouldDraw = false
+
+	elseif ply:Team() == TEAM_SPECTATOR and CrosshairDesigner.GetBool("HideInSpectate") then
+		shouldDraw = false
+		
 	end
 
 end

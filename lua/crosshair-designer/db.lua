@@ -70,7 +70,7 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 		end)
 	else
 		-- Hacky - remove?
-		file.Write(saveFile, "0 1 0 1 0 0 50 250 50 255 3 7 2 0 8 0 1 250 46 46 255 0 50 1 1 1 1 ") -- default config (thanks Necro)
+		file.Write(saveFile, "0 1 1 1 0 0 50 250 50 255 2 7 2 0 8 0 1 250 46 46 255 0 50 1 1 1 1 1") -- default config (thanks Necro)
 		CrosshairDesigner.Load(crossID)
 	end
 end
