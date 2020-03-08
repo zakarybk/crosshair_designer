@@ -10,7 +10,13 @@ local cols = {
 
 -- Return a frame size which takes into account the aspect ratio
 local function CalculateMenuSize(screenWidth, screenHeight)
-	local frameW = screenWidth * (0.2 * ((1920/1080) - (screenWidth/screenHeight) +1))
+	local baseW, baseH = 1920, 1080
+
+	-- Stops the menu from becoming wider if only the screen width increases
+	local aspect = math.min(screenWidth/screenHeight, baseW/baseH)
+	local diff = math.min((baseW/baseH) / (screenWidth/screenHeight), 1)
+	local frameW = math.Round(screenWidth * (0.2 * ((1920/1080)-aspect +1)) * diff)
+
 	local frameH = screenHeight
 
 	return frameW, frameH
@@ -20,16 +26,24 @@ end
 local function CalculateMenuPos(calcMenuSize, screenWidth, screenHeight)
 	local frameW, frameH = calcMenuSize(screenWidth, screenHeight)
 
-	local x = screenWidth - frameW
+	local x = screenWidth - frameW + 1
 	local y = 0
 
 	return x, y
 end
 
+-- Returns the factor to scale everything by to better support higher resolutions
+local function CalculateScaleFactor(calcMenuSize, screenWidth, screenHeight)
+	local baseW, baseH = calcMenuSize(1920, 1080)
+	local frameW, frameH = calcMenuSize(screenWidth, screenHeight)
+
+	return math.max(frameW/baseW, 1)
+end
+
 -- Check for resolution changes
 timer.Create("CrosshairDesigner.ResolutionChangeCheck", 1, 0, function()
 	if ScrW() ~= screenW or ScrH() ~= screenH then
-		if CrosshairDesigner.IsMenuOpen() then
+		if IsValid(CrosshairDesigner.Menu) then
 			CrosshairDesigner.OpenMenu(true) -- Updates menu size if already open
 			hook.Run("CrosshairDesigner_DetectedResolutionChange")
 		end
@@ -48,15 +62,17 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	screenW, screenH = ScrW(), ScrH()
 	local frameW, frameH = CalculateMenuSize(screenW, screenH)
 	local frameX, frameY = CalculateMenuPos(CalculateMenuSize, screenW, screenH)
+	--local scaleFactor = CalculateScaleFactor(CalculateMenuSize, screenW, screenH) -- To later use to change font size?
 
 	-- Only open one copy
 	if IsValid(CrosshairDesigner.Menu) then
-		CrosshairDesigner.Menu:SetVisible(true)
 
-		-- Update size
+		-- Update size or open menu
 		if resolutionChanged then
-			CrosshairDesigner.Menu:SetSize( frameW, frameH )
-			CrosshairDesigner.Menu:SetPos( frameX, frameY )
+			CrosshairDesigner.Menu:SetSize(frameW, frameH)
+			CrosshairDesigner.Menu:SetPos(frameX, frameY)
+		else
+			CrosshairDesigner.Menu:SetVisible(true)
 		end
 
 		hook.Run("CrosshairDesigner_MenuOpened", CrosshairDesigner.Menu)
