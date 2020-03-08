@@ -108,11 +108,20 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 		function(convarName, oldVal, newVal)
 			
 			local adjusted = CrosshairDesigner.ClampConvar(convarData, oldVal, newVal)
+			local val
 
-			if adjusted ~= tonumber(newVal) then
+			if convarData.isBool then
+				val = tobool(adjusted)
+				oldVal = tobool(oldVal)
+			else
+				val = tonumber(adjusted)
+				oldVal = tonumber(oldVal)
+			end
+
+			if val ~= oldVal then
 				hook.Run("CrosshairDesigner_ValueChanged", 
 					convarData.var,
-					tostring(adjusted)
+					val
 				)
 			end
 		end,

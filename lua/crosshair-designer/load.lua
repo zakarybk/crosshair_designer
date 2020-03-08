@@ -8,6 +8,19 @@ if SERVER then
 	AddCSLuaFile("hide.lua")
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
+
+	--[[
+		Chat command to open menu - OnPlayerChat wasn't working in TTT
+	]]--
+	hook.Add("PlayerSay", "PlayerSayExample", function(ply, text, team)
+		text = string.Trim(string.lower(text))
+
+		if text == "!cross" or text == "!crosshair" or text == "!crosshairs" then
+			ply:ConCommand("crosshairs")
+			return text
+		end
+	end)
+
 else
 	include("detours.lua")
 	include("db.lua")
@@ -110,7 +123,7 @@ else
 		{
 			id="Gap",
 			var="cross_gap",
-			default="3",
+			default="8",
 			help="Change size of the gap in the middle of the crosshair",
 			title="Gap in middle",
 			min=0,
@@ -128,7 +141,7 @@ else
 		{
 			id="Thickness",
 			var="cross_thickness",
-			default="2",
+			default="3",
 			help="Change the length of the lines in the crosshair",
 			title="Thickness of lines",
 			min=0,
@@ -268,6 +281,14 @@ else
 			title="Hide CW crosshair",
 			isBool=true
 		},
+		{
+			id="TraceDraw",
+			var="crosshairdesigner_tracedraw",
+			default="0",
+			help="Draw based on player angles",
+			title="Centre to player angles",
+			isBool=true
+		},
 	})
 
 	--[[
@@ -347,6 +368,11 @@ else
 			)
 		end
 	)
+
+	-- Directory where everything is saved
+	if not file.IsDir( "crosshair_designer", "DATA" ) then
+		file.CreateDir( "crosshair_designer", "DATA" )
+	end
 end
 
 print("Finished loading crosshair designer (590788321)")

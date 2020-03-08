@@ -366,17 +366,3 @@ CrosshairDesigner.OpenSavePrompt = function(crossID)
 	end
 
 end
-
-
---[[
-	Chat command
-]]--
-hook.Add("OnPlayerChat", "CrosshairDesigner_OpenMenu", function(ply, text, teamChat, isDead)
-	if ply == LocalPlayer() and not teamChat then
-		text = string.Trim(string.lower(text))
-
-		if text == "!cross" or text == "!crosshair" or text == "!crosshairs" then
-			CrosshairDesigner.OpenMenu()
-		end
-	end
-end)

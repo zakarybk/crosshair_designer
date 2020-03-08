@@ -61,11 +61,15 @@ local wep
 local shouldDraw = true
 
 local SWEPChecks = {} -- SWEPChecks[n].ShouldUse() SWEPChecks[n].ShouldUse.ShouldDraw()
+local cachedCross = {}
+
+local LocalPlayer = LocalPlayer
+local IsValid = IsValid
 
 -- GM:PlayerSwitchWeapon "This hook is predicted. This means that in singleplayer, 
 -- it will not be called in the Client realm."
 -- https://wiki.facepunch.com/gmod/GM:PlayerSwitchWeapon
-hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", function()
+local function WeaponSwitchMonitor()
 
 	ply = LocalPlayer()
 
@@ -82,28 +86,20 @@ hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", function()
 		UpdateVisibility(ply, wep)
 	end
 
-end)
+end
 
 -- Update weapon on weapon change + update vis for every tick
 UpdateVisibility = function(ply, wep) -- local
 
 	shouldDraw = true
 
-	if not CrosshairDesigner.GetBool("ShowCross") then
+	if (not cachedCross["ShowCross"]) or
+		(not SWEPShouldDraw(ply, wep)) or
+		(cachedCross["HideInVeh"] and ply:InVehicle()) or
+		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR) or
+		(not ply:Alive())
+		then
 		shouldDraw = false
-
-	elseif not ply:Alive() then
-		shouldDraw = false
-
-	elseif not SWEPShouldDraw(ply, wep) then
-		shouldDraw = false
-
-	elseif ply:InVehicle() and CrosshairDesigner.GetBool("HideInVeh") then
-		shouldDraw = false
-
-	elseif ply:Team() == TEAM_SPECTATOR and CrosshairDesigner.GetBool("HideInSpectate") then
-		shouldDraw = false
-		
 	end
 
 end
@@ -180,14 +176,20 @@ CrosshairDesigner.MakeSwepCheckTopPriority = function(name) -- untested
 end
 
 hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
-	if name == "CrosshairDesiger_Crosshair" then
-		if not shouldDraw then
-			return false
-		end
+	-- Hide our crosshair
+	if not shouldDraw and name == "CrosshairDesiger_Crosshair" then
+		return false
+	end
+	--Hide HL2 (+TFA) crosshair
+	if name == "CHudCrosshair" and not cachedCross["ShowHL2"] then
+		return false
 	end
 end)
 
-hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, newVal)
+hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, val)
+	local data = CrosshairDesigner.GetConvarData(convar)
+	cachedCross[data.id] = val
+
 	ply = LocalPlayer()
 
 	if IsValid(ply) then
@@ -201,13 +203,13 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, n
 	local id = CrosshairDesigner.GetConvarID(convar)
 
 	if id == "HideFAS" then
-		if CrosshairDesigner.GetBool("HideFAS") then
+		if val then
 			CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
 		else
 			CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
 		end
 	elseif id == "HideCW" then
-		if CrosshairDesigner.GetBool("HideCW") then
+		if val then
 			CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 		else
 			CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
@@ -218,14 +220,26 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, n
 end)
 
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", function()
-	if CrosshairDesigner.GetBool("HideFAS") then
+	-- Cache values locally
+	for i, data in pairs(CrosshairDesigner.GetConvarDatas()) do
+		if data.isBool then
+			cachedCross[data.id] = CrosshairDesigner.GetBool(data.id)
+		else
+			cachedCross[data.id] = CrosshairDesigner.GetInt(data.id)
+		end
+	end
+
+	-- Load detours if set to active
+	if cachedCross["HideFAS"] then
 		CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
 	else
 		CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
 	end
-	if CrosshairDesigner.GetBool("HideCW") then
+	if cachedCross["HideCW"] then
 		CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 	else
 		CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
 	end
+
+	hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", WeaponSwitchMonitor)
 end)
