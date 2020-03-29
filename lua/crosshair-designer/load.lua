@@ -290,7 +290,7 @@ else
 			isBool=true
 		},
 		{
-			id="Ghost_DM",
+			id="HideGhostDM",
 			var="crosshairdesigner_hideghostdm",
 			default="0",
 			help="Hide the TTT Ghost DM crosshair",
@@ -377,8 +377,8 @@ else
 		end
 	)
 	
-	-- Ghost Death Match Sweps
-	CrosshairDesigner.AddSwepCheck("Ghost_DM", 
+	-- Ghost Death Match SWEPs
+	CrosshairDesigner.AddSwepCheck("GhostDM",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 13) == "weapon_ghost_" then
 				if wep.DrawHUD != nil then
@@ -391,7 +391,17 @@ else
 				CrosshairDesigner.GetBool("HideOnADS") and 
 				wep:GetIronSights()
 			)
-		end
+		end,
+		function(ply, wep) -- OnSet
+			if CrosshairDesigner.GetBool("HideGhostDM") then
+				CrosshairDesigner.GhostDMCrosshair = wep.DrawHUD
+				wep.DrawHUD = function() end
+			end
+		end,
+		function(ply, wep) -- OnRemove
+			wep.DrawHUD = CrosshairDesigner.GhostDMCrosshair or wep.DrawHUD
+			CrosshairDesigner.GhostDMCrosshair = false
+		end,
 	)
 
 	-- Directory where everything is saved
