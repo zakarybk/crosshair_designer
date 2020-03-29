@@ -11,11 +11,7 @@
 
 	This is made to be used by other addons if they wish through
 
-	CrosshairDesigner.
-
-
-
-( -- see load.lua for examples
+	CrosshairDesigner.AddSwepCheck( -- see load.lua for examples
 		name,
 		shouldUse(ply, wep),  -- always passes through valid values
 		shouldDraw(ply, wep), -- always passes through valid values
