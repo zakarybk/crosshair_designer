@@ -368,6 +368,23 @@ else
 			)
 		end
 	)
+	
+	-- Ghost Death Match Sweps
+	CrosshairDesigner.AddSwepCheck("Ghost_DM", 
+		function(ply, wep) -- ShouldUse
+			if string.Left(wep:GetClass(), 13) == "weapon_ghost_" then
+				if wep.DrawHUD != nil then
+					return true
+				end
+			end
+		end,
+		function(ply, wep) -- ShouldDraw
+			return not (
+				CrosshairDesigner.GetBool("HideOnADS") and 
+				wep:GetIronSights()
+			)
+		end
+	)
 
 	-- Directory where everything is saved
 	if not file.IsDir( "crosshair_designer", "DATA" ) then
