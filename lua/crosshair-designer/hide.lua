@@ -11,7 +11,11 @@
 
 	This is made to be used by other addons if they wish through
 
-	CrosshairDesigner.AddSwepCheck( -- see load.lua for examples
+	CrosshairDesigner.
+
+
+
+( -- see load.lua for examples
 		name,
 		shouldUse(ply, wep),  -- always passes through valid values
 		shouldDraw(ply, wep), -- always passes through valid values
@@ -78,8 +82,8 @@ local function WeaponSwitchMonitor()
 
 		if IsValid(wep) then
 			if activeWeapon ~= wep then
+				UpdateSWEPCheck(ply, wep, activeWeapon)
 				activeWeapon = wep
-				UpdateSWEPCheck(ply, wep)
 			end
 		end
 
@@ -104,19 +108,19 @@ UpdateVisibility = function(ply, wep) -- local
 
 end
 
-UpdateSWEPCheck = function(ply, wep) -- local
+UpdateSWEPCheck = function(ply, newWep, oldWep) -- local
+	if currentCheck.OnRemove != nil and oldWep != nil then
+		currentCheck.OnRemove(ply, oldWep)
+	end
+	
 	for i, check in pairs(SWEPChecks) do
 		if check.enabled and check.ShouldUse(ply, wep) then
-
-			if currentCheck.OnRemove != nil then
-				currentCheck.OnRemove(ply, wep)
-			end
 
 			SWEPShouldDraw = check.ShouldDraw
 			currentCheck = check
 
 			if currentCheck.OnSet != nil then
-				currentCheck.OnSet(ply, wep)
+				currentCheck.OnSet(ply, newWep)
 			end
 
 			return
@@ -196,7 +200,7 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 		wep = ply:GetActiveWeapon()
 
 		if IsValid(wep) then
-			UpdateSWEPCheck(ply, wep)
+			UpdateSWEPCheck(ply, wep, wep)
 		end
 	end
 
@@ -214,7 +218,7 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 		else
 			CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
 		end
-	end 
+	end
 	-- TTT crosshair is being handled directly in detour.lua
 	-- TFA hides with HUDShouldDraw CHudCrosshair
 end)
