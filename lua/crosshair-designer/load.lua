@@ -289,6 +289,14 @@ else
 			title="Centre to player angles",
 			isBool=true
 		},
+		{
+			id="Ghost_DM",
+			var="crosshairdesigner_hideghostdm",
+			default="0",
+			help="Hide the TTT Ghost DM crosshair",
+			title="Hide the TTT Ghost DM crosshair",
+			isBool=true
+		},	
 	})
 
 	--[[
