@@ -96,7 +96,7 @@ UpdateVisibility = function(ply, wep) -- local
 	if (not cachedCross["ShowCross"]) or
 		(not SWEPShouldDraw(ply, wep)) or
 		(cachedCross["HideInVeh"] and ply:InVehicle()) or
-		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR) or
+		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR and not ply:GetNWBool("SpecDM_Enabled", false)) or
 		(not ply:Alive())
 		then
 		shouldDraw = false
