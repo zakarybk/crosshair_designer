@@ -8,6 +8,10 @@ if SERVER then
 	AddCSLuaFile("hide.lua")
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
+	AddCSLuaFile("safe_value.lua")
+	AddCSLuaFile("server_crosshair.lua")
+	include("safe_value.lua")
+	include("server_crosshair.lua")
 
 	--[[
 		Chat command to open menu - OnPlayerChat wasn't working in TTT
@@ -23,15 +27,34 @@ if SERVER then
 
 else
 	include("detours.lua")
+	include("safe_value.lua")
 	include("db.lua")
 	include("hide.lua")
 	include("draw.lua")
 	include("menu.lua")
+	include("server_crosshair.lua")
+
+	-- Add new settings through this
+	CrosshairDesigner.AddSetting = function(setting)
+		if CLIENT then
+			CrosshairDesigner.SetUpConvar(setting)
+		end
+		CrosshairDesigner.AddSafeCheck(setting)
+	end
+
+	CrosshairDesigner.AddSettings = function(settings)
+		for i, setting in pairs(settings) do
+			CrosshairDesigner.AddSetting(setting)
+		end
+	end
+
+	-- Backwards compatible (deprecated)
+	CrosshairDesigner.SetUpConvars = CrosshairDesigner.AddSettings
 
 	--[[
 		Setup the client convars and callbacks to verify values
 	]]--
-	CrosshairDesigner.SetUpConvars({ -- Must be in this order as it's the order the values are read from file
+	CrosshairDesigner.AddSettings({ -- Must be in this order as it's the order the values are read from file
 		{
 			id="ShowHL2",
 			var="toggle_crosshair_hide", 

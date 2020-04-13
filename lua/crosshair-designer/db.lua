@@ -1,6 +1,4 @@
 CrosshairDesigner.Directory = "crosshair_designer"
-CrosshairDesigner.FutureDirectory = "crosshair_designer/remastered" -- old crosshair has good file restriction so may not need new dir
--- but it would make it more clear for users
 
 -- Outdated - the way I handled crosshair naming back in 2016 
 -- so that it's forwards and backwards compatible
@@ -75,11 +73,9 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 	end
 end
 
-CrosshairDesigner.SetUpConvars = function(convars)
-	for i, convarData in pairs(convars) do
-		CrosshairDesigner.AddConvar(convarData.id, convarData)
-		CrosshairDesigner.AddConvarCallback(convarData)
-	end
+CrosshairDesigner.SetUpConvar = function(convarData)
+	CrosshairDesigner.AddConvar(convarData.id, convarData)
+	CrosshairDesigner.AddConvarCallback(convarData)
 end
 
 CrosshairDesigner.AddConvar = function(id, convarData)
@@ -130,45 +126,19 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 end
 
 CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
-	if convarData.isBool then -- bool
+	local id = convarData.id
 
-		if tobool(newVal) == nil or tonumber(newVal) == nil then
-			if tobool(oldVal) == nil then
-				newVal = convarData.default
-			else
-				newVal = oldVal
-			end
-			CrosshairDesigner.SetValue(convarData.var, math.floor(tonumber(newVal)))
-		end
-		
-	elseif tonumber(convarData.default) ~= nil then -- number
-
-		if tonumber(newVal) == nil then
-			if tonumber(oldVal) == nil then
-				newVal = convarData.default
-			else
-				newVal = math.floor(oldVal)
-			end
-			CrosshairDesigner.SetValue(convarData.var, math.floor(newVal))
+	if not CrosshairDesigner.IsSafeValue(id, newVal) then
+		if not CrosshairDesigner.IsSafeValue(id, oldVal) then
+			newVal = CrosshairDesigner.SafeValue(id, newVal) -- default
 		else
-			local clamped = tonumber(newVal)
-
-			if convarData.min ~= nil then
-				clamped = math.max(clamped, convarData.min)
-			end
-
-			if convarData.max ~= nil then
-				clamped = math.min(clamped, convarData.max)
-			end
-
-			clamped = math.floor(clamped)
-
-			if clamped ~= tonumber(newVal) then
-				CrosshairDesigner.SetValue(convarData.var, clamped)
-				newVal = clamped
-			end
+			newVal = CrosshairDesigner.SafeValue(id, oldVal) -- previous
 		end
+		CrosshairDesigner.SetValue(convarData.var, newVal)
 	end
+
+	-- Change type before returning (newVal arg is always string)
+	newVal = CrosshairDesigner.SafeValue(id, oldVal)
 
 	return newVal
 end

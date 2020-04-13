@@ -59,6 +59,7 @@ local activeWeapon = nil
 local ply
 local wep
 local shouldDraw = true
+local tempCrossFile = "crosshair_temp.txt"
 
 local SWEPChecks = {} -- SWEPChecks[n].ShouldUse() SWEPChecks[n].ShouldUse.ShouldDraw()
 local cachedCross = {}
@@ -96,7 +97,7 @@ UpdateVisibility = function(ply, wep) -- local
 	if (not cachedCross["ShowCross"]) or
 		(not SWEPShouldDraw(ply, wep)) or
 		(cachedCross["HideInVeh"] and ply:InVehicle()) or
-		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR and not ply:GetNWBool("SpecDM_Enabled", false)) or
+		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR) or
 		(not ply:Alive())
 		then
 		shouldDraw = false
@@ -243,3 +244,75 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", func
 
 	hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", WeaponSwitchMonitor)
 end)
+
+--[[
+	Temp crosshair saving to allow server crosshairs
+
+	How do you handle the case when someone wants to keep the server crosshair?
+
+	They have to save/load which then ignores the server's one?
+
+	I need session + persistent settings:
+		example:	
+		On don't use server's crosshair - if server updates it, still ignore
+]]--
+
+local function runOnce()
+	if CrosshairDesigner.ranOnce == nil then
+		CrosshairDesigner.ranOnce = true
+		if file.Exists(tempCrossFile, "DATA") then
+			CrosshairDesigner.Load(nil, file.Read(tempCrossFile, "DATA"))
+			-- Reset temp crosshair
+			file.Delete(tempCrossFile)
+		end
+	end
+end
+runOnce()
+
+CrosshairDesigner.HideServerCrosshair = function()
+	if file.Exists(tempCrossFile, "DATA") then
+		CrosshairDesigner.Load(nil, file.Read(tempCrossFile, "DATA"))
+	end
+end
+
+CrosshairDesigner.ShowServerCrosshair = function(cross)
+	if not file.Exists(tempCrossFile, "DATA") then
+		file.Write(tempCrossFile, CrosshairDesigner.CurrentToString())
+	end
+
+	CrosshairDesigner.Load(nil, cross)
+end
+
+--[[
+Gamemode specific visibility check
+
+
+if gamemode == "blah"
+	CrosshairDesigner.AddVisiblityCheck(ply) -> shouldHide
+
+
+Need a reset button - tmp setting - automatic revert after leaving server
+
+crosshair_designer/tmp.txt -- delete after loading - If server doesn't have one
+
+
+When joining server and open crosshair menu
+	ask if they want to keep the server's crosshair
+
+
+setting goes in saving - 
+same with set 
+
+Saving menu:
+	server cross
+		allow - unallow will revert to previous
+		set - req superadmin
+		get (allow needs to be ticked)
+		
+
+Do something about SpecDM_Enabled
+
+CrosshairDesigner.AddVisiblityCheck() check -> return shouldHide -- not needed yet?
+
+if addon found - add
+]]
