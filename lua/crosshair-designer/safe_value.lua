@@ -33,6 +33,8 @@ local safeOrDefault = function(typeFunc, val, default)
 	if typeFunc(val) == nil then
 		val = typeFunc(default)
 		changed = true
+	else
+		val = typeFunc(val)
 	end
 
 	val, changed
@@ -46,7 +48,7 @@ CrosshairDesigner.SafeValue = function(id, val)
 		" ( " + id + ") ")
 
 
-	if convarData.isBool then
+	if setting.isBool then
 		local val, changed = safeOrDefault(tobool, val, setting.default)
 	else
 		local val, changed = safeOrDefault(tonumber, val, setting.default)
