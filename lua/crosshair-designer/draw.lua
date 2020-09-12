@@ -221,13 +221,20 @@ local Crosshair = function()
 
 			*/
 
+			local degrees = 180
+			local a = math.rad(degrees)
+
 
 			-- draw left
-			local startX = centreX - gapLeft
-			local startY = centreY
-			local endX = centreX - gapLeft - length
-			local endY = centreY
-			surface.DrawLine(startX, startY, endX, endY)
+			local startX = -gapLeft
+			local startY = 0
+			local endX = 0 - gapLeft - length
+			local endY = -length
+			startX = startX * math.sin( a )
+			startY = startY * math.cos( a )
+			endX = endX * math.sin( a )
+			endY = endY * math.cos( a )
+			surface.DrawLine(centreX-startX, centreY-startY, centreX-endX, centreY-endY)
 
 			-- draw right
 			local startX = centreX + gapRight
