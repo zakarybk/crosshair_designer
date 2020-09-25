@@ -229,7 +229,7 @@ end
 
 -- Update cached values
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, val)
-	local data, val = CrosshairDesigner.GetConvarData(convar)
+	local data = CrosshairDesigner.GetConvarData(convar)
 	cachedCross[data.id] = val
 
 	if data.id == "CircleRadius" or data.id == "CircleSegments" then

@@ -30,7 +30,15 @@ else
 
 	-- Different method for hiding crosshair with remastered
 	local function UsingM9KRemastered()
-		return MMM_M9k_IsBaseInstalled
+		-- return MMM_M9k_IsBaseInstalled -- loaded too late
+		local remastered = false
+		for i, addon in pairs(engine.GetAddons()) do
+			if addon.wsid == "2169649722" then
+				remastered = true
+				break
+			end
+		end
+		return remastered
 	end
 
 	--[[
@@ -39,31 +47,31 @@ else
 	CrosshairDesigner.SetUpConvars({ -- Must be in this order as it's the order the values are read from file
 		{
 			id="ShowHL2",
-			var="toggle_crosshair_hide", 
-			default="0", 
+			var="toggle_crosshair_hide",
+			default="0",
 			help="Show the half life crosshair",
 			title="Show HL2/TFA crosshair",
 			isBool=true
 		},
 		{
 			id="ShowCross",
-			var="toggle_crosshair", 
-			default="1", 
+			var="toggle_crosshair",
+			default="1",
 			help="Hide the custom crosshair",
 			title="Show custom crosshair",
 			isBool=true
 		},
 		{
 			id="HideOnADS",
-			var="cross_ads", 
-			default="1", 
+			var="cross_ads",
+			default="1",
 			help="Hide the custom crosshair when aiming down sights",
 			title="Hide when aiming down sights",
 			isBool=true
 		},
 		{
 			id="UseLine",
-			var="cross_line", 
+			var="cross_line",
 			default="1",
 			help="Use the line style for the crosshair",
 			title="Show crosshair lines",
@@ -183,8 +191,8 @@ else
 
 		{
 			id="ColOnTarget",
-			var="hc_target_colour", 
-			default="1", 
+			var="hc_target_colour",
+			default="1",
 			help="Use the line style for the crosshair",
 			title="Change colour on target",
 			isBool=true,
@@ -350,7 +358,7 @@ else
 			function(ply, wep) -- ShouldDraw
 				return not (
 					CrosshairDesigner.GetBool("HideOnADS") and
-					wep.IronSightState != null and wep.IronSightState or wep:GetNWInt("ScopeState") > 0
+					(wep.IronSightState != nil and wep.IronSightState or wep:GetNWInt("ScopeState") > 0)
 				)
 			end
 		)

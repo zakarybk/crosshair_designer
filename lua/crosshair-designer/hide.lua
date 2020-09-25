@@ -185,7 +185,7 @@ hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
 end)
 
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, val)
-	local data, val = CrosshairDesigner.GetConvarData(convar)
+	local data = CrosshairDesigner.GetConvarData(convar)
 	cachedCross[data.id] = val
 
 	ply = LocalPlayer()
