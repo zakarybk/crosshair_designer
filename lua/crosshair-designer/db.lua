@@ -87,9 +87,9 @@ CrosshairDesigner.AddConvar = function(id, convarData)
 	convars[id].index = math.floor(table.Count(convars) / 2) + 1
 	convars[id].data = convarData
 	convars[id].var = CreateClientConVar(
-		convarData.var, 
+		convarData.var,
 		convarData.default,
-		true, 
+		true,
 		false,
 		convarData.help or nil,
 		convarData.min or nil,
@@ -106,7 +106,7 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 	cvars.AddChangeCallback(
 		convarData.var,
 		function(convarName, oldVal, newVal)
-			
+
 			local adjusted = CrosshairDesigner.ClampConvar(convarData, oldVal, newVal)
 			local val
 
@@ -119,7 +119,7 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 			end
 
 			if val ~= oldVal then
-				hook.Run("CrosshairDesigner_ValueChanged", 
+				hook.Run("CrosshairDesigner_ValueChanged",
 					convarData.var,
 					val
 				)
@@ -140,7 +140,7 @@ CrosshairDesigner.ClampConvar = function(convarData, oldVal, newVal)
 			end
 			CrosshairDesigner.SetValue(convarData.var, math.floor(tonumber(newVal)))
 		end
-		
+
 	elseif tonumber(convarData.default) ~= nil then -- number
 
 		if tonumber(newVal) == nil then
