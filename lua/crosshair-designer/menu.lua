@@ -123,7 +123,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	end
 
 	CrosshairDesigner.Sliders = {}
-	
+
 	-- Create sliders
 	for i, data in pairs(convarDatas) do
 		if not data.isBool and not data.isColour then
@@ -164,9 +164,9 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	colourPicker:DockMargin(0, 5, 0, 0)
     colourPicker:SetColor(Color(
     	CrosshairDesigner.GetInt("Red"),
-    	CrosshairDesigner.GetInt("Green"), 
-    	CrosshairDesigner.GetInt("Blue"), 
-    	CrosshairDesigner.GetInt("Alpha") 
+    	CrosshairDesigner.GetInt("Green"),
+    	CrosshairDesigner.GetInt("Blue"),
+    	CrosshairDesigner.GetInt("Alpha")
     ))
     CrosshairDesigner.colourPicker = colourPicker
 
@@ -197,7 +197,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
     targetColourPicker:Dock(TOP)
 	targetColourPicker:DockMargin(0, 5, 0, 0)
     targetColourPicker:SetColor(Color(
-    	CrosshairDesigner.GetInt("TargetRed"), 
+    	CrosshairDesigner.GetInt("TargetRed"),
     	CrosshairDesigner.GetInt("TargetGreen"),
     	CrosshairDesigner.GetInt("TargetBlue"),
     	CrosshairDesigner.GetInt("TargetAlpha")
@@ -239,7 +239,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
         loadButton.DoClick = function()
         	CrosshairDesigner.Load(i)
 		end
-		
+
 		local saveButton = vgui.Create("DButton", dPanel)
         saveButton:SetText("Save")
         saveButton:Dock(RIGHT)
@@ -251,7 +251,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
         		CrosshairDesigner.Save(i)
         	end
 		end
-	
+
 	end
 
 	local toClipboard = vgui.Create("DButton", CrosshairDesigner.Sheet.Saving)
@@ -268,7 +268,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	toClipboard:DockMargin(0, 5, 0, 0)
     toClipboard.DoClick = function()
     	Derma_StringRequest(
-			"Crosshair Designer", 
+			"Crosshair Designer",
 			"Paste the crosshair settings string (control+v)",
 			"",
 			function(text) CrosshairDesigner.Load(0, text) end,
@@ -309,13 +309,13 @@ hook.Add("CrosshairDesigner_CrosshairLoaded", "UpdateMenu", function()
 
 	CrosshairDesigner.colourPicker:SetColor(Color(
     	CrosshairDesigner.GetInt("Red"),
-    	CrosshairDesigner.GetInt("Green"), 
-    	CrosshairDesigner.GetInt("Blue"), 
-    	CrosshairDesigner.GetInt("Alpha") 
+    	CrosshairDesigner.GetInt("Green"),
+    	CrosshairDesigner.GetInt("Blue"),
+    	CrosshairDesigner.GetInt("Alpha")
     ))
 
 	CrosshairDesigner.targetColourPicker:SetColor(Color(
-    	CrosshairDesigner.GetInt("TargetRed"), 
+    	CrosshairDesigner.GetInt("TargetRed"),
     	CrosshairDesigner.GetInt("TargetGreen"),
     	CrosshairDesigner.GetInt("TargetBlue"),
     	CrosshairDesigner.GetInt("TargetAlpha")
@@ -341,12 +341,12 @@ CrosshairDesigner.OpenSavePrompt = function(crossID)
 	local DLabel = vgui.Create("DLabel", Frame)
 	DLabel:SetPos(20, 30 )
 	DLabel:SetText("Are you sure you want to override")
-	DLabel:SizeToContents() 
+	DLabel:SizeToContents()
 
 	local DLabel = vgui.Create("DLabel", Frame)
 	DLabel:SetPos(20 , 50)
 	DLabel:SetText(GetConVar("Hc_crosssave_" .. crossID):GetString() .. "?")
-	DLabel:SizeToContents() 
+	DLabel:SizeToContents()
 
 	local yesButton = vgui.Create("DButton", Frame)
 	yesButton:SetText("Yes")

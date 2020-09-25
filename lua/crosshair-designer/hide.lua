@@ -1,5 +1,5 @@
 --[[
-	Handles when the crosshair should be hidden or visible as a result of 
+	Handles when the crosshair should be hidden or visible as a result of
 	external factors (not related to crosshair settings but other addons)
 
 	The crosshair settings can control whether the external factors should
@@ -58,7 +58,7 @@ local SWEPShouldDraw = DefaultSWEPShouldDraw
 local activeWeapon = nil
 local ply
 local wep
-local shouldDraw = true
+local shouldDraw = false
 
 local SWEPChecks = {} -- SWEPChecks[n].ShouldUse() SWEPChecks[n].ShouldUse.ShouldDraw()
 local cachedCross = {}
@@ -66,42 +66,40 @@ local cachedCross = {}
 local LocalPlayer = LocalPlayer
 local IsValid = IsValid
 
--- GM:PlayerSwitchWeapon "This hook is predicted. This means that in singleplayer, 
+-- GM:PlayerSwitchWeapon "This hook is predicted. This means that in singleplayer,
 -- it will not be called in the Client realm."
 -- https://wiki.facepunch.com/gmod/GM:PlayerSwitchWeapon
 local function WeaponSwitchMonitor()
 
-	ply = LocalPlayer()
+	local ply = LocalPlayer()
 
 	if IsValid(ply) then
-		wep = ply:GetActiveWeapon()
+		local wep = ply:GetActiveWeapon()
 
 		if IsValid(wep) then
 			if activeWeapon ~= wep then
 				activeWeapon = wep
 				UpdateSWEPCheck(ply, wep)
 			end
+			shouldDraw = SWEPShouldDraw(ply, wep) and CrosshairShouldDraw(ply, wep)
+		else
+			shouldDraw = CrosshairShouldDraw(ply, wep)
 		end
 
-		UpdateVisibility(ply, wep)
 	end
 
 end
 
 -- Update weapon on weapon change + update vis for every tick
-UpdateVisibility = function(ply, wep) -- local
-
-	shouldDraw = true
-
+CrosshairShouldDraw = function(ply, wep) -- local
 	if (not cachedCross["ShowCross"]) or
-		(not SWEPShouldDraw(ply, wep)) or
+		(not ply:Alive()) or
 		(cachedCross["HideInVeh"] and ply:InVehicle()) or
-		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR and not ply:IsGhost()) or
-		(not ply:Alive())
+		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR)
 		then
-		shouldDraw = false
+		return false
 	end
-
+	return true
 end
 
 UpdateSWEPCheck = function(ply, wep) -- local
@@ -187,7 +185,7 @@ hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
 end)
 
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, val)
-	local data = CrosshairDesigner.GetConvarData(convar)
+	local data, val = CrosshairDesigner.GetConvarData(convar)
 	cachedCross[data.id] = val
 
 	ply = LocalPlayer()
@@ -214,7 +212,7 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 		else
 			CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
 		end
-	end 
+	end
 	-- TTT crosshair is being handled directly in detour.lua
 	-- TFA hides with HUDShouldDraw CHudCrosshair
 end)

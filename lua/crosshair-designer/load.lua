@@ -28,6 +28,11 @@ else
 	include("draw.lua")
 	include("menu.lua")
 
+	-- Different method for hiding crosshair with remastered
+	local function UsingM9KRemastered()
+		return MMM_M9k_IsBaseInstalled
+	end
+
 	--[[
 		Setup the client convars and callbacks to verify values
 	]]--
@@ -299,7 +304,7 @@ else
 		Only one of these can be valid at once so the most
 		any one of these will be called is once per frame
 	]]--
-	CrosshairDesigner.AddSwepCheck("FA:S", 
+	CrosshairDesigner.AddSwepCheck("FA:S",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 5) == "fas2_" then
 				if wep.dt != nil and wep.dt.Status ~= nil then
@@ -309,14 +314,14 @@ else
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
+				CrosshairDesigner.GetBool("HideOnADS") and
 				wep.dt.Status == FAS_STAT_ADS
 			)
 		end
 	)
 
 	-- TFA
-	CrosshairDesigner.AddSwepCheck("TFA", 
+	CrosshairDesigner.AddSwepCheck("TFA",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 4) == "tfa_" then
 				if wep.GetIronSights ~= nil then
@@ -326,34 +331,53 @@ else
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
+				CrosshairDesigner.GetBool("HideOnADS") and
 				wep:GetIronSights()
 			)
 		end
 	)
 
-	-- M9k
-	CrosshairDesigner.AddSwepCheck("M9K", 
-		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 4) == "m9k_" then
-				if wep.GetIronsights ~= nil and
-					wep.IronSightsPos ~= nil and
-					wep.RunSightsPos ~= nil 
-					then return true
+	-- M9K is not listed as a setting since it doesn't draw its own crosshair
+	-- We only need to hide our crosshair when aiming down sights
+	-- M9k Remastered
+	if UsingM9KRemastered() then
+		CrosshairDesigner.AddSwepCheck("M9K",
+			function(ply, wep) -- ShouldUse
+				if string.Left(wep:GetClass(), 4) == "m9k_" then
+					return true
 				end
+			end,
+			function(ply, wep) -- ShouldDraw
+				return not (
+					CrosshairDesigner.GetBool("HideOnADS") and
+					wep.IronSightState != null and wep.IronSightState or wep:GetNWInt("ScopeState") > 0
+				)
 			end
-		end,
-		function(ply, wep) -- ShouldDraw
-			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
-				wep:GetIronsights() and -- returns true when running....
-				wep.IronSightsPos ~= wep.RunSightsPos -- so also check pos
-			)
-		end
-	)
+		)
+	-- M9k Legacy
+	else
+		CrosshairDesigner.AddSwepCheck("M9K",
+			function(ply, wep) -- ShouldUse
+				if string.Left(wep:GetClass(), 4) == "m9k_" then
+					if wep.GetIronsights ~= nil and
+						wep.IronSightsPos ~= nil and
+						wep.RunSightsPos ~= nil
+						then return true
+					end
+				end
+			end,
+			function(ply, wep) -- ShouldDraw
+				return not (
+					CrosshairDesigner.GetBool("HideOnADS") and
+					wep:GetIronsights() and -- returns true when running....
+					wep.IronSightsPos ~= wep.RunSightsPos -- so also check pos
+				)
+			end
+		)
+	end
 
 	-- CW
-	CrosshairDesigner.AddSwepCheck("CW", 
+	CrosshairDesigner.AddSwepCheck("CW",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 3) == "cw_" then
 				if wep.dt ~= nil and wep.dt.State != nil then
@@ -363,7 +387,7 @@ else
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
+				CrosshairDesigner.GetBool("HideOnADS") and
 				wep.dt.State == CW_AIMING
 			)
 		end

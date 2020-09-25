@@ -34,18 +34,18 @@ local dynamic = 0
 local hc_shootingvalue = 0
 local ply
 local hc_dynamiccorsshair = function()
-	
+
 	if not cachedCross["Dynamic"] or timer.Exists("HC_SmoothDynamics") then
 		timer.Destroy ("HC_SmoothDynamics")
 	end
-		
+
 	if cachedCross["Dynamic"] then
 		timer.Create( "HC_SmoothDynamics", 0.03, 0, function()
 			if not IsValid(ply) then return end
 
 			local hc_dynamicamount = cachedCross["DynamicSize"]
 			local speedzzz = ply:GetVelocity():Length()
-			
+
 			if ply:Health() > 0 and ply:GetActiveWeapon():IsValid() then
 				if ply:GetActiveWeapon():Clip1() > 0 then
 					local spedzLength = string.len(speedzzz)
@@ -53,15 +53,15 @@ local hc_dynamiccorsshair = function()
 
 					if speedzzz / spedzLength  < hc_dynamicamount and speedzzz / spedzLength > 3 then
 						dynamic = speedzzz / spedzLength 
-			
+
 					elseif speedzzz / spedzLength < 3 and inAttack and hc_shootingvalue < hc_dynamicamount / 3 then
 						hc_shootingvalue = hc_shootingvalue + 0.5
 						dynamic = hc_shootingvalue
-			
+
 					elseif speedzzz / spedzLength < 3 and !inAttack and hc_shootingvalue > 0 then
 						hc_shootingvalue = hc_shootingvalue - 0.5
 						dynamic = hc_shootingvalue
-			
+
 					elseif speedzzz / spedzLength < 4 and !inAttack and hc_shootingvalue < 1 then  ---- IN_ATTACK1 instead
 						dynamic = speedzzz / spedzLength
 					end
@@ -135,7 +135,7 @@ local Crosshair = function()
 			trace.filter = ply
 			traceResult = util.TraceLine(trace)
 		end
-			
+
 		local pos = traceResult.HitPos:ToScreen()
 		mx, my = pos.x, pos.y
 	else
@@ -153,7 +153,7 @@ local Crosshair = function()
 		local gapRight = math.floor(gap/2)
 
 		if cachedCross["UseArrow"] then
-			
+
 			--Arrows -- replace with draw poly? -- remove call overlay effect with low alpha
 			for i=1,cachedCross["Thickness"] do
 
@@ -169,7 +169,7 @@ local Crosshair = function()
 				else
 					surface.DrawLine(mx-stretch-length-gapRight, my-iLeft+stretch, mx-gapRight, my)-- left.top
 					surface.DrawLine(mx-iLeft+stretch, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom.left
-					
+
 					if cachedCross["Thickness"] % 2 == 0 and cachedCross["Thickness"] < 4 then
 						surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx, my-gapRight) -- top.right
 						surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my) -- right.top
@@ -178,8 +178,8 @@ local Crosshair = function()
 						surface.DrawLine(mx+stretch+length+gapRight, my-iRight-stretch, mx + gapRight, my) -- right.bottom
 					end
 				end
-				
-			end 
+
+			end
 
 		else
 
@@ -198,7 +198,7 @@ local Crosshair = function()
 				else
 					surface.DrawLine(mx-stretch-length-gapRight, my-iLeft+stretch, mx-gapRight, my-iLeft)-- left.top
 					surface.DrawLine(mx-iRight+stretch, my+length+stretch+gapRight, mx-iRight, my + gapRight) -- bottom.left
-					
+
 					if cachedCross["Thickness"] % 2 == 0 and cachedCross["Thickness"] < 4  then
 						surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx+iRight, my-gapRight) -- top.right
 						surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my+iLeft) -- right.top
@@ -229,14 +229,14 @@ end
 
 -- Update cached values
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, val)
-	local data = CrosshairDesigner.GetConvarData(convar)
-	cachedCross[data.id] = val	
+	local data, val = CrosshairDesigner.GetConvarData(convar)
+	cachedCross[data.id] = val
 
 	if data.id == "CircleRadius" or data.id == "CircleSegments" then
 		cachedCross.circle = generateCircle(
-			ScrW()/2, 
-			ScrH()/2, 
-			cachedCross["CircleRadius"], 
+			ScrW()/2,
+			ScrH()/2,
+			cachedCross["CircleRadius"],
 			cachedCross["CircleSegments"]
 		)
 	end
@@ -264,9 +264,9 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 	end
 
 	cachedCross.circle = generateCircle(
-		ScrW()/2, 
-		ScrH()/2, 
-		cachedCross["CircleRadius"], 
+		ScrW()/2,
+		ScrH()/2,
+		cachedCross["CircleRadius"],
 		cachedCross["CircleSegments"]
 	)
 
@@ -278,9 +278,9 @@ end)
 
 hook.Add("CrosshairDesigner_DetectedResolutionChange", "CenterCircle", function()
 	cachedCross.circle = generateCircle(
-		ScrW()/2, 
-		ScrH()/2, 
-		cachedCross["CircleRadius"], 
+		ScrW()/2,
+		ScrH()/2,
+		cachedCross["CircleRadius"],
 		cachedCross["CircleSegments"]
 	)
 end)
