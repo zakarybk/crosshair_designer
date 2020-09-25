@@ -106,7 +106,7 @@ UpdateVisibility = function(ply, wep) -- local
 end
 
 UpdateSWEPCheck = function(ply, newWep, oldWep) -- local
-	if currentCheck.OnRemove != nil and oldWep != nil then
+	if currentCheck.OnRemove ~= nil and oldWep ~= nil then
 		currentCheck.OnRemove(ply, oldWep)
 	end
 	
@@ -116,7 +116,7 @@ UpdateSWEPCheck = function(ply, newWep, oldWep) -- local
 			SWEPShouldDraw = check.ShouldDraw
 			currentCheck = check
 
-			if currentCheck.OnSet != nil then
+			if currentCheck.OnSet ~= nil then
 				currentCheck.OnSet(ply, newWep)
 			end
 

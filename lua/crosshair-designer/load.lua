@@ -57,31 +57,31 @@ else
 	CrosshairDesigner.AddSettings({ -- Must be in this order as it's the order the values are read from file
 		{
 			id="ShowHL2",
-			var="toggle_crosshair_hide", 
-			default="0", 
+			var="toggle_crosshair_hide",
+			default="0",
 			help="Show the half life crosshair",
 			title="Show HL2/TFA crosshair",
 			isBool=true
 		},
 		{
 			id="ShowCross",
-			var="toggle_crosshair", 
-			default="1", 
+			var="toggle_crosshair",
+			default="1",
 			help="Hide the custom crosshair",
 			title="Show custom crosshair",
 			isBool=true
 		},
 		{
 			id="HideOnADS",
-			var="cross_ads", 
-			default="1", 
+			var="cross_ads",
+			default="1",
 			help="Hide the custom crosshair when aiming down sights",
 			title="Hide when aiming down sights",
 			isBool=true
 		},
 		{
 			id="UseLine",
-			var="cross_line", 
+			var="cross_line",
 			default="1",
 			help="Use the line style for the crosshair",
 			title="Show crosshair lines",
@@ -319,7 +319,7 @@ else
 			help="Hide the TTT Ghost DM crosshair",
 			title="Hide the TTT Ghost DM crosshair",
 			isBool=true
-		},	
+		},
 	})
 
 	--[[
@@ -330,7 +330,7 @@ else
 		Only one of these can be valid at once so the most
 		any one of these will be called is once per frame
 	]]--
-	CrosshairDesigner.AddSwepCheck("FA:S", 
+	CrosshairDesigner.AddSwepCheck("FA:S",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 5) == "fas2_" then
 				if wep.dt != nil and wep.dt.Status ~= nil then
@@ -340,14 +340,14 @@ else
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
+				CrosshairDesigner.GetBool("HideOnADS") and
 				wep.dt.Status == FAS_STAT_ADS
 			)
 		end
 	)
 
 	-- TFA
-	CrosshairDesigner.AddSwepCheck("TFA", 
+	CrosshairDesigner.AddSwepCheck("TFA",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 4) == "tfa_" then
 				if wep.GetIronSights ~= nil then
@@ -357,26 +357,26 @@ else
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
+				CrosshairDesigner.GetBool("HideOnADS") and
 				wep:GetIronSights()
 			)
 		end
 	)
 
 	-- M9k
-	CrosshairDesigner.AddSwepCheck("M9K", 
+	CrosshairDesigner.AddSwepCheck("M9K",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 4) == "m9k_" then
 				if wep.GetIronsights ~= nil and
 					wep.IronSightsPos ~= nil and
-					wep.RunSightsPos ~= nil 
+					wep.RunSightsPos ~= nil
 					then return true
 				end
 			end
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
+				CrosshairDesigner.GetBool("HideOnADS") and
 				wep:GetIronsights() and -- returns true when running....
 				wep.IronSightsPos ~= wep.RunSightsPos -- so also check pos
 			)
@@ -399,7 +399,7 @@ else
 			)
 		end
 	)
-	
+
 	-- Ghost Death Match SWEPs
 	CrosshairDesigner.AddSwepCheck("GhostDM",
 		function(ply, wep) -- ShouldUse
@@ -411,7 +411,7 @@ else
 		end,
 		function(ply, wep) -- ShouldDraw
 			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and 
+				CrosshairDesigner.GetBool("HideOnADS") and
 				wep:GetIronSights()
 			)
 		end,
@@ -424,7 +424,7 @@ else
 		function(ply, wep) -- OnRemove
 			wep.DrawHUD = CrosshairDesigner.GhostDMCrosshair or wep.DrawHUD
 			CrosshairDesigner.GhostDMCrosshair = false
-		end,
+		end
 	)
 
 	-- Directory where everything is saved

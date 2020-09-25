@@ -37,13 +37,13 @@ local safeOrDefault = function(typeFunc, val, default)
 		val = typeFunc(val)
 	end
 
-	val, changed
+	return val, changed
 end
 
 CrosshairDesigner.SafeValue = function(id, val)
 	local setting = CrosshairDesigner.SettingAtID(id)
 	local changed = false
-	
+
 	assert(setting != nil, "Tried to make a safe value for a non-existant setting!" ..
 		" ( " + id + ") ")
 

@@ -123,7 +123,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	end
 
 	CrosshairDesigner.Sliders = {}
-	
+
 	-- Create sliders
 	for i, data in pairs(convarDatas) do
 		if not data.isBool and not data.isColour then
@@ -239,7 +239,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
         loadButton.DoClick = function()
         	CrosshairDesigner.Load(i)
 		end
-		
+
 		local saveButton = vgui.Create("DButton", dPanel)
         saveButton:SetText("Save")
         saveButton:Dock(RIGHT)
@@ -251,7 +251,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
         		CrosshairDesigner.Save(i)
         	end
 		end
-	
+
 	end
 
 	local toClipboard = vgui.Create("DButton", CrosshairDesigner.Sheet.Saving)

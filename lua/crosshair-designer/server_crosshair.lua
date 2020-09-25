@@ -1,6 +1,8 @@
-util.AddNetworkString("CrosshairDesigner_SetServerCrosshair")
-util.AddNetworkString("CrosshairDesigner_GetServerCrosshair")
-util.AddNetworkString("CrosshairDesigner_ExistsServerCrosshair")
+if SERVER then
+	util.AddNetworkString("CrosshairDesigner_SetServerCrosshair")
+	util.AddNetworkString("CrosshairDesigner_GetServerCrosshair")
+	util.AddNetworkString("CrosshairDesigner_ExistsServerCrosshair")
+end
 
 local canEditCheck = function(ply) return ply:IsSuperAdmin() end
 local serverCrosshair = false
@@ -12,12 +14,12 @@ CrosshairDesigner.CanEditServerCrosshair = function(ply) return canEditCheck(ply
 if CLIENT then
 
 	local useServerCross = CreateClientConVar(
-		"crosshairdesigner_allowservercrosshair", 
-		"1", 
-		true, 
+		"crosshairdesigner_allowservercrosshair",
+		"1",
+		true,
 		"When set, if the server has a custom crosshair then you will use their one instead."
 	)
-	cvars.AddChangeCallback("crosshairdesigner_allowservercrosshair", 
+	cvars.AddChangeCallback("crosshairdesigner_allowservercrosshair",
 		function(name, old, new)
     	if tobool(new) == true then
     		CrosshairDesigner.RequestServerCrosshair()
