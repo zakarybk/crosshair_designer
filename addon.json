@@ -1,11 +1,6 @@
 {
-	"title"		:	"Crosshair Designer",
-	"type"		:	"tool",
-	"tags"		:	[ "fun", "roleplay" ],
-	"ignore"	:
-	[
-		"*.md",
-		"*.jpeg",
-		"*.git*"
-	]
+"title" : "Crosshair Designer",
+"type" : "tool",
+"tags" : ["fun","roleplay"],
+"ignore" : ["*.psd", "*.vcproj", "*.svn*", "*.git*", "README.md", "icon.jpeg"]
 }
