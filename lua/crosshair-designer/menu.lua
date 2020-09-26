@@ -45,8 +45,8 @@ timer.Create("CrosshairDesigner.ResolutionChangeCheck", 1, 0, function()
 	if ScrW() ~= screenW or ScrH() ~= screenH then
 		if IsValid(CrosshairDesigner.Menu) then
 			CrosshairDesigner.OpenMenu(true) -- Updates menu size if already open
-			hook.Run("CrosshairDesigner_DetectedResolutionChange")
 		end
+		hook.Run("CrosshairDesigner_DetectedResolutionChange")
 	end
 end)
 
