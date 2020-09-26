@@ -9,5 +9,6 @@ echo "Creating GMA: "
 sh ./create-gma.sh
 
 echo "Uploading to the Workshop"
-"C:/Program Files (x86)/Steam/steamapps/common/GarrysMod/bin/gmpublish.exe" update -addon "./temp.gma" -id "590788321" -changes $1
+str="'$*'"
+"C:/Program Files (x86)/Steam/steamapps/common/GarrysMod/bin/gmpublish.exe" update -addon "./temp.gma" -id "590788321" -changes "$str"
 
