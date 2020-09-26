@@ -28,19 +28,6 @@ else
 	include("draw.lua")
 	include("menu.lua")
 
-	-- Different method for hiding crosshair with remastered
-	local function UsingM9KRemastered()
-		-- return MMM_M9k_IsBaseInstalled -- loaded too late
-		local remastered = false
-		for i, addon in pairs(engine.GetAddons()) do
-			if addon.wsid == "2169649722" then
-				remastered = addon.mounted
-				break
-			end
-		end
-		return remastered
-	end
-
 	--[[
 		Setup the client convars and callbacks to verify values
 	]]--
