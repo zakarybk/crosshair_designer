@@ -34,7 +34,7 @@ else
 		local remastered = false
 		for i, addon in pairs(engine.GetAddons()) do
 			if addon.wsid == "2169649722" then
-				remastered = true
+				remastered = addon.mounted
 				break
 			end
 		end
@@ -347,42 +347,33 @@ else
 
 	-- M9K is not listed as a setting since it doesn't draw its own crosshair
 	-- We only need to hide our crosshair when aiming down sights
-	-- M9k Remastered
-	if UsingM9KRemastered() then
-		CrosshairDesigner.AddSwepCheck("M9K",
-			function(ply, wep) -- ShouldUse
-				if string.Left(wep:GetClass(), 4) == "m9k_" then
-					return true
+	-- M9k Remastered + Legacy
+	CrosshairDesigner.AddSwepCheck("M9K",
+		function(ply, wep) -- ShouldUse
+			if string.Left(wep:GetClass(), 4) == "m9k_" then
+				if wep.GetIronsights ~= nil and
+					wep.IronSightsPos ~= nil and
+					wep.RunSightsPos ~= nil
+					then return true -- M9k Legacy
+				else
+					return true -- M9k Remastered
 				end
-			end,
-			function(ply, wep) -- ShouldDraw
-				return not (
-					CrosshairDesigner.GetBool("HideOnADS") and
-					(wep.IronSightState != nil and wep.IronSightState or wep:GetNWInt("ScopeState") > 0)
-				)
 			end
-		)
-	-- M9k Legacy
-	else
-		CrosshairDesigner.AddSwepCheck("M9K",
-			function(ply, wep) -- ShouldUse
-				if string.Left(wep:GetClass(), 4) == "m9k_" then
-					if wep.GetIronsights ~= nil and
-						wep.IronSightsPos ~= nil and
-						wep.RunSightsPos ~= nil
-						then return true
-					end
-				end
-			end,
-			function(ply, wep) -- ShouldDraw
-				return not (
-					CrosshairDesigner.GetBool("HideOnADS") and
-					wep:GetIronsights() and -- returns true when running....
-					wep.IronSightsPos ~= wep.RunSightsPos -- so also check pos
-				)
-			end
-		)
-	end
+		end,
+		function(ply, wep) -- ShouldDraw
+			return not (
+				-- Legacy
+				(not MMM_M9k_IsBaseInstalled and
+				CrosshairDesigner.GetBool("HideOnADS") and
+				wep:GetIronsights() and -- returns true when running....
+				wep.IronSightsPos ~= wep.RunSightsPos) or -- so also check pos
+				-- Remastered
+				(MMM_M9k_IsBaseInstalled and
+				CrosshairDesigner.GetBool("HideOnADS") and
+				(wep.IronSightState != nil and wep.IronSightState or wep:GetNWInt("ScopeState") > 0))
+			)
+		end
+	)
 
 	-- CW
 	CrosshairDesigner.AddSwepCheck("CW",
