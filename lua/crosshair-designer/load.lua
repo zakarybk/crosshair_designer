@@ -392,6 +392,21 @@ else
 		end
 	)
 
+	-- Scifi
+	CrosshairDesigner.AddSwepCheck("Scifi",
+		function(ply, wep) -- ShouldUse
+			if string.Left(wep:GetClass(), 4) == "sfw_" then
+				return wep.GetIronSights != nil
+			end
+		end,
+		function(ply, wep) -- ShouldDraw
+			return not (
+				CrosshairDesigner.GetBool("HideOnADS") and
+				wep:GetIronSights()
+			)
+		end
+	)
+
 	-- Directory where everything is saved
 	if not file.IsDir( "crosshair_designer", "DATA" ) then
 		file.CreateDir( "crosshair_designer", "DATA" )
