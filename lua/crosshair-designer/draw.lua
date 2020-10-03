@@ -215,10 +215,6 @@ local Crosshair = function()
 
 	end
 
-	-- Middle of screen
-	--surface.SetDrawColor(255,0,0,255)
-	--surface.DrawLine(ScrW() / 2, ScrH() / 2, (ScrW() / 2)+1, (ScrH() / 2)+1)
-
 	if cachedCross["UseCircle"] then
 		if cachedCross["CircleRadius"] == 1 then
 			-- Pixel perfect under the HL2 crosshair
