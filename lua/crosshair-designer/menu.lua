@@ -216,6 +216,40 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	    CrosshairDesigner.SetValue("TargetAlpha", colour.a)
 	end
 
+	-- Colour picker for outline
+	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
+    label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetText("Outline crosshair colour")
+    label:SetDark(1)
+    label:Dock(TOP)
+	label:DockMargin(0, 5, 0, 0)
+
+	local outlineColourPicker = vgui.Create("DColorMixer", CrosshairDesigner.ScrollPanel)
+    outlineColourPicker:SetPalette(true)
+    outlineColourPicker:SetAlphaBar(true)
+    outlineColourPicker:SetWangs(true)
+    outlineColourPicker:Dock(TOP)
+	outlineColourPicker:DockMargin(0, 5, 0, 0)
+    outlineColourPicker:SetColor(Color(
+    	CrosshairDesigner.GetInt("OutlineRed"),
+    	CrosshairDesigner.GetInt("OutlineGreen"),
+    	CrosshairDesigner.GetInt("OutlineBlue"),
+    	CrosshairDesigner.GetInt("OutlineAlpha")
+    ))
+    CrosshairDesigner.outlineColourPicker = outlineColourPicker
+
+    local targetConfirm = vgui.Create("DButton", CrosshairDesigner.ScrollPanel)
+    targetConfirm:SetText("Outline colour")
+    targetConfirm:Dock(TOP)
+	targetConfirm:DockMargin(0, 5, 0, 0)
+    targetConfirm.DoClick = function()
+	    local colour = outlineColourPicker:GetColor()
+	    CrosshairDesigner.SetValue("OutlineRed", colour.r)
+	    CrosshairDesigner.SetValue("OutlineGreen", colour.g)
+	    CrosshairDesigner.SetValue("OutlineBlue", colour.b)
+	    CrosshairDesigner.SetValue("OutlineAlpha", colour.a)
+	end
+
 	-- Saving menu now
 
 	for i=1, 10 do

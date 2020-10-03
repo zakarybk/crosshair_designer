@@ -291,6 +291,52 @@ else
 			title="Centre to player angles",
 			isBool=true
 		},
+
+		-- Outline
+		{
+			id="Outline",
+			var="crosshair_designer_outline",
+			default="0",
+			help="Outlines the crosshair",
+			title="Outline",
+			isBool=true
+		},
+		{
+			id="OutlineRed",
+			var="crosshair_designer_outline_r",
+			default="0",
+			help="Change the amount of red in the outline of the crosshair",
+			min=0,
+			max=255,
+			isColour=true,
+		},
+		{
+			id="OutlineGreen",
+			var="crosshair_designer_outline_g",
+			default="0",
+			help="Change the amount of green in the outline of the crosshair",
+			min=0,
+			max=255,
+			isColour=true,
+		},
+		{
+			id="OutlineBlue",
+			var="crosshair_designer_outline_b",
+			default="0",
+			help="Change the amount of blue in the outline of the crosshair",
+			min=0,
+			max=255,
+			isColour=true,
+		},
+		{
+			id="OutlineAlpha",
+			var="crosshair_designer_outline_a",
+			default="255",
+			help="Change the transparency of the outline of the crosshair",
+			min=0,
+			max=255,
+			isColour=true,
+		},
 	})
 
 	--[[
