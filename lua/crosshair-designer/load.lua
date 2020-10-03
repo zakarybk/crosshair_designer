@@ -8,6 +8,7 @@ if SERVER then
 	AddCSLuaFile("hide.lua")
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
+	AddCSLuaFile("disable.lua")
 
 	--[[
 		Chat command to open menu - OnPlayerChat wasn't working in TTT
@@ -27,6 +28,7 @@ else
 	include("hide.lua")
 	include("draw.lua")
 	include("menu.lua")
+	include("disable.lua")
 
 	--[[
 		Setup the client convars and callbacks to verify values
@@ -393,6 +395,14 @@ else
 			)
 		end
 	)
+
+	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
+	local gm = engine.ActiveGamemode()
+	if gm == "prop_hunt" then
+		CrosshairDesigner.DisableFeature("ColOnTarget", false, "Giving away positions in Prop Hunt!")
+	elseif gm == "guesswho" then
+		CrosshairDesigner.DisableFeature("ColOnTarget", false, "Giving away position in Guess Who!")
+	end
 
 	-- Directory where everything is saved
 	if not file.IsDir( "crosshair_designer", "DATA" ) then

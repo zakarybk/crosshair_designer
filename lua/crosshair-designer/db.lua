@@ -107,6 +107,29 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 		convarData.var,
 		function(convarName, oldVal, newVal)
 
+			-- Override value
+			local forceVal, reason = hook.Run("CrosshairDesigner_OverrideValue", convarName)
+
+			if forceVal != nil then
+				local name = CrosshairDesigner.GetConvarData(convarName).title
+				if reason != nil then
+					Derma_Message(
+						"'" .. name .. "' has been disabled for:\n" .. reason, 
+						"Crosshair Designer disabled setting", 
+						"OK"
+					)
+				else
+					Derma_Message(
+						"'" .. name .. "' has been disabled",
+						"Crosshair Designer disabled setting", 
+						"OK"
+					)
+				end
+				return -- Stop execution
+			end
+
+			-- Update value
+
 			local adjusted = CrosshairDesigner.ClampConvar(convarData, oldVal, newVal)
 			local val
 
@@ -182,7 +205,16 @@ CrosshairDesigner.GetInt = function(id)
 end
 
 CrosshairDesigner.GetBool = function(id)
-	return (convars[id] ~= nil and convars[id].var:GetBool()) or false
+	if convars[id] ~= nil then
+		local forceVal, reason = hook.Run("CrosshairDesigner_OverrideValue", convars[id].data.var)
+		if forceVal ~= nil then
+			return forceVal
+		else
+			return convars[id].var:GetBool()
+		end
+	else
+		return false
+	end
 end
 
 CrosshairDesigner.SetValue = function(id, val)

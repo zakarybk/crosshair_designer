@@ -256,10 +256,13 @@ end)
 -- Load cached values
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", function(tbl)
 	for i, data in pairs(CrosshairDesigner.GetConvarDatas()) do
-		if data.isBool then
-			cachedCross[data.id] = CrosshairDesigner.GetBool(data.id)
-		else
-			cachedCross[data.id] = CrosshairDesigner.GetInt(data.id)
+		// Do not update if the value has already been set
+		if cachedCross[data.id] == nil then
+			if data.isBool then
+				cachedCross[data.id] = CrosshairDesigner.GetBool(data.id)
+			else
+				cachedCross[data.id] = CrosshairDesigner.GetInt(data.id)
+			end
 		end
 	end
 
@@ -269,6 +272,7 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 		cachedCross["CircleRadius"],
 		cachedCross["CircleSegments"]
 	)
+
 
 	ply = LocalPlayer()
 
