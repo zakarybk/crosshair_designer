@@ -256,7 +256,7 @@ end)
 -- Load cached values
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", function(tbl)
 	for i, data in pairs(CrosshairDesigner.GetConvarDatas()) do
-		// Do not update if the value has already been set
+		-- Do not update if the value has already been set
 		if cachedCross[data.id] == nil then
 			if data.isBool then
 				cachedCross[data.id] = CrosshairDesigner.GetBool(data.id)
