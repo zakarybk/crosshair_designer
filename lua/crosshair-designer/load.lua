@@ -137,7 +137,7 @@ else
 			default="7",
 			help="Change the length of the lines in the crosshair",
 			title="Length of lines",
-			min=0,
+			min=2,
 			max=100,
 		},
 		{
