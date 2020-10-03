@@ -91,6 +91,7 @@ local Crosshair = function()
 	-- Conditions for crosshair to be drawn
 	shouldDraw = hook.Run("HUDShouldDraw", "CrosshairDesiger_Crosshair")
 	ply = LocalPlayer()
+	local drawCol = Color(0,0,0,255)
 	setColour, alreadyTraced = false, false
 
 	if not shouldDraw or not IsValid(ply) then
@@ -107,7 +108,7 @@ local Crosshair = function()
 
 		target = traceResult.Entity
 		if IsValid(target) and (target:IsPlayer() or target:IsNPC()) then
-			surface.SetDrawColor(
+			drawCol = Color(
 				cachedCross["TargetRed"],
 				cachedCross["TargetGreen"],
 				cachedCross["TargetBlue"],
@@ -119,7 +120,7 @@ local Crosshair = function()
 
 	if not setColour then
 		-- Cross Colour
-		surface.SetDrawColor(
+		drawCol = Color(
 			cachedCross["Red"],
 			cachedCross["Green"],
 			cachedCross["Blue"],
@@ -143,10 +144,12 @@ local Crosshair = function()
 		my = ScrH() / 2
 	end
 
+	surface.SetDrawColor(drawCol)
+
 	if cachedCross["UseLine"] then
 
 		local gap = cachedCross["Gap"] + dynamic
-		local length = cachedCross["Length"]
+		local length = cachedCross["Length"] - 1
 		local stretch = cachedCross["Stretch"]
 
 		local gapLeft = math.floor((gap/2)) + 1
@@ -211,11 +214,42 @@ local Crosshair = function()
 
 				end
 			end
+
+			surface.SetDrawColor(0,0,0,255)
+
+			local topOffset = math.floor(cachedCross["Thickness"]/2) + 1
+			local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
+
+			-- Outline left
+			surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft, my-topOffset) -- top
+			surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-gapLeft, my+bottomOffset) -- bottom
+			surface.DrawLine(mx-stretch-length-gapLeft-1, my+stretch+bottomOffset, mx-stretch-length-gapLeft-1, my-topOffset+stretch) -- left
+			surface.DrawLine(mx-gapLeft+1, my+bottomOffset, mx-gapLeft+1, my-topOffset) -- right
+
+			-- -- Outline bottom
+			surface.DrawLine(mx-topOffset, my+gapLeft-1, mx+bottomOffset, my+gapLeft-1) -- top
+			surface.DrawLine(mx-topOffset+stretch, my+gapLeft+stretch+length+1, mx+bottomOffset+stretch, my+gapLeft+stretch+length+1) -- bottom
+			surface.DrawLine(mx+stretch-topOffset, my+length+stretch+gapLeft, mx-topOffset, my+gapLeft) -- left
+			surface.DrawLine(mx+stretch+bottomOffset, my+length+stretch+gapLeft, mx+bottomOffset, my+gapLeft) -- right
+
+			-- -- Outline right
+			surface.DrawLine(mx+stretch+length+gapRight, my-stretch-bottomOffset, mx+gapRight, my-bottomOffset) -- top
+			surface.DrawLine(mx+stretch+length+gapRight, my-stretch+topOffset, mx+gapRight, my+topOffset) -- bottom
+			surface.DrawLine(mx+gapRight-1, my-bottomOffset, mx+gapRight-1, my+topOffset) -- left
+			surface.DrawLine(mx+stretch+length+gapRight+1, my-stretch-bottomOffset, mx+gapRight+length+stretch+1, my+topOffset-stretch) -- right
+
+			-- -- Outline top
+			surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight-1, mx+topOffset-stretch, my-gapRight-length-stretch-1) -- top
+			surface.DrawLine(mx-bottomOffset, my-gapRight+1, mx+topOffset, my-gapRight+1) -- bottom
+			surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx-bottomOffset, my-gapRight) -- left
+			surface.DrawLine(mx-stretch+topOffset, my-length-stretch-gapRight, mx+topOffset, my-gapRight) -- right
+
 		end
 
 	end
 
 	if cachedCross["UseCircle"] then
+		surface.SetDrawColor(drawCol)
 		if cachedCross["CircleRadius"] == 1 then
 			-- Pixel perfect under the HL2 crosshair
 			surface.DrawRect(mx, my, 1, 1)
