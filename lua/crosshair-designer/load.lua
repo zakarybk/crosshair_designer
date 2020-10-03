@@ -350,7 +350,7 @@ else
 	CrosshairDesigner.AddSwepCheck("FA:S",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 5) == "fas2_" then
-				if wep.dt != nil and wep.dt.Status ~= nil then
+				if wep.dt ~= nil and wep.dt.Status ~= nil then
 					return true
 				end
 			end
@@ -405,7 +405,7 @@ else
 				-- Remastered
 				(MMM_M9k_IsBaseInstalled and
 				CrosshairDesigner.GetBool("HideOnADS") and
-				(wep.IronSightState != nil and wep.IronSightState or wep:GetNWInt("ScopeState") > 0))
+				(wep.IronSightState ~= nil and wep.IronSightState or wep:GetNWInt("ScopeState") > 0))
 			)
 		end
 	)
@@ -414,7 +414,7 @@ else
 	CrosshairDesigner.AddSwepCheck("CW",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 3) == "cw_" then
-				if wep.dt ~= nil and wep.dt.State != nil then
+				if wep.dt ~= nil and wep.dt.State ~= nil then
 					return true
 				end
 			end
@@ -431,7 +431,7 @@ else
 	CrosshairDesigner.AddSwepCheck("Scifi",
 		function(ply, wep) -- ShouldUse
 			if string.Left(wep:GetClass(), 4) == "sfw_" then
-				return wep.GetIronSights != nil
+				return wep.GetIronSights ~= nil
 			end
 		end,
 		function(ply, wep) -- ShouldDraw

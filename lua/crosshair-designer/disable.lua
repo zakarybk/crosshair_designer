@@ -23,7 +23,7 @@ CrosshairDesigner.EnableFeature = function(convar)
 end
 
 hook.Add("CrosshairDesigner_OverrideValue", "CrosshairDesigner_DisableFeature", function(convar)
-	if disabled[convar] != nil then
+	if disabled[convar] ~= nil then
 		return disabled[convar].forceVal, disabled[convar].reason
 	end
 end)

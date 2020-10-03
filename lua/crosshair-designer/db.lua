@@ -116,9 +116,9 @@ CrosshairDesigner.AddConvarCallback = function(convarData)
 			-- Override value
 			local forceVal, reason = hook.Run("CrosshairDesigner_OverrideValue", convarName)
 
-			if forceVal != nil then
+			if forceVal ~= nil then
 				local name = CrosshairDesigner.GetConvarData(convarName).title
-				if reason != nil then
+				if reason ~= nil then
 					Derma_Message(
 						"'" .. name .. "' has been disabled for:\n" .. reason, 
 						"Crosshair Designer disabled setting", 
