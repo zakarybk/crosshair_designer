@@ -146,7 +146,7 @@ else
 			default="3",
 			help="Change the length of the lines in the crosshair",
 			title="Thickness of lines",
-			min=0,
+			min=1,
 			max=100,
 		},
 		{

@@ -221,8 +221,19 @@ local Crosshair = function()
 
 	if cachedCross["UseCircle"] then
 		if cachedCross["CircleRadius"] == 1 then
-			surface.DrawLine(ScrW() / 2, ScrH() / 2, (ScrW() / 2)+1, (ScrH() / 2)+1)
+			-- Pixel perfect under the HL2 crosshair
+			surface.DrawRect(mx, my, 1, 1)
 		else
+			-- If the circle pos is based off of tracing, 
+			-- then it needs updating every frame
+			if cachedCross["TraceDraw"] then
+				generateCircle(
+					ScrW()/2-1,
+					ScrH()/2+1,
+					cachedCross["CircleRadius"],
+					cachedCross["CircleSegments"]
+				)
+			end
 			draw.NoTexture()
 			surface.DrawPoly(cachedCross.circle)
 		end
@@ -237,8 +248,8 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 
 	if data.id == "CircleRadius" or data.id == "CircleSegments" then
 		cachedCross.circle = generateCircle(
-			ScrW()/2,
-			ScrH()/2,
+			ScrW()/2-1,
+			ScrH()/2+1,
 			cachedCross["CircleRadius"],
 			cachedCross["CircleSegments"]
 		)
@@ -270,8 +281,8 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 	end
 
 	cachedCross.circle = generateCircle(
-		ScrW()/2,
-		ScrH()/2,
+		ScrW()/2-1,
+		ScrH()/2+1,
 		cachedCross["CircleRadius"],
 		cachedCross["CircleSegments"]
 	)
@@ -285,8 +296,8 @@ end)
 
 hook.Add("CrosshairDesigner_DetectedResolutionChange", "CenterCircle", function()
 	cachedCross.circle = generateCircle(
-		ScrW()/2,
-		ScrH()/2,
+		ScrW()/2-1,
+		ScrH()/2+1,
 		cachedCross["CircleRadius"],
 		cachedCross["CircleSegments"]
 	)
