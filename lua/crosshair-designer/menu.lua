@@ -239,11 +239,11 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
     ))
     CrosshairDesigner.outlineColourPicker = outlineColourPicker
 
-    local targetConfirm = vgui.Create("DButton", CrosshairDesigner.ScrollPanel)
-    targetConfirm:SetText("Outline colour")
-    targetConfirm:Dock(TOP)
-	targetConfirm:DockMargin(0, 5, 0, 0)
-    targetConfirm.DoClick = function()
+    local outlineConfirm = vgui.Create("DButton", CrosshairDesigner.ScrollPanel)
+    outlineConfirm:SetText("Outline colour")
+    outlineConfirm:Dock(TOP)
+	outlineConfirm:DockMargin(0, 5, 0, 0)
+    outlineConfirm.DoClick = function()
 	    local colour = outlineColourPicker:GetColor()
 	    CrosshairDesigner.SetValue("OutlineRed", colour.r)
 	    CrosshairDesigner.SetValue("OutlineGreen", colour.g)
@@ -354,6 +354,13 @@ hook.Add("CrosshairDesigner_CrosshairLoaded", "UpdateMenu", function()
     	CrosshairDesigner.GetInt("TargetGreen"),
     	CrosshairDesigner.GetInt("TargetBlue"),
     	CrosshairDesigner.GetInt("TargetAlpha")
+    ))
+
+    CrosshairDesigner.outlineColourPicker:SetColor(Color(
+    	CrosshairDesigner.GetInt("OutlineRed"),
+    	CrosshairDesigner.GetInt("OutlineGreen"),
+    	CrosshairDesigner.GetInt("OutlineBlue"),
+    	CrosshairDesigner.GetInt("OutlineAlpha")
     ))
 end)
 
