@@ -139,7 +139,7 @@ local Crosshair = function()
 		local pos = traceResult.HitPos:ToScreen()
 		mx, my = pos.x, pos.y
 	else
-		mx = ScrW() / 2
+		mx = (ScrW() / 2) - 1
 		my = ScrH() / 2
 	end
 
@@ -149,34 +149,39 @@ local Crosshair = function()
 		local length = cachedCross["Length"]
 		local stretch = cachedCross["Stretch"]
 
-		local gapLeft = (gap/2)
-		local gapRight = math.floor(gap/2)
+		local gapLeft = math.floor((gap/2)) + 1
+		local gapRight = math.ceil(gap/2)
+
+		-- Draw the inital lines
+		surface.DrawLine(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft, my) -- left
+		surface.DrawLine(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom
+
+		surface.DrawLine(mx+stretch+length+gapRight, my-stretch, mx+gapRight, my) -- right
+		surface.DrawLine(mx-stretch, my-length-stretch-gapRight, mx, my-gapRight) -- top
 
 		if cachedCross["UseArrow"] then
 
-			--Arrows -- replace with draw poly? -- remove call overlay effect with low alpha
-			for i=1,cachedCross["Thickness"] do
+			--Arrows
+			for i=2,cachedCross["Thickness"] do
 
-				local iLeft = (i/2)
-				local iRight = math.floor(i/2)
+				local offset = math.floor(i/2)
 
-				if i%2==1 then
-					surface.DrawLine(mx-stretch-length-gapRight, my+iRight+stretch, mx-gapRight, my)-- left.bottom
-					surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my) -- right.top
+				if i % 2 == 0 then
+					-- Draw clockwise on other side of the line
+					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my) -- left
+					surface.DrawLine(mx+stretch-offset, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom
 
-					surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx, my-gapRight) -- top.right
-					surface.DrawLine(mx+iRight+stretch, my+length+stretch+gapRight, mx, my+gapRight) -- bottom.right
+					surface.DrawLine(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my) -- right
+					surface.DrawLine(mx-stretch+offset, my-length-stretch-gapRight, mx, my-gapRight) -- top
+
 				else
-					surface.DrawLine(mx-stretch-length-gapRight, my-iLeft+stretch, mx-gapRight, my)-- left.top
-					surface.DrawLine(mx-iLeft+stretch, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom.left
+					-- Draw anti-clockwise on other side of the line
+					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my) -- left
+					surface.DrawLine(mx+stretch+offset, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom
 
-					if cachedCross["Thickness"] % 2 == 0 and cachedCross["Thickness"] < 4 then
-						surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx, my-gapRight) -- top.right
-						surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my) -- right.top
-					else
-						surface.DrawLine(mx-iLeft-stretch, my-length-stretch-gapRight, mx, my-gapRight) -- top.left
-						surface.DrawLine(mx+stretch+length+gapRight, my-iRight-stretch, mx + gapRight, my) -- right.bottom
-					end
+					surface.DrawLine(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my) -- right
+					surface.DrawLine(mx-stretch-offset, my-length-stretch-gapRight, mx, my-gapRight) -- top
+
 				end
 
 			end
@@ -184,28 +189,26 @@ local Crosshair = function()
 		else
 
 			--Thickness
-			for i=1,cachedCross["Thickness"] do
+			for i=2,cachedCross["Thickness"] do
 
-				local iLeft = (i/2)
-				local iRight = math.floor(i/2)
+				local offset = math.floor(i/2)
 
-				if i%2==1 then
-					surface.DrawLine(mx-stretch-length-gapRight, my+iRight+stretch, mx-gapRight, my+iRight)-- left.bottom
-					surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my+iLeft) -- right.top
+				if i % 2 == 0 then
+					-- Draw clockwise on other side of the line
+					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my-offset) -- left
+					surface.DrawLine(mx+stretch-offset, my+length+stretch+gapLeft, mx-offset, my+gapLeft) -- bottom
 
-					surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx+iRight, my-gapRight) -- top.right
-					surface.DrawLine(mx+iRight+stretch, my+length+stretch+gapRight, mx+iRight, my+gapRight) -- bottom.right
+					surface.DrawLine(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my+offset) -- right
+					surface.DrawLine(mx-stretch+offset, my-length-stretch-gapRight, mx+offset, my-gapRight) -- top
+
 				else
-					surface.DrawLine(mx-stretch-length-gapRight, my-iLeft+stretch, mx-gapRight, my-iLeft)-- left.top
-					surface.DrawLine(mx-iRight+stretch, my+length+stretch+gapRight, mx-iRight, my + gapRight) -- bottom.left
+					-- Draw anti-clockwise on other side of the line
+					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my+offset) -- left
+					surface.DrawLine(mx+stretch+offset, my+length+stretch+gapLeft, mx+offset, my+gapLeft) -- bottom
 
-					if cachedCross["Thickness"] % 2 == 0 and cachedCross["Thickness"] < 4  then
-						surface.DrawLine(mx+iRight-stretch, my-length-stretch-gapRight, mx+iRight, my-gapRight) -- top.right
-						surface.DrawLine(mx+stretch+length+gapLeft, my+iLeft-stretch, mx+gapLeft, my+iLeft) -- right.top
-					else
-						surface.DrawLine(mx-iLeft-stretch, my-length-stretch-gapRight, mx-iLeft, my-gapRight) -- top.left
-						surface.DrawLine(mx+stretch+length+gapLeft, my-iRight-stretch, mx + gapRight, my-iRight) -- right.bottom
-					end
+					surface.DrawLine(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my-offset) -- right
+					surface.DrawLine(mx-stretch-offset, my-length-stretch-gapRight, mx-offset, my-gapRight) -- top
+
 				end
 			end
 		end
