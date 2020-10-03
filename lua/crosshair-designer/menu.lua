@@ -119,6 +119,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	        checkBox:SetConVar(data.var)
 	        checkBox:Dock( TOP )
 			checkBox:DockMargin( 0, 5, 0, 0 )
+			checkBox:SetTooltip(data.help)
 	    end
 	end
 
@@ -219,7 +220,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	-- Colour picker for outline
 	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
     label:SetTextColor(Color(255, 255, 255, 255))
-    label:SetText("Outline crosshair colour")
+    label:SetText("Outline colour (requires outline enabled)")
     label:SetDark(1)
     label:Dock(TOP)
 	label:DockMargin(0, 5, 0, 0)
