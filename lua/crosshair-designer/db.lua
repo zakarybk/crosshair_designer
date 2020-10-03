@@ -52,14 +52,20 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 
 	if strings then
 		local i = 1
-		local count = math.min(#strings, #indexed)
+		local count = #indexed
 
 		timer.Create( "CrosshairDesigner_StaggeredSettings", 0.05, count, function()
 
 			local id = CrosshairDesigner.ConvarDataAtIndex(i)
 
 			if id then
-				CrosshairDesigner.SetValue(id.data.var, strings[i])
+				-- If a setting was found in the save, use it
+				if strings[i] != nil then
+					CrosshairDesigner.SetValue(id.data.var, strings[i])
+				else
+				-- Otherwise use the default value
+					CrosshairDesigner.SetValue(id.data.var, id.data.default)
+				end
 			end
 
 			i = i + 1
