@@ -189,6 +189,41 @@ local Crosshair = function()
 
 			end
 
+			-- Outline for arrow crosshair
+			if cachedCross["Outline"] then
+
+				surface.SetDrawColor(
+					cachedCross["OutlineRed"],
+					cachedCross["OutlineGreen"],
+					cachedCross["OutlineBlue"],
+					cachedCross["OutlineAlpha"]
+				)
+
+				local topOffset = math.floor(cachedCross["Thickness"]/2) + 1
+				local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
+
+				-- Outline left
+				surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft, my) -- top
+				surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-gapLeft, my) -- bottom
+				surface.DrawLine(mx-stretch-length-gapLeft-1, my+stretch+bottomOffset, mx-stretch-length-gapLeft-1, my-topOffset+stretch) -- left
+
+				-- Outline bottom
+				surface.DrawLine(mx-topOffset+stretch, my+gapLeft+stretch+length+1, mx+bottomOffset+stretch, my+gapLeft+stretch+length+1) -- bottom
+				surface.DrawLine(mx+stretch-topOffset, my+length+stretch+gapLeft, mx, my+gapLeft) -- left
+				surface.DrawLine(mx+stretch+bottomOffset, my+length+stretch+gapLeft, mx, my+gapLeft) -- right
+
+				-- Outline right
+				surface.DrawLine(mx+stretch+length+gapRight, my-stretch-bottomOffset, mx+gapRight, my) -- top
+				surface.DrawLine(mx+stretch+length+gapRight, my-stretch+topOffset, mx+gapRight, my) -- bottom
+				surface.DrawLine(mx+stretch+length+gapRight+1, my-stretch-bottomOffset, mx+gapRight+length+stretch+1, my+topOffset-stretch) -- right
+
+				-- Outline top
+				surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight-1, mx+topOffset-stretch, my-gapRight-length-stretch-1) -- top
+				surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx, my-gapRight) -- left
+				surface.DrawLine(mx-stretch+topOffset, my-length-stretch-gapRight, mx, my-gapRight) -- right
+
+			end
+
 		else
 
 			--Thickness
@@ -215,6 +250,7 @@ local Crosshair = function()
 				end
 			end
 
+			-- Outline for rectangle crosshair
 			if cachedCross["Outline"] then
 
 				surface.SetDrawColor(
