@@ -1,4 +1,5 @@
 local cachedCross = {}
+local polys
 
 local generateCircle = function(x, y, radius, seg)
 	local cir = {}
@@ -107,6 +108,152 @@ local function drawRotated(px, py, ox, oy, screenCentre, rotation)
 	surface.DrawLine(lineStartX, lineStartY, lineEndX, lineEndY)
 end
 
+local function generatePolys()
+	local gap = cachedCross["Gap"] + dynamic
+	local length = cachedCross["Length"]
+	local rotation = math.rad(cachedCross["Rotation"])
+
+	local gapLeft = math.floor((gap/2)) + 1
+	local gapRight = math.ceil(gap/2)
+	local topOffset = math.floor(cachedCross["Thickness"]/2) + 1
+	local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
+
+	local boolNum = {["false"] = 0, ["true"] = 1, ["nil"] = 0}
+	local fillOutline = boolNum[tostring(cachedCross["Outline"])]
+
+	-- Function to call this needs to translate the poly
+	local mx = 0
+	local my = 0
+	local screenCentre = Vector(0, 0)
+
+	local polys = {}
+
+	if cachedCross["UseArrow"] then
+
+		-- left
+		local x1, y1 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		local x2, y2 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		local x3, y3 = rotateAroundPoint(Vector(mx-gapLeft, my), rotation, screenCentre) -- top
+		local x4, y4 = rotateAroundPoint(Vector(mx-gapLeft, my), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+		-- bottom
+		x1, y1 = rotateAroundPoint(Vector(mx-topOffset+1, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
+		x2, y2 = rotateAroundPoint(Vector(mx, my+gapLeft), rotation, screenCentre) -- top
+		x3, y3 = rotateAroundPoint(Vector(mx, my+gapLeft), rotation, screenCentre) -- top
+		x4, y4 = rotateAroundPoint(Vector(mx+bottomOffset, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+		-- right
+		x1, y1 = rotateAroundPoint(Vector(mx+gapRight, my), rotation, screenCentre) -- bottom
+		x2, y2 = rotateAroundPoint(Vector(mx+gapRight, my), rotation, screenCentre) -- top
+		x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-topOffset+1), rotation, screenCentre) -- top
+		x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+		-- top
+		x1, y1 = rotateAroundPoint(Vector(mx, my-gapRight+1), rotation, screenCentre) -- bottom
+		x2, y2 = rotateAroundPoint(Vector(mx-bottomOffset+1, my-length-gapRight+1-fillOutline), rotation, screenCentre) -- top
+		x3, y3 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight-length+1-fillOutline), rotation, screenCentre) -- top
+		x4, y4 = rotateAroundPoint(Vector(mx, my-gapRight+1), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+	else
+
+		-- left
+		local x1, y1 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		local x2, y2 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		local x3, y3 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		local x4, y4 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+		-- bottom
+		x1, y1 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
+		x2, y2 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
+		x3, y3 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
+		x4, y4 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+		-- right
+		x1, y1 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		x2, y2 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+		-- top
+		x1, y1 = rotateAroundPoint(Vector(mx-bottomOffset+1-fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
+		x2, y2 = rotateAroundPoint(Vector(mx-bottomOffset+1-fillOutline, my-length-gapRight+1-fillOutline), rotation, screenCentre) -- top
+		x3, y3 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight-length+1-fillOutline), rotation, screenCentre) -- top
+		x4, y4 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
+		table.insert(polys, {
+			{x = x1, y = y1},
+			{x = x2, y = y2},
+			{x = x3, y = y3},
+			{x = x4, y = y4}
+		})
+
+	end
+
+	return polys
+end
+
+local function generateLines()
+	local lines = {}
+end
+
+local function generateOutline()
+	local lines = {}
+end
+
+local function translatePolys(polys, newPos)
+	local translated = {}
+
+	for k, tbl in pairs(polys) do
+		translated[k] = {}
+		for _, pos in pairs(tbl) do
+			table.insert(translated[k], {x = pos.x + newPos.x, y = pos.y + newPos.y})
+		end
+	end
+
+	return translated
+end
+
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
@@ -167,7 +314,7 @@ local Crosshair = function()
 
 	surface.SetDrawColor(0,0,0,255)
 
-	local rotation = math.rad(45) -- -45
+	local rotation = math.rad(0) -- -45
 	local screenCentre = Vector(mx, my)
 
 	surface.SetDrawColor(drawCol)
@@ -189,72 +336,74 @@ local Crosshair = function()
 		surface.SetDrawColor( 255, 255, 0, 255 )
 		draw.NoTexture()
 
-		-- left
+		-- -- left
+		-- local x1, y1 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		-- local x2, y2 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		-- local x3, y3 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		-- local x4, y4 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
 		-- surface.DrawPoly({
-		-- 	{x = mx-stretch-length-gapLeft, y = my+stretch+bottomOffset}, -- bottom
-		-- 	{x = mx-stretch-length-gapLeft, y = my+stretch-topOffset}, -- top
-		-- 	{x = mx-gapLeft, y = my-topOffset}, -- top
-		-- 	{x = mx-gapLeft, y = my+bottomOffset} -- bottom
+		-- 	{x = x1, y = y1},
+		-- 	{x = x2, y = y2},
+		-- 	{x = x3, y = y3},
+		-- 	{x = x4, y = y4}
 		-- })
 
-		-- left
-		local x1, y1 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-		local x2, y2 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
-		local x3, y3 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
-		local x4, y4 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-		surface.DrawPoly({
-			{x = x1, y = y1},
-			{x = x2, y = y2},
-			{x = x3, y = y3},
-			{x = x4, y = y4}
-		})
+		-- -- bottom
+		-- x1, y1 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
+		-- x2, y2 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
+		-- x3, y3 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
+		-- x4, y4 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
+		-- surface.DrawPoly({
+		-- 	{x = x1, y = y1},
+		-- 	{x = x2, y = y2},
+		-- 	{x = x3, y = y3},
+		-- 	{x = x4, y = y4}
+		-- })
 
-		-- bottom
-		x1, y1 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
-		x2, y2 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
-		x3, y3 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
-		x4, y4 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
-		surface.DrawPoly({
-			{x = x1, y = y1},
-			{x = x2, y = y2},
-			{x = x3, y = y3},
-			{x = x4, y = y4}
-		})
+		-- -- right
+		-- x1, y1 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		-- x2, y2 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		-- x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
+		-- x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
+		-- surface.DrawPoly({
+		-- 	{x = x1, y = y1},
+		-- 	{x = x2, y = y2},
+		-- 	{x = x3, y = y3},
+		-- 	{x = x4, y = y4}
+		-- })
 
-		-- right
-		x1, y1 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-		x2, y2 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
-		x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
-		x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-		surface.DrawPoly({
-			{x = x1, y = y1},
-			{x = x2, y = y2},
-			{x = x3, y = y3},
-			{x = x4, y = y4}
-		})
+		-- -- top
+		-- x1, y1 = rotateAroundPoint(Vector(mx-bottomOffset+1-fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
+		-- x2, y2 = rotateAroundPoint(Vector(mx-stretch-bottomOffset+1-fillOutline, my-length-stretch-gapRight+1-fillOutline), rotation, screenCentre) -- top
+		-- x3, y3 = rotateAroundPoint(Vector(mx+topOffset-stretch+fillOutline, my-gapRight-length-stretch+1-fillOutline), rotation, screenCentre) -- top
+		-- x4, y4 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
+		-- surface.DrawPoly({
+		-- 	{x = x1, y = y1},
+		-- 	{x = x2, y = y2},
+		-- 	{x = x3, y = y3},
+		-- 	{x = x4, y = y4}
+		-- })
 
-		-- top
-		x1, y1 = rotateAroundPoint(Vector(mx-bottomOffset+1-fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
-		x2, y2 = rotateAroundPoint(Vector(mx-stretch-bottomOffset+1-fillOutline, my-length-stretch-gapRight+1-fillOutline), rotation, screenCentre) -- top
-		x3, y3 = rotateAroundPoint(Vector(mx+topOffset-stretch+fillOutline, my-gapRight-length-stretch+1-fillOutline), rotation, screenCentre) -- top
-		x4, y4 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
-		surface.DrawPoly({
-			{x = x1, y = y1},
-			{x = x2, y = y2},
-			{x = x3, y = y3},
-			{x = x4, y = y4}
-		})
+		if cachedCross["FillDraw"] then
 
-		--surface.SetDrawColor(drawCol)
+			polys2 = translatePolys(polys, screenCentre)
+			-- PrintTable(polys)
+			for k, v in pairs(polys2) do
+				surface.DrawPoly(v)
+			end
+
+		end
+
+		surface.SetDrawColor(drawCol)
 
 		--surface.SetDrawColor( 255, 255, 0, 0 )
 
 		-- Draw the inital lines
-		drawRotated(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft, my, screenCentre, rotation) -- left
-		drawRotated(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- bottom
+		drawRotated(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft+1, my, screenCentre, rotation) -- left
+		drawRotated(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft-1, screenCentre, rotation) -- bottom
 
-		drawRotated(mx+stretch+length+gapRight, my-stretch, mx+gapRight, my, screenCentre, rotation) -- right
-		drawRotated(mx-stretch, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- top
+		drawRotated(mx+stretch+length+gapRight, my-stretch, mx+gapRight-1, my, screenCentre, rotation) -- right
+		drawRotated(mx-stretch, my-length-stretch-gapRight, mx, my-gapRight+1, screenCentre, rotation) -- top
 
 		if cachedCross["UseArrow"] then
 
@@ -265,19 +414,19 @@ local Crosshair = function()
 
 				if i % 2 == 0 then
 					-- Draw clockwise on other side of the line
-					drawRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my, screenCentre, rotation) -- left
-					drawRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft+1, my, screenCentre, rotation) -- left
+					drawRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx, my+gapLeft-1, screenCentre, rotation) -- bottom
 
-					drawRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my, screenCentre, rotation) -- right
-					drawRotated(mx-stretch+offset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight-1, my, screenCentre, rotation) -- right
+					drawRotated(mx-stretch+offset, my-length-stretch-gapRight, mx, my-gapRight+1, screenCentre, rotation) -- top
 
 				else
 					-- Draw anti-clockwise on other side of the line
-					drawRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my, screenCentre, rotation) -- left
-					drawRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft+1, my, screenCentre, rotation) -- left
+					drawRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx, my+gapLeft-1, screenCentre, rotation) -- bottom
 
-					drawRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my, screenCentre, rotation) -- right
-					drawRotated(mx-stretch-offset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight-1, my, screenCentre, rotation) -- right
+					drawRotated(mx-stretch-offset, my-length-stretch-gapRight, mx, my-gapRight+1, screenCentre, rotation) -- top
 
 				end
 
@@ -327,19 +476,19 @@ local Crosshair = function()
 
 				if i % 2 == 0 then
 					-- Draw clockwise on other side of the line
-					drawRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my-offset, screenCentre, rotation) -- left
-					drawRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx-offset, my+gapLeft, screenCentre, rotation) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft+1, my-offset, screenCentre, rotation) -- left
+					drawRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx-offset, my+gapLeft-1, screenCentre, rotation) -- bottom
 
-					drawRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my+offset, screenCentre, rotation) -- right
-					drawRotated(mx-stretch+offset, my-length-stretch-gapRight, mx+offset, my-gapRight, screenCentre, rotation) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight-1, my+offset, screenCentre, rotation) -- right
+					drawRotated(mx-stretch+offset, my-length-stretch-gapRight, mx+offset, my-gapRight+1, screenCentre, rotation) -- top
 
 				else
 					-- Draw anti-clockwise on other side of the line
-					drawRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my+offset, screenCentre, rotation) -- left
-					drawRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx+offset, my+gapLeft, screenCentre, rotation) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft+1, my+offset, screenCentre, rotation) -- left
+					drawRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx+offset, my+gapLeft-1, screenCentre, rotation) -- bottom
 
-					drawRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my-offset, screenCentre, rotation) -- right
-					drawRotated(mx-stretch-offset, my-length-stretch-gapRight, mx-offset, my-gapRight, screenCentre, rotation) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight-1, my-offset, screenCentre, rotation) -- right
+					drawRotated(mx-stretch-offset, my-length-stretch-gapRight, mx-offset, my-gapRight+1, screenCentre, rotation) -- top
 
 				end
 			end
@@ -424,6 +573,8 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 		)
 	end
 
+	polys = generatePolys(math.rad(-45))
+
 	if data.id == "Dynamic" then
 		if not val then
 			if timer.Exists("HC_SmoothDynamics") then
@@ -455,6 +606,8 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 		cachedCross["CircleRadius"],
 		cachedCross["CircleSegments"]
 	)
+
+	polys = generatePolys(math.rad(-45))
 
 
 	ply = LocalPlayer()

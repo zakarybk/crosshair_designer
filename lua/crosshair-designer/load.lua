@@ -337,6 +337,27 @@ else
 			max=255,
 			isColour=true,
 		},
+
+		-- Rotation
+		{
+			id="Rotation",
+			var="crosshairdesigner_rotation",
+			default="0",
+			help="How much to rotate the crosshair by",
+			title="Rotation",
+			min=-90,
+			max=90,
+		},
+
+		-- Draw with polys instead of lines
+		{
+			id="FillDraw",
+			var="crosshairdesigner_filldraw",
+			default="0",
+			help="Draw a single shape instead of multiple lines",
+			title="Fill draw",
+			isBool=true
+		},
 	})
 
 	--[[
