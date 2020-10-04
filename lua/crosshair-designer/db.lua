@@ -54,24 +54,31 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 		local i = 1
 		local count = #indexed
 
-		timer.Create( "CrosshairDesigner_StaggeredSettings", 0.02, count, function()
+		timer.Create( "CrosshairDesigner_StaggeredSettings", 0.02, 0, function()
 
 			local id = CrosshairDesigner.ConvarDataAtIndex(i)
+			local val = "0"
 
 			if id then
 				-- If a setting was found in the save, use it
 				if strings[i] != nil then
-					CrosshairDesigner.SetValue(id.data.var, strings[i])
+					val = strings[i]
 				else
 				-- Otherwise use the default value
-					CrosshairDesigner.SetValue(id.data.var, id.data.default)
+					val = id.data.default
 				end
 			end
 
-			i = i + 1
+			CrosshairDesigner.SetValue(id.data.var, val)
 
-			if i == count then
-				hook.Run("CrosshairDesigner_CrosshairLoaded")
+			-- Keep running until the game decides it wants to update our values
+			if tostring(CrosshairDesigner.GetValue(id.data.var)) == tostring(val) then
+				i = i + 1
+
+				if i == count then
+					hook.Run("CrosshairDesigner_CrosshairLoaded")
+					timer.Remove("CrosshairDesigner_StaggeredSettings")
+				end
 			end
 		end)
 	else
