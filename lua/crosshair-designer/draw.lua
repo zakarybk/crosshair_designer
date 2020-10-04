@@ -161,10 +161,10 @@ local function generatePolys()
 	})
 
 	-- right
-	x1, y1 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my+bottomOffset+fillOutline+1), rotation, screenCentre) -- bottom
-	x2, y2 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my-topOffset+1+fillOutline), rotation, screenCentre) -- top
-	x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-topOffset+1+fillOutline), rotation, screenCentre) -- top
-	x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+bottomOffset+fillOutline+1), rotation, screenCentre) -- bottom
+	x1, y1 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my+topOffset+fillOutline), rotation, screenCentre) -- bottom
+	x2, y2 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my-bottomOffset+1-fillOutline), rotation, screenCentre) -- top
+	x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-bottomOffset+1-fillOutline), rotation, screenCentre) -- top
+	x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+topOffset+fillOutline), rotation, screenCentre) -- bottom
 	table.insert(polys, {
 		{x = x1, y = y1},
 		{x = x2, y = y2},

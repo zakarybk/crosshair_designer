@@ -54,7 +54,7 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 		local i = 1
 		local count = #indexed
 
-		timer.Create( "CrosshairDesigner_StaggeredSettings", 0.05, count, function()
+		timer.Create( "CrosshairDesigner_StaggeredSettings", 0.02, count, function()
 
 			local id = CrosshairDesigner.ConvarDataAtIndex(i)
 
