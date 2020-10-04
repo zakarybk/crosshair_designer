@@ -1,5 +1,7 @@
 # Garry's Mod Crosshair Designer (Remastered)
 
+**I recommend using the workshop version listed below. Sometimes I may push unfinished edits to master! But the workshop will always contain a checked version.**
+
 The addon now supports
 * TTT
 * FA:S
