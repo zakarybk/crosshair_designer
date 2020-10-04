@@ -345,7 +345,7 @@ else
 			default="0",
 			help="How much to rotate the crosshair by",
 			title="Rotation",
-			min=-90,
+			min=0,
 			max=90,
 		},
 
