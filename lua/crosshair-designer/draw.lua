@@ -86,6 +86,31 @@ local ScrW = ScrW
 local mx, my
 local shouldDraw
 
+local function rotated_point(origin, angle, distance)
+	return origin + Vector(math.sin(angle),math.cos(angle)) * distance
+end
+
+local function rotate_around_point_lowperf(point, radians, origin)
+	local cosRadians = math.cos(radians)
+	local sinRadians = math.sin(radians)
+
+    local x, y = point.x, point.y
+    local ox, oy = origin.x, origin.y
+
+    local qx = ox + cosRadians * (x - ox) + sinRadians * (y - oy)
+    local qy = oy + -sinRadians * (x - ox) + cosRadians * (y - oy)
+
+    return qx, qy
+end
+
+local function drawRotated(px, py, ox, oy, screenCentre, rotation)
+	local lineStartX, lineStartY = rotate_around_point_lowperf(Vector(px, py),rotation,screenCentre)
+	local lineEndX, lineEndY = rotate_around_point_lowperf(Vector(ox, oy), rotation, screenCentre)
+
+	--surface.DrawLine(o.x, o.y, p.x, p.y)
+	surface.DrawLine(lineStartX, lineStartY, lineEndX, lineEndY)
+end
+
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
@@ -144,6 +169,30 @@ local Crosshair = function()
 		my = ScrH() / 2
 	end
 
+	surface.SetDrawColor(0,0,0,255)
+
+	local rotation = math.rad(30)
+	local stretch = cachedCross["Stretch"]
+	local gap = cachedCross["Gap"] + dynamic
+	local gapLeft = math.floor((gap/2)) + 1
+	local gapRight = math.ceil(gap/2)
+	local length = cachedCross["Length"] - 1
+
+	local screenCentre = Vector(mx, my)
+
+	-- local o = rotated_point(origin, rotation, stretch+length+gapLeft)
+	-- local p = rotated_point(origin, rotation, gapLeft)
+
+	-- local lineStartX, lineStartY = rotate_around_point_lowperf(Vector(mx-stretch-length-gapLeft, my+stretch),rotation,origin)
+	-- local lineEndX, lineEndY = rotate_around_point_lowperf(Vector(mx-gapLeft, my), rotation, origin)
+
+	--surface.DrawLine(o.x, o.y, p.x, p.y)
+	--surface.DrawLine(lineStartX, lineStartY, lineEndX, lineEndY)
+
+	--surface.DrawLine(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft, my)
+
+	--drawRotated(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation)
+
 	surface.SetDrawColor(drawCol)
 
 	if cachedCross["UseLine"] then
@@ -156,11 +205,11 @@ local Crosshair = function()
 		local gapRight = math.ceil(gap/2)
 
 		-- Draw the inital lines
-		surface.DrawLine(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft, my) -- left
-		surface.DrawLine(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom
+		drawRotated(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft, my, screenCentre, rotation) -- left
+		drawRotated(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- bottom
 
-		surface.DrawLine(mx+stretch+length+gapRight, my-stretch, mx+gapRight, my) -- right
-		surface.DrawLine(mx-stretch, my-length-stretch-gapRight, mx, my-gapRight) -- top
+		drawRotated(mx+stretch+length+gapRight, my-stretch, mx+gapRight, my, screenCentre, rotation) -- right
+		drawRotated(mx-stretch, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- top
 
 		if cachedCross["UseArrow"] then
 
@@ -171,19 +220,19 @@ local Crosshair = function()
 
 				if i % 2 == 0 then
 					-- Draw clockwise on other side of the line
-					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my) -- left
-					surface.DrawLine(mx+stretch-offset, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my, screenCentre, rotation) -- left
+					drawRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- bottom
 
-					surface.DrawLine(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my) -- right
-					surface.DrawLine(mx-stretch+offset, my-length-stretch-gapRight, mx, my-gapRight) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my, screenCentre, rotation) -- right
+					drawRotated(mx-stretch+offset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- top
 
 				else
 					-- Draw anti-clockwise on other side of the line
-					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my) -- left
-					surface.DrawLine(mx+stretch+offset, my+length+stretch+gapLeft, mx, my+gapLeft) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my, screenCentre, rotation) -- left
+					drawRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- bottom
 
-					surface.DrawLine(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my) -- right
-					surface.DrawLine(mx-stretch-offset, my-length-stretch-gapRight, mx, my-gapRight) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my, screenCentre, rotation) -- right
+					drawRotated(mx-stretch-offset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- top
 
 				end
 
@@ -203,24 +252,24 @@ local Crosshair = function()
 				local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
 
 				-- Outline left
-				surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft, my) -- top
-				surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-gapLeft, my) -- bottom
-				surface.DrawLine(mx-stretch-length-gapLeft-1, my+stretch+bottomOffset, mx-stretch-length-gapLeft-1, my-topOffset+stretch) -- left
+				drawRotated(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft, my, screenCentre, rotation) -- top
+				drawRotated(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-gapLeft, my, screenCentre, rotation) -- bottom
+				drawRotated(mx-stretch-length-gapLeft-1, my+stretch+bottomOffset, mx-stretch-length-gapLeft-1, my-topOffset+stretch, screenCentre, rotation) -- left
 
 				-- Outline bottom
-				surface.DrawLine(mx-topOffset+stretch, my+gapLeft+stretch+length+1, mx+bottomOffset+stretch, my+gapLeft+stretch+length+1) -- bottom
-				surface.DrawLine(mx+stretch-topOffset, my+length+stretch+gapLeft, mx, my+gapLeft) -- left
-				surface.DrawLine(mx+stretch+bottomOffset, my+length+stretch+gapLeft, mx, my+gapLeft) -- right
+				drawRotated(mx-topOffset+stretch, my+gapLeft+stretch+length+1, mx+bottomOffset+stretch, my+gapLeft+stretch+length+1, screenCentre, rotation) -- bottom
+				drawRotated(mx+stretch-topOffset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- left
+				drawRotated(mx+stretch+bottomOffset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation) -- right
 
 				-- Outline right
-				surface.DrawLine(mx+stretch+length+gapRight, my-stretch-bottomOffset, mx+gapRight, my) -- top
-				surface.DrawLine(mx+stretch+length+gapRight, my-stretch+topOffset, mx+gapRight, my) -- bottom
-				surface.DrawLine(mx+stretch+length+gapRight+1, my-stretch-bottomOffset, mx+gapRight+length+stretch+1, my+topOffset-stretch) -- right
+				drawRotated(mx+stretch+length+gapRight, my-stretch-bottomOffset, mx+gapRight, my, screenCentre, rotation) -- top
+				drawRotated(mx+stretch+length+gapRight, my-stretch+topOffset, mx+gapRight, my, screenCentre, rotation) -- bottom
+				drawRotated(mx+stretch+length+gapRight+1, my-stretch-bottomOffset, mx+gapRight+length+stretch+1, my+topOffset-stretch, screenCentre, rotation) -- right
 
 				-- Outline top
-				surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight-1, mx+topOffset-stretch, my-gapRight-length-stretch-1) -- top
-				surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx, my-gapRight) -- left
-				surface.DrawLine(mx-stretch+topOffset, my-length-stretch-gapRight, mx, my-gapRight) -- right
+				drawRotated(mx-stretch-bottomOffset, my-length-stretch-gapRight-1, mx+topOffset-stretch, my-gapRight-length-stretch-1, screenCentre, rotation) -- top
+				drawRotated(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- left
+				drawRotated(mx-stretch+topOffset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation) -- right
 
 			end
 
@@ -233,19 +282,19 @@ local Crosshair = function()
 
 				if i % 2 == 0 then
 					-- Draw clockwise on other side of the line
-					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my-offset) -- left
-					surface.DrawLine(mx+stretch-offset, my+length+stretch+gapLeft, mx-offset, my+gapLeft) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft, my-offset, screenCentre, rotation) -- left
+					drawRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx-offset, my+gapLeft, screenCentre, rotation) -- bottom
 
-					surface.DrawLine(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my+offset) -- right
-					surface.DrawLine(mx-stretch+offset, my-length-stretch-gapRight, mx+offset, my-gapRight) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight, my+offset, screenCentre, rotation) -- right
+					drawRotated(mx-stretch+offset, my-length-stretch-gapRight, mx+offset, my-gapRight, screenCentre, rotation) -- top
 
 				else
 					-- Draw anti-clockwise on other side of the line
-					surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my+offset) -- left
-					surface.DrawLine(mx+stretch+offset, my+length+stretch+gapLeft, mx+offset, my+gapLeft) -- bottom
+					drawRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft, my+offset, screenCentre, rotation) -- left
+					drawRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx+offset, my+gapLeft, screenCentre, rotation) -- bottom
 
-					surface.DrawLine(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my-offset) -- right
-					surface.DrawLine(mx-stretch-offset, my-length-stretch-gapRight, mx-offset, my-gapRight) -- top
+					drawRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight, my-offset, screenCentre, rotation) -- right
+					drawRotated(mx-stretch-offset, my-length-stretch-gapRight, mx-offset, my-gapRight, screenCentre, rotation) -- top
 
 				end
 			end
@@ -264,28 +313,28 @@ local Crosshair = function()
 				local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
 
 				-- Outline left
-				surface.DrawLine(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft, my-topOffset) -- top
-				surface.DrawLine(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-gapLeft, my+bottomOffset) -- bottom
-				surface.DrawLine(mx-stretch-length-gapLeft-1, my+stretch+bottomOffset, mx-stretch-length-gapLeft-1, my-topOffset+stretch) -- left
-				surface.DrawLine(mx-gapLeft+1, my+bottomOffset, mx-gapLeft+1, my-topOffset) -- right
+				drawRotated(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft, my-topOffset, screenCentre, rotation) -- top
+				drawRotated(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-gapLeft, my+bottomOffset, screenCentre, rotation) -- bottom
+				drawRotated(mx-stretch-length-gapLeft-1, my+stretch+bottomOffset, mx-stretch-length-gapLeft-1, my-topOffset+stretch, screenCentre, rotation) -- left
+				drawRotated(mx-gapLeft+1, my+bottomOffset, mx-gapLeft+1, my-topOffset, screenCentre, rotation) -- right
 
 				-- Outline bottom
-				surface.DrawLine(mx-topOffset, my+gapLeft-1, mx+bottomOffset, my+gapLeft-1) -- top
-				surface.DrawLine(mx-topOffset+stretch, my+gapLeft+stretch+length+1, mx+bottomOffset+stretch, my+gapLeft+stretch+length+1) -- bottom
-				surface.DrawLine(mx+stretch-topOffset, my+length+stretch+gapLeft, mx-topOffset, my+gapLeft) -- left
-				surface.DrawLine(mx+stretch+bottomOffset, my+length+stretch+gapLeft, mx+bottomOffset, my+gapLeft) -- right
+				drawRotated(mx-topOffset, my+gapLeft-1, mx+bottomOffset, my+gapLeft-1, screenCentre, rotation) -- top
+				drawRotated(mx-topOffset+stretch, my+gapLeft+stretch+length+1, mx+bottomOffset+stretch, my+gapLeft+stretch+length+1, screenCentre, rotation) -- bottom
+				drawRotated(mx+stretch-topOffset, my+length+stretch+gapLeft, mx-topOffset, my+gapLeft, screenCentre, rotation) -- left
+				drawRotated(mx+stretch+bottomOffset, my+length+stretch+gapLeft, mx+bottomOffset, my+gapLeft, screenCentre, rotation) -- right
 
 				-- Outline right
-				surface.DrawLine(mx+stretch+length+gapRight, my-stretch-bottomOffset, mx+gapRight, my-bottomOffset) -- top
-				surface.DrawLine(mx+stretch+length+gapRight, my-stretch+topOffset, mx+gapRight, my+topOffset) -- bottom
-				surface.DrawLine(mx+gapRight-1, my-bottomOffset, mx+gapRight-1, my+topOffset) -- left
-				surface.DrawLine(mx+stretch+length+gapRight+1, my-stretch-bottomOffset, mx+gapRight+length+stretch+1, my+topOffset-stretch) -- right
+				drawRotated(mx+stretch+length+gapRight, my-stretch-bottomOffset, mx+gapRight, my-bottomOffset, screenCentre, rotation) -- top
+				drawRotated(mx+stretch+length+gapRight, my-stretch+topOffset, mx+gapRight, my+topOffset, screenCentre, rotation) -- bottom
+				drawRotated(mx+gapRight-1, my-bottomOffset, mx+gapRight-1, my+topOffset, screenCentre, rotation) -- left
+				drawRotated(mx+stretch+length+gapRight+1, my-stretch-bottomOffset, mx+gapRight+length+stretch+1, my+topOffset-stretch, screenCentre, rotation) -- right
 
 				-- Outline top
-				surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight-1, mx+topOffset-stretch, my-gapRight-length-stretch-1) -- top
-				surface.DrawLine(mx-bottomOffset, my-gapRight+1, mx+topOffset, my-gapRight+1) -- bottom
-				surface.DrawLine(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx-bottomOffset, my-gapRight) -- left
-				surface.DrawLine(mx-stretch+topOffset, my-length-stretch-gapRight, mx+topOffset, my-gapRight) -- right
+				drawRotated(mx-stretch-bottomOffset, my-length-stretch-gapRight-1, mx+topOffset-stretch, my-gapRight-length-stretch-1, screenCentre, rotation) -- top
+				drawRotated(mx-bottomOffset, my-gapRight+1, mx+topOffset, my-gapRight+1, screenCentre, rotation) -- bottom
+				drawRotated(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx-bottomOffset, my-gapRight, screenCentre, rotation) -- left
+				drawRotated(mx-stretch+topOffset, my-length-stretch-gapRight, mx+topOffset, my-gapRight, screenCentre, rotation) -- right
 
 			end
 
