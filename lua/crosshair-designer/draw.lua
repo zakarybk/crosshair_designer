@@ -570,9 +570,9 @@ local Crosshair = function()
 	-- Gap will vary depending on rotation
 
 	local rotation = 90
-	local length = 5
-	local gap = 1
-	local thickness = 1
+	local length = 14
+	local gap = 8
+	local thickness = 2
 
 	-- top left, top right, bottom right, bottom left
 	local topLeft = Vector(0, 0)
@@ -580,7 +580,7 @@ local Crosshair = function()
 	local bottomRight = Vector(thickness, length)
 	local bottomLeft = Vector(0, length)
 
-	local lines = 4
+	local lines = 20
 
 	mx = (ScrW() / 2) - 1
 	my = ScrH() / 2
@@ -590,10 +590,10 @@ local Crosshair = function()
 		local rotation = (360 / lines) * i
 		local middleOffset = Vector(0, 0)
 
-		if rotation >= 90 and rotation <= 180 then
+		if rotation >= 0+45 and rotation <= (180+45)%360 then
 			local gapOffset = math.ceil(gap/2)
 			surface.SetDrawColor(255, 0, 0, 255)
-			if (rotation >=0 and rotation <= 90) then
+			if (rotation >=0+45 and rotation <= 90+45) then
 				-- Right side
 				middleOffset = Vector(-1, gapOffset) -- x = y, y = x
 			else
@@ -603,7 +603,7 @@ local Crosshair = function()
 		else
 			local gapOffset = math.floor((gap/2)) + 1
 			surface.SetDrawColor(drawCol)
-			if (rotation > 180 and rotation <= 270) then
+			if (rotation > 180+45 and rotation <= 270+45) then
 				-- Left side
 				middleOffset = Vector(0, -1 + gapOffset)
 			else
