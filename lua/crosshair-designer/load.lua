@@ -346,7 +346,7 @@ else
 			help="How much to rotate the crosshair by",
 			title="Rotation",
 			min=0,
-			max=90,
+			max=360,
 		},
 
 		-- Draw with polys instead of lines

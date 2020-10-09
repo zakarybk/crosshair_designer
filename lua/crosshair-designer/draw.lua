@@ -570,9 +570,9 @@ local Crosshair = function()
 	-- Gap will vary depending on rotation
 
 	local rotation = 90
-	local length = 14
-	local gap = 8
-	local thickness = 2
+	local length = cachedCross["Length"]
+	local gap = cachedCross["Gap"]
+	local thickness = cachedCross["Thickness"]
 
 	-- top left, top right, bottom right, bottom left
 	local topLeft = Vector(0, 0)
@@ -580,14 +580,14 @@ local Crosshair = function()
 	local bottomRight = Vector(thickness, length)
 	local bottomLeft = Vector(0, length)
 
-	local lines = 20
+	local lines = 10
 
 	mx = (ScrW() / 2) - 1
 	my = ScrH() / 2
 
 	for i=1, lines do
 
-		local rotation = (360 / lines) * i
+		local rotation = (((360 / lines) * i) - cachedCross["Rotation"]) % 360
 		local middleOffset = Vector(0, 0)
 
 		if rotation >= 0+45 and rotation <= (180+45)%360 then
