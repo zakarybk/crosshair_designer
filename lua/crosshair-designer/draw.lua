@@ -522,6 +522,114 @@ local Crosshair = function()
 		)
 	end
 
+	surface.SetDrawColor(drawCol)
+
+	local function pointsToPoly(positions)
+		local output = {}
+		for i, pos in pairs(positions) do
+			table.insert(output, Vector(pos.x, pos.y))
+		end
+		return output
+	end
+
+	local function translatePoly(poly, newPos)
+		local translated = {}
+
+		for k, pos in pairs(poly) do
+			translated[k] = {x = pos.x + newPos.x, y = pos.y + newPos.y}
+		end
+
+		return translated
+	end
+
+	local function rotateAroundPoint(point, radians, origin)
+		local cosRadians = math.cos(radians)
+		local sinRadians = math.sin(radians)
+
+	    local x, y = point.x, point.y
+	    local ox, oy = origin.x, origin.y
+
+	    local qx = ox + cosRadians * (x - ox) + sinRadians * (y - oy)
+	    local qy = oy + -sinRadians * (x - ox) + cosRadians * (y - oy)
+
+	    return Vector(qx, qy)
+	end
+
+	local function rotatePoly(poly, rotation)
+		local origin = Vector(0, 0)
+		local radians = math.rad(rotation)
+		local output = {}
+
+		for i, point in pairs(poly) do
+			output[i] = rotateAroundPoint(point, radians, origin)
+		end
+
+		return output
+	end
+
+	-- Gap will vary depending on rotation
+
+	local rotation = 90
+	local length = 5
+	local gap = 1
+	local thickness = 1
+
+	-- top left, top right, bottom right, bottom left
+	local topLeft = Vector(0, 0)
+	local topRight = Vector(thickness, 0)
+	local bottomRight = Vector(thickness, length)
+	local bottomLeft = Vector(0, length)
+
+	local lines = 4
+
+	mx = (ScrW() / 2) - 1
+	my = ScrH() / 2
+
+	for i=1, lines do
+
+		local rotation = (360 / lines) * i
+		local middleOffset = Vector(0, 0)
+
+		if rotation >= 90 and rotation <= 180 then
+			local gapOffset = math.ceil(gap/2)
+			surface.SetDrawColor(255, 0, 0, 255)
+			if (rotation >=0 and rotation <= 90) then
+				-- Right side
+				middleOffset = Vector(-1, gapOffset) -- x = y, y = x
+			else
+				-- Top side
+				middleOffset = Vector(-1, -1 + gapOffset)
+			end
+		else
+			local gapOffset = math.floor((gap/2)) + 1
+			surface.SetDrawColor(drawCol)
+			if (rotation > 180 and rotation <= 270) then
+				-- Left side
+				middleOffset = Vector(0, -1 + gapOffset)
+			else
+				-- Bottom side
+				middleOffset = Vector(0, gapOffset)
+			end
+		end
+
+		surface.DrawPoly(
+			translatePoly( -- Translate to middle of screen
+				rotatePoly(
+					translatePoly( -- Apply middle gap offset
+						pointsToPoly({topLeft, topRight, bottomRight, bottomLeft}),
+						middleOffset
+					),
+					rotation
+				),
+				Vector(mx, my)
+			)
+		)
+
+	end
+
+
+	if true then return end
+
 	-- Thanks Simple ThirdPerson - https://github.com/Metastruct/simplethirdperson/blob/master/lua/autorun/thirdperson.lua#L933
 	if cachedCross["TraceDraw"] then
 		if not alreadyTraced then
