@@ -574,11 +574,15 @@ local Crosshair = function()
 	local gap = cachedCross["Gap"]
 	local thickness = cachedCross["Thickness"]
 
+	-- Based on clockwise with start at the top, so right then left
+	local leftThickness = math.floor(cachedCross["Thickness"]/2)
+	local rightThickness = math.ceil(cachedCross["Thickness"]/2)
+
 	-- top left, top right, bottom right, bottom left
-	local topLeft = Vector(0, 0)
-	local topRight = Vector(thickness, 0)
-	local bottomRight = Vector(thickness, length)
-	local bottomLeft = Vector(0, length)
+	local topLeft = Vector(-leftThickness, 0)
+	local topRight = Vector(rightThickness, 0)
+	local bottomRight = Vector(rightThickness, length)
+	local bottomLeft = Vector(-leftThickness, length)
 
 	local lines = 10
 
