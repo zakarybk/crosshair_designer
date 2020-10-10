@@ -64,7 +64,7 @@ else
 			id="UseLine",
 			var="cross_line",
 			default="1",
-			help="Draw four crosshair lines",
+			help="Draw crosshair lines",
 			title="Show crosshair lines",
 			isBool=true
 		},
