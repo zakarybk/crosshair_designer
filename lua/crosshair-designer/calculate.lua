@@ -1,0 +1,350 @@
+function CrosshairDesigner.PointsToPoly(positions)
+	local output = {}
+	for i, pos in pairs(positions) do
+		table.insert(output, Vector(pos.x, pos.y))
+	end
+	return output
+end
+
+function CrosshairDesigner.TranslatePoly(poly, newPos)
+	local translated = {}
+
+	for k, pos in pairs(poly) do
+		translated[k] = {x = pos.x + newPos.x, y = pos.y + newPos.y}
+	end
+
+	return translated
+end
+
+function CrosshairDesigner.TranslatePolys(polys, newPos)
+	local translated = {}
+
+	for k, poly in pairs(polys) do
+		translated[k] = CrosshairDesigner.TranslatePoly(poly, newPos)
+	end
+
+	return translated
+end
+
+function CrosshairDesigner.TranslateLine(line, newPos)
+	return line[1] + newPos.x, line[2] + newPos.y,
+		line[3] + newPos.x, line[4] + newPos.y
+end
+
+function CrosshairDesigner.TranslateLines(lines, newPos)
+	local translated = {}
+
+	for k, line in pairs(lines) do
+		translated[k] = {CrosshairDesigner.TranslateLine(line, newPos)}
+	end
+
+	return translated
+end
+
+function CrosshairDesigner.RotateAroundPoint(point, radians, origin)
+	local cosRadians = math.cos(radians)
+	local sinRadians = math.sin(radians)
+
+    local x, y = point.x, point.y
+    local ox, oy = origin.x, origin.y
+
+    local qx = ox + cosRadians * (x - ox) + sinRadians * (y - oy)
+    local qy = oy + -sinRadians * (x - ox) + cosRadians * (y - oy)
+
+    return Vector(qx, qy)
+end
+
+function CrosshairDesigner.RotatePoly(poly, rotation)
+	local origin = Vector(0, 0)
+	local radians = math.rad(rotation)
+	local output = {}
+
+	for i, point in pairs(poly) do
+		output[i] = CrosshairDesigner.RotateAroundPoint(point, radians, origin)
+	end
+
+	return output
+end
+
+function CrosshairDesigner.RotateLine(line, rotation)
+	local origin = Vector(0, 0)
+	local radians = math.rad(rotation)
+
+	local rotatedStart = CrosshairDesigner.RotateAroundPoint(Vector(line[1], line[2]), radians, origin)
+	local rotatedEnd = CrosshairDesigner.RotateAroundPoint(Vector(line[3], line[4]), radians, origin)
+
+	return rotatedStart.x, rotatedStart.y,
+		rotatedEnd.x, rotatedEnd.y
+end
+
+function CrosshairDesigner.CalculateLinePolys(config)
+	-- Parameter check
+	if config.lineCount == nil then Error("No lineCount supplied to CalculateLinePolys!") end
+	if config.thickness == nil then Error("No thickness supplied to CalculateLinePolys!") end
+	if config.gap == nil then Error("No gap supplied to CalculateLinePolys!") end
+	if config.length == nil then Error("No length supplied to CalculateLinePolys!") end
+
+	-- Parameter mapping
+	local lineCount = config.lineCount
+	local rotation = config.rotation != nil and config.rotation or 0
+	local thickness = config.thickness
+	local stretch = config.stretch != nil and config.stretch or 0
+	local gap = config.gap
+	local length = config.length
+	local addOutline = config.addOutline != nil and config.addOutline or false
+	local outlineWidth = outlineWidth or 1
+	local pointInwards = config.pointInwards != nil and config.pointInwards or false
+	local pointOutwards = config.pointOutwards != nil and config.pointOutwards or false
+
+	local polys = {}
+	local outlinePolys = {}
+
+	-- Based on clockwise with start at the top, so right then left
+	local leftThickness = math.floor(thickness/2)
+	local rightThickness = math.ceil(thickness/2)
+
+	-- top left, top right, bottom right, bottom left
+	local topLeft, topRight, bottomRight, bottomLeft
+	if pointInwards then
+		topLeft = Vector(0, 0)
+		topRight = Vector(0, 0)
+		bottomRight = Vector(rightThickness-stretch, length)
+		bottomLeft = Vector(-leftThickness-stretch, length)
+	elseif pointOutwards then
+		topLeft = Vector(-leftThickness, 0)
+		topRight = Vector(rightThickness, 0)
+		bottomRight = Vector(0-stretch, length)
+		bottomLeft = Vector(0-stretch, length)
+	else
+		topLeft = Vector(-leftThickness, 0)
+		topRight = Vector(rightThickness, 0)
+		bottomRight = Vector(rightThickness-stretch, length)
+		bottomLeft = Vector(-leftThickness-stretch, length)
+	end
+
+	-- For each line, calculate line and outline if requested
+	for i=1, lineCount do
+
+		local rot = (((360 / lineCount) * i) - rotation) % 360
+		local middleOffset = Vector(0, 0)
+		local poly = {}
+
+		-- 45 is the rotation offset needed to separate top and left from bottom and right
+		-- This split was chosen because the HL2 crosshair uses the top right pixel
+		-- The rotation goes anti-clockwise, hence using -cachedCross["Rotation"])
+
+		if rot >= 0+45 and rot <= (180+45)%360 then
+			local gapOffset = math.ceil(gap/2)
+
+			if (rot >=0+45 and rot <= 90+45) then
+				-- Right side (with 0 rotation)
+				middleOffset = Vector(-1, gapOffset) -- x = y, y = x
+			else
+				-- Top side (with 0 rotation)
+				middleOffset = Vector(-1, -1 + gapOffset)
+			end
+		else
+			local gapOffset = math.floor((gap/2)) + 1
+
+			if (rot > 180+45 and rot <= 270+45) then
+				-- Left side (with 0 rotation)
+				middleOffset = Vector(0, -1 + gapOffset)
+			else
+				-- Bottom side (with 0 rotation)
+				middleOffset = Vector(0, gapOffset)
+			end
+		end
+
+		if addOutline then
+			poly = CrosshairDesigner.RotatePoly(
+				CrosshairDesigner.TranslatePoly( -- Apply middle gap offset
+					CrosshairDesigner.PointsToPoly({
+						topLeft+Vector(-outlineWidth, -outlineWidth),
+						topRight+Vector(outlineWidth, -outlineWidth),
+						bottomRight+Vector(outlineWidth, outlineWidth),
+						bottomLeft+Vector(-outlineWidth, outlineWidth)
+					}),
+					middleOffset
+				),
+				rot
+			)
+			table.insert(outlinePolys, poly)
+		end
+
+		-- Normal line
+		poly = CrosshairDesigner.RotatePoly(
+			CrosshairDesigner.TranslatePoly( -- Apply middle gap offset
+				CrosshairDesigner.PointsToPoly({topLeft, topRight, bottomRight, bottomLeft}),
+				middleOffset
+			),
+			rot
+		)
+		table.insert(polys, poly)
+
+	end
+
+	return polys, outlinePolys
+end
+
+function CrosshairDesigner.CalculateLines(config)
+	-- Parameter check
+	if config.lineCount == nil then Error("No lineCount supplied to CalculateLinePolys!") end
+	if config.thickness == nil then Error("No thickness supplied to CalculateLinePolys!") end
+	if config.gap == nil then Error("No gap supplied to CalculateLinePolys!") end
+	if config.length == nil then Error("No length supplied to CalculateLinePolys!") end
+
+	-- Parameter mapping
+	local lineCount = config.lineCount
+	local rotation = config.rotation != nil and config.rotation or 0
+	local thickness = config.thickness
+	local stretch = config.stretch != nil and config.stretch or 0
+	local gap = config.gap
+	local length = config.length
+	local addOutline = config.addOutline != nil and config.addOutline or false
+	local outlineWidth = outlineWidth or 1
+	local pointInwards = config.pointInwards != nil and config.pointInwards or false
+	local pointOutwards = config.pointOutwards != nil and config.pointOutwards or false
+
+	local lines = {}
+	local outlineLines = {}
+
+	-- Based on clockwise with start at the top, so right then left
+	local leftThickness = math.floor(thickness/2)
+	local rightThickness = math.ceil(thickness/2)
+
+	local lineStart = Vector(0, 0)
+	local lineEnd = Vector(0, length)
+
+	-- For each line, calculate line and outline if requested
+	for i=1, lineCount do
+
+		local rot = (((360 / lineCount) * i) - rotation) % 360
+		local middleOffset = Vector(0, 0)
+		local line = {}
+
+		-- 45 is the rotation offset needed to separate top and left from bottom and right
+		-- This split was chosen because the HL2 crosshair uses the top right pixel
+		-- The rotation goes anti-clockwise, hence using -cachedCross["Rotation"])
+
+		-- Differs from DrawPoly version
+		if rot >= 0+45 and rot <= (180+45)%360 then
+			local gapOffset = math.ceil(gap/2)
+
+			if (rot >=0+45 and rot <= 90+45) then
+				-- Right side (with 0 rotation)
+				middleOffset = Vector(0, gapOffset) -- x = y, y = x
+			else
+				-- Top side (with 0 rotation)
+				middleOffset = Vector(0, gapOffset)
+			end
+		else
+			local gapOffset = math.floor((gap/2)) + 1
+
+			if (rot > 180+45 and rot <= 270+45) then
+				-- Left side (with 0 rotation)
+				middleOffset = Vector(0, gapOffset)
+			else
+				-- Bottom side (with 0 rotation)
+				middleOffset = Vector(0, gapOffset)
+			end
+		end
+
+		if addOutline then
+			-- based on | being the line
+			-- right
+			line = {CrosshairDesigner.RotateLine(
+				{CrosshairDesigner.TranslateLine({
+						lineStart.x-outlineWidth-leftThickness,
+						lineStart.y,
+						lineEnd.x-outlineWidth-leftThickness-stretch,
+						lineEnd.y-stretch
+					},
+					middleOffset
+				)},
+				rot
+			)}
+			table.insert(outlineLines, line)
+
+			-- left
+			line = {CrosshairDesigner.RotateLine(
+				{CrosshairDesigner.TranslateLine({
+						lineStart.x+outlineWidth+rightThickness-1,
+						lineStart.y,
+						lineEnd.x+outlineWidth+rightThickness-1-stretch,
+						lineEnd.y-stretch
+					},
+					middleOffset
+				)},
+				rot
+			)}
+			table.insert(outlineLines, line)
+
+			-- inner
+			line = {CrosshairDesigner.RotateLine(
+				{CrosshairDesigner.TranslateLine({
+						lineStart.x-leftThickness-1,
+						lineStart.y-outlineWidth,
+						lineStart.x+outlineWidth+rightThickness,
+						lineStart.y-outlineWidth
+					},
+					middleOffset
+				)},
+				rot
+			)}
+			table.insert(outlineLines, line)
+
+			-- outer
+			line = {CrosshairDesigner.RotateLine(
+				{CrosshairDesigner.TranslateLine({
+						lineEnd.x-leftThickness-1-stretch,
+						lineEnd.y-stretch,
+						lineEnd.x+outlineWidth+rightThickness-stretch,
+						lineEnd.y-stretch
+					},
+					middleOffset
+				)},
+				rot
+			)}
+			table.insert(outlineLines, line)
+		end
+
+		-- Middle lines
+		line = {CrosshairDesigner.RotateLine(
+			{CrosshairDesigner.TranslateLine(
+				{lineStart.x, lineStart.y, lineEnd.x - stretch, lineEnd.y - stretch},
+				middleOffset
+			)},
+			rot
+		)}
+
+		table.insert(lines, line)
+
+		-- Thickness lines
+		for t=2, thickness do
+			local offset = math.floor(t/2)
+			if t % 2 == 0 then
+				-- Draw clockwise on other side of the line
+				line = {CrosshairDesigner.RotateLine(
+					{CrosshairDesigner.TranslateLine(
+						{lineStart.x - offset, lineStart.y, lineEnd.x - offset - stretch, lineEnd.y - stretch},
+						middleOffset
+					)},
+					rot
+				)}
+				table.insert(lines, line)
+			else
+				-- Draw anti-clockwise on other side of the line
+				line = {CrosshairDesigner.RotateLine(
+					{CrosshairDesigner.TranslateLine(
+						{lineStart.x + offset, lineStart.y, lineEnd.x + offset - stretch, lineEnd.y - stretch},
+						middleOffset
+					)},
+					rot
+				)}
+				table.insert(lines, line)
+			end
+		end
+	end
+
+	return lines, outlineLines
+end

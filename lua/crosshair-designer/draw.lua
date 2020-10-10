@@ -524,65 +524,6 @@ local Crosshair = function()
 
 	surface.SetDrawColor(drawCol)
 
-	local function pointsToPoly(positions)
-		local output = {}
-		for i, pos in pairs(positions) do
-			table.insert(output, Vector(pos.x, pos.y))
-		end
-		return output
-	end
-
-	local function translatePoly(poly, newPos)
-		local translated = {}
-
-		for k, pos in pairs(poly) do
-			translated[k] = {x = pos.x + newPos.x, y = pos.y + newPos.y}
-		end
-
-		return translated
-	end
-
-	local function translateLine(line, newPos)
-		return line[1] + newPos.x, line[2] + newPos.y,
-			line[3] + newPos.x, line[4] + newPos.y
-	end
-
-	local function rotateAroundPoint(point, radians, origin)
-		local cosRadians = math.cos(radians)
-		local sinRadians = math.sin(radians)
-
-	    local x, y = point.x, point.y
-	    local ox, oy = origin.x, origin.y
-
-	    local qx = ox + cosRadians * (x - ox) + sinRadians * (y - oy)
-	    local qy = oy + -sinRadians * (x - ox) + cosRadians * (y - oy)
-
-	    return Vector(qx, qy)
-	end
-
-	local function rotatePoly(poly, rotation)
-		local origin = Vector(0, 0)
-		local radians = math.rad(rotation)
-		local output = {}
-
-		for i, point in pairs(poly) do
-			output[i] = rotateAroundPoint(point, radians, origin)
-		end
-
-		return output
-	end
-
-	local function rotateLine(line, rotation)
-		local origin = Vector(0, 0)
-		local radians = math.rad(rotation)
-
-		local rotatedStart = rotateAroundPoint(Vector(line[1], line[2]), radians, origin)
-		local rotatedEnd = rotateAroundPoint(Vector(line[3], line[4]), radians, origin)
-
-		return rotatedStart.x, rotatedStart.y,
-			rotatedEnd.x, rotatedEnd.y
-	end
-
 	-- Gap will vary depending on rotation
 
 	local rotation = 90
@@ -595,149 +536,64 @@ local Crosshair = function()
 	local outline = boolNum[tostring(cachedCross["Outline"])]
 	outline = outline or 0
 
-	-- Based on clockwise with start at the top, so right then left
-	local leftThickness = math.floor(cachedCross["Thickness"]/2)
-	local rightThickness = math.ceil(cachedCross["Thickness"]/2)
-
-	-- top left, top right, bottom right, bottom left
-	local topLeft = Vector(-leftThickness, 0)
-	local topRight = Vector(rightThickness, 0)
-	local bottomRight = Vector(rightThickness-stretch, length)
-	local bottomLeft = Vector(-leftThickness-stretch, length)
-
-	local lines = 4
-
+	-- Aling with HL2 crosshair
 	mx = (ScrW() / 2) - 1
 	my = ScrH() / 2
 
-	for i=1, lines do
+	-- local polys, outlinePolys = CrosshairDesigner.CalculateLinePolys({
+	-- 	lineCount = 4,
+	-- 	rotation = cachedCross["Rotation"],
+	-- 	thickness = cachedCross["Thickness"],
+	-- 	stretch = cachedCross["Stretch"],
+	-- 	gap = cachedCross["Gap"],
+	-- 	length = cachedCross["Length"],
+	-- 	addOutline = outline,
+	-- 	outlineWidth = 2,
+	-- })
 
-		local rotation = (((360 / lines) * i) - cachedCross["Rotation"]) % 360
-		local middleOffset = Vector(0, 0)
-		local outLineOffset = Vector(0, 0)
-		local outLineThickness = Vector(0, 0)
+	-- polys = CrosshairDesigner.TranslatePolys(polys, Vector(mx, my))
+	-- outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, Vector(mx, my))
 
-		-- 45 is the rotation offset needed to separate top and left from bottom and right
-		-- This split was chosen because the HL2 crosshair uses the top right pixel
-		-- The rotation goes anti-clockwise, hence using -cachedCross["Rotation"])
+	-- surface.SetDrawColor(0, 0, 0, 255)
+	-- for k, poly in pairs(outlinePolys) do
+	-- 	surface.DrawPoly(poly)
+	-- end
 
-		if rotation >= 0+45 and rotation <= (180+45)%360 then
-			local gapOffset = math.ceil(gap/2)
+	-- surface.SetDrawColor(drawCol)
+	-- for k, poly in pairs(polys) do
+	-- 	surface.DrawPoly(poly)
+	-- end
 
-			if (rotation >=0+45 and rotation <= 90+45) then
-				-- Right side (with 0 rotation)
-				middleOffset = Vector(-1, gapOffset) -- x = y, y = x
-			else
-				-- Top side (with 0 rotation)
-				middleOffset = Vector(-1, -1 + gapOffset)
-			end
-		else
-			local gapOffset = math.floor((gap/2)) + 1
+	local lines, lineOutlines = CrosshairDesigner.CalculateLines({
+		lineCount = 4,
+		rotation = cachedCross["Rotation"],
+		thickness = cachedCross["Thickness"],
+		stretch = cachedCross["Stretch"],
+		gap = cachedCross["Gap"],
+		length = cachedCross["Length"],
+		addOutline = outline,
+		outlineWidth = 2,
+	})
 
-			if (rotation > 180+45 and rotation <= 270+45) then
-				-- Left side (with 0 rotation)
-				middleOffset = Vector(0, -1 + gapOffset)
+	--PrintTable(lines)
 
-				outLineOffset = Vector(0, 0) -- x = y, y = x
-				outLineThickness = Vector(1, 0)
-			else
-				-- Bottom side (with 0 rotation)
-				middleOffset = Vector(0, gapOffset)
+	lines = CrosshairDesigner.TranslateLines(lines, Vector(mx, my))
+	lineOutlines = CrosshairDesigner.TranslateLines(lineOutlines, Vector(mx, my))
 
-				outLineOffset = Vector(0, 0) -- x = y, y = x
-				outLineThickness = Vector(0, -1)
-			end
-		end
+	-- PrintTable(lines)
 
-		outLineThickness = Vector(0, 0)
-
-		surface.SetDrawColor(0, 0, 0, 255)
-
-		local outlineWidth = 10
-
-		local poly = translatePoly( -- Translate to middle of screen
-			rotatePoly(
-				translatePoly( -- Apply middle gap offset
-					pointsToPoly({
-						topLeft+Vector(-outlineWidth, -outlineWidth),
-						topRight+Vector(outlineWidth, -outlineWidth),
-						bottomRight+Vector(outlineWidth, outlineWidth),
-						bottomLeft+Vector(-outlineWidth, outlineWidth)
-					}),
-					middleOffset
-				),
-				rotation
-			),
-			Vector(mx, my)
-		)
-
-		surface.DrawPoly(poly)
-
-		surface.SetDrawColor(drawCol)
-
-		local poly = translatePoly( -- Translate to middle of screen
-			rotatePoly(
-				translatePoly( -- Apply middle gap offset
-					pointsToPoly({topLeft, topRight, bottomRight, bottomLeft}),
-					middleOffset
-				),
-				rotation
-			),
-			Vector(mx, my)
-		)
-
-		surface.DrawPoly(poly)
-
-		surface.SetDrawColor(0, 0, 0, 255)
-
-		-- if rotation >= 0+45 and rotation <= (180+45)%360 then
-		-- 	if (rotation >=0+45 and rotation <= 90+45) then
-		-- 		-- Right side (with 0 rotation)
-		-- 		surface.DrawLine(poly[1].x, poly[1].y-1, poly[4].x, poly[4].y-1) -- top
-		-- 		surface.DrawLine(poly[2].x, poly[2].y, poly[3].x, poly[3].y) -- bottom
-		-- 	else
-		-- 		-- Top side (with 0 rotation)
-		-- 		surface.DrawLine(poly[1].x-1, poly[1].y-1, poly[4].x-1, poly[4].y-1) -- top
-		-- 		surface.DrawLine(poly[2].x, poly[2].y-1, poly[3].x, poly[3].y-1) -- bottom
-		-- 	end
-		-- else
-
-		-- 	if (rotation > 180+45 and rotation <= 270+45) then
-		-- 		-- Left side (with 0 rotation)
-		-- 		surface.DrawLine(poly[1].x-1, poly[1].y, poly[4].x-1, poly[4].y) -- top
-		-- 		surface.DrawLine(poly[2].x-1, poly[2].y-1, poly[3].x-1, poly[3].y-1) -- bottom
-		-- 	else
-		-- 		-- Bottom side (with 0 rotation)
-		-- 		surface.DrawLine(poly[1].x, poly[1].y, poly[4].x, poly[4].y) -- top
-		-- 		surface.DrawLine(poly[2].x-1, poly[2].y, poly[3].x-1, poly[3].y) -- bottom
-		-- 	end
-		-- end
-
-		-- Now draw the outline
-
-		local line = {
-			translateLine({
-				rotateLine({
-						translateLine({
-							topLeft.x,
-							topLeft.y,
-							bottomLeft.x - 1,
-							bottomLeft.y
-						}, middleOffset)
-					},
-					rotation
-				)},
-				Vector(mx, my)
-			)}
-		--PrintTable(line)
-		--surface.DrawLine(line[1], line[2], line[3], line[4])
-		--surface.DrawLine(poly[2].x, poly[2].y, poly[3].x, poly[3].y)
-		--surface.DrawLine(poly[3].x, poly[3].y, poly[4].x, poly[4].y)
-		--surface.DrawLine(poly[4].x, poly[4].y, poly[1].x, poly[1].y)
-
-
-
+	for k, line in pairs(lines) do
+		-- print(unpack(line))
+		surface.DrawLine(unpack(line))
 	end
+
+	 surface.SetDrawColor(0, 0, 0, 255)
+	for k, line in pairs(lineOutlines) do
+		-- print(unpack(line))
+		surface.DrawLine(unpack(line))
+	end
+
+	--end
 
 
 	if true then return end

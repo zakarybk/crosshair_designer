@@ -6,6 +6,7 @@ if SERVER then
 	AddCSLuaFile("detours.lua")
 	AddCSLuaFile("db.lua")
 	AddCSLuaFile("hide.lua")
+	AddCSLuaFile("calculate.lua")
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
 	AddCSLuaFile("disable.lua")
@@ -26,6 +27,7 @@ else
 	include("detours.lua")
 	include("db.lua")
 	include("hide.lua")
+	include("calculate.lua")
 	include("draw.lua")
 	include("menu.lua")
 	include("disable.lua")
@@ -155,8 +157,8 @@ else
 			default="0",
 			help="The amount to stretch the crosshair by (disabled when using fill draw)",
 			title="Stretch of lines",
-			min=0,
-			max=360,
+			min=-180,
+			max=180,
 		},
 		{
 			id="CircleRadius",
