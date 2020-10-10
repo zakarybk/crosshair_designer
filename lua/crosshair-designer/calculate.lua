@@ -124,6 +124,7 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 	for k, line in pairs(outlines) do
 		local middle = (math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)) % #lines
 		local middleLine = lines[middle]
+		print(k, middle)
 
 		local pos = Vector(middleLine[3], middleLine[4])
 		local direction = pos:GetNormalized()
@@ -140,7 +141,7 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 	return translated
 end
 
-function CrosshairDesigner.AdjustPolysByDynamicGap(polys, gap, lineThickness, totalRotation)
+function CrosshairDesigner.AdjustPolysByDynamicGap(polys, gap, totalRotation)
 	local translatedPolys = {}
 	local dynamicAmt = gap
 
