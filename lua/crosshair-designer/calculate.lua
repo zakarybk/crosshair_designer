@@ -90,52 +90,71 @@ function CrosshairDesigner.Direction(point1, point2)
    return deg
 end
 
-function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, totalThickness, screenCentre)
-	local translated = {}
+function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness, screenCentre)
+	local translatedLines = {}
 	local dynamicAmt = gap
 
+	-- Normal line
 	for k, line in pairs(lines) do
-		local middle = math.ceil(k/totalThickness) * totalThickness - (totalThickness - 1)
-		print(k, middle)
+		local middle = math.ceil(k/lineThickness) * lineThickness - (lineThickness - 1)
 		local middleLine = lines[middle]
 
 		local pos = Vector(middleLine[3], middleLine[4])
 		local direction = pos:GetNormalized()
 		local dyanmicGap = direction * dynamicAmt
 
-		translated[k] = {
+		translatedLines[k] = {
 			line[1] + dyanmicGap.x,
 			line[2] + dyanmicGap.y,
 			line[3] + dyanmicGap.x,
 			line[4] + dyanmicGap.y
 		}
+
+		-- -- Outlines
+		-- if k == middle then
+		-- 	for i=1, #outlineThickness do
+		-- 		translatedOutlines[k] = {
+		-- 			outline[i][1] + dyanmicGap.x,
+		-- 			outline[i][2] + dyanmicGap.y,
+		-- 			outline[i][3] + dyanmicGap.x,
+		-- 			outline[i][4] + dyanmicGap.y
+		-- 		}
+		-- 	end
+		-- end
 	end
 
-	return translated
+	return translatedLines
 end
 
-function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, gap, totalThickness)
+function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, totalThickness, lineThickness)
 	local translated = {}
 	local dynamicAmt = gap
 
-	print(#lines)
+	for k, line in pairs(outlines) do
+		local middle = math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)
+		local middleLine = lines[middle]
 
-	for k, line in pairs(lines) do
-		local right = (math.ceil(k/totalThickness) * totalThickness - (totalThickness - 1)) + 2
-		local rightLine = lines[right]
-		print(k, right)
-		local leftLine = lines[right+1]
-		--print(rightLine)
+		print(middle)
 
-		local middle = Vector(rightLine[3], rightLine[4]) - Vector(leftLine[3], leftLine[4])
-		local direction = middle:GetNormalized()
+		local pos = Vector(middleLine[3], middleLine[4])
+		local direction = pos:GetNormalized()
 		local dyanmicGap = direction * dynamicAmt
 
+		-- local right = (math.ceil(k/totalThickness) * totalThickness - (totalThickness - 1)) % (#outlines-1) +1
+		-- local rightLine = outlines[right]
+		-- print(k, right)
+		-- local leftLine = outlines[right+1]
+		-- --print(rightLine)
+
+		-- local middle = Vector(rightLine[3], rightLine[4]) - Vector(leftLine[3], leftLine[4])
+		-- local direction = middle:GetNormalized()
+		-- local dyanmicGap = direction * dynamicAmt
+
 		translated[k] = {
-			line[1] - dyanmicGap.x,
-			line[2] - dyanmicGap.y,
-			line[3] - dyanmicGap.x,
-			line[4] - dyanmicGap.y
+			line[1] + dyanmicGap.x,
+			line[2] + dyanmicGap.y,
+			line[3] + dyanmicGap.x,
+			line[4] + dyanmicGap.y
 		}
 	end
 

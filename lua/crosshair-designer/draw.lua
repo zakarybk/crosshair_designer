@@ -573,14 +573,18 @@ local Crosshair = function()
 		length = cachedCross["Length"],
 		addOutline = true,
 		outlineWidth = 1,
-		pointInwards = false
+		pointInwards = false,
+		pointOutwards = false
 	})
 
 	--PrintTable(lines)
 	-- Add dynamic amount
 	local mid =  Vector(mx, my)
 	lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic, cachedCross["Thickness"])
-	lineOutlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lineOutlines, dynamic, 4)
+	local offset = 0 -- pointInwards and 1 or pointOutwards and 1 or 0
+	print("Offset: ", offset)
+	--lines, outlines, gap, totalThickness, lineThickness
+	lineOutlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, lineOutlines, dynamic, 4-offset, cachedCross["Thickness"])
 
 	-- Translate to middle of screen
 	lines = CrosshairDesigner.TranslateLines(lines, Vector(mx, my))
