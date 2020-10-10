@@ -248,7 +248,7 @@ local Crosshair = function()
 		end
 
 		local pos = traceResult.HitPos:ToScreen()
-		mx, my = pos.x, pos.y
+		mx, my = pos.x - 1, pos.y
 	else
 		-- Align with HL2 crosshair
 		mx = (ScrW() / 2) - 1
