@@ -96,7 +96,7 @@ function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness)
 
 	-- Normal line
 	for k, line in pairs(lines) do
-		local middle = (math.ceil(k/lineThickness) * lineThickness - (lineThickness - 1) % #lines) + 1
+		local middle = math.Clamp((math.ceil(k/lineThickness) * lineThickness - (lineThickness - 1) % (#lines+1)), 1, #lines)
 		local middleLine = lines[middle]
 
 		local pos = Vector(middleLine[3], middleLine[4])
@@ -122,9 +122,10 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 	-- We use the middle line from lines so that we can move from the middle
 
 	for k, line in pairs(outlines) do
-		local middle = ((math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)) % #lines) + 1
+		local middle = math.Clamp(((math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)) % (#lines+1)), 1, #lines)
 		local middleLine = lines[middle]
-		print(k, middle)
+		-- print(math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1))
+		-- print(k, middle)
 
 		local pos = Vector(middleLine[3], middleLine[4])
 		local direction = pos:GetNormalized()
