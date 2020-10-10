@@ -90,7 +90,7 @@ function CrosshairDesigner.Direction(point1, point2)
    return deg
 end
 
-function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness, screenCentre)
+function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness)
 	local translatedLines = {}
 	local dynamicAmt = gap
 
@@ -110,17 +110,6 @@ function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness, sc
 			line[4] + dyanmicGap.y
 		}
 
-		-- -- Outlines
-		-- if k == middle then
-		-- 	for i=1, #outlineThickness do
-		-- 		translatedOutlines[k] = {
-		-- 			outline[i][1] + dyanmicGap.x,
-		-- 			outline[i][2] + dyanmicGap.y,
-		-- 			outline[i][3] + dyanmicGap.x,
-		-- 			outline[i][4] + dyanmicGap.y
-		-- 		}
-		-- 	end
-		-- end
 	end
 
 	return translatedLines
@@ -129,6 +118,8 @@ end
 function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, totalThickness, lineThickness)
 	local translated = {}
 	local dynamicAmt = gap
+
+	-- We use the middle line from lines so that we can move from the middle
 
 	for k, line in pairs(outlines) do
 		local middle = math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)
@@ -140,16 +131,6 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 		local direction = pos:GetNormalized()
 		local dyanmicGap = direction * dynamicAmt
 
-		-- local right = (math.ceil(k/totalThickness) * totalThickness - (totalThickness - 1)) % (#outlines-1) +1
-		-- local rightLine = outlines[right]
-		-- print(k, right)
-		-- local leftLine = outlines[right+1]
-		-- --print(rightLine)
-
-		-- local middle = Vector(rightLine[3], rightLine[4]) - Vector(leftLine[3], leftLine[4])
-		-- local direction = middle:GetNormalized()
-		-- local dyanmicGap = direction * dynamicAmt
-
 		translated[k] = {
 			line[1] + dyanmicGap.x,
 			line[2] + dyanmicGap.y,
@@ -159,6 +140,34 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 	end
 
 	return translated
+end
+
+function CrosshairDesigner.AdjustPolysByDynamicGap(polys, gap, lineThickness, totalRotation)
+	local translatedPolys = {}
+	local dynamicAmt = gap
+
+
+	-- Normal line
+	for k, poly in pairs(polys) do
+		local middle
+		if k % 2 == 0 then
+			middle = Vector(0, 1)
+		else
+			middle = Vector(0, -1)
+		end
+		local rot = ((360/#polys) * k) - totalRotation % 360
+
+		middle:Rotate(Angle(rot, rot))
+
+		local pos = middle
+		local direction = pos:GetNormalized()
+		local dyanmicGap = direction * dynamicAmt
+
+		translatedPolys[k] = CrosshairDesigner.TranslatePoly(poly, dyanmicGap)
+
+	end
+
+	return translatedPolys
 end
 
 function CrosshairDesigner.CalculateLinePolys(config)
@@ -272,10 +281,10 @@ end
 
 function CrosshairDesigner.CalculateLines(config)
 	-- Parameter check
-	if config.lineCount == nil then Error("No lineCount supplied to CalculateLinePolys!") end
-	if config.thickness == nil then Error("No thickness supplied to CalculateLinePolys!") end
-	if config.gap == nil then Error("No gap supplied to CalculateLinePolys!") end
-	if config.length == nil then Error("No length supplied to CalculateLinePolys!") end
+	if config.lineCount == nil then Error("No lineCount supplied to CalculateLines!") end
+	if config.thickness == nil then Error("No thickness supplied to CalculateLines!") end
+	if config.gap == nil then Error("No gap supplied to CalculateLines!") end
+	if config.length == nil then Error("No length supplied to CalculateLines!") end
 
 	-- Parameter mapping
 	local lineCount = config.lineCount

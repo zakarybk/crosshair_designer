@@ -540,55 +540,59 @@ local Crosshair = function()
 	mx = (ScrW() / 2) - 1
 	my = ScrH() / 2
 
-	-- local polys, outlinePolys = CrosshairDesigner.CalculateLinePolys({
-	-- 	lineCount = 4,
-	-- 	rotation = cachedCross["Rotation"],
-	-- 	thickness = cachedCross["Thickness"],
-	-- 	stretch = cachedCross["Stretch"],
-	-- 	gap = cachedCross["Gap"],
-	-- 	length = cachedCross["Length"],
-	-- 	addOutline = outline,
-	-- 	outlineWidth = 2,
-	-- })
-
-	-- polys = CrosshairDesigner.TranslatePolys(polys, Vector(mx, my))
-	-- outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, Vector(mx, my))
-
-	-- surface.SetDrawColor(0, 0, 0, 255)
-	-- for k, poly in pairs(outlinePolys) do
-	-- 	surface.DrawPoly(poly)
-	-- end
-
-	-- surface.SetDrawColor(drawCol)
-	-- for k, poly in pairs(polys) do
-	-- 	surface.DrawPoly(poly)
-	-- end
-
-	local lines, lineOutlines = CrosshairDesigner.CalculateLines({
+	local polys, outlinePolys = CrosshairDesigner.CalculateLinePolys({
 		lineCount = 4,
 		rotation = cachedCross["Rotation"],
 		thickness = cachedCross["Thickness"],
 		stretch = cachedCross["Stretch"],
 		gap = cachedCross["Gap"],
 		length = cachedCross["Length"],
-		addOutline = true,
-		outlineWidth = 1,
-		pointInwards = false,
-		pointOutwards = false
+		addOutline = outline,
+		outlineWidth = 2,
+		pointInwards = true
 	})
 
-	--PrintTable(lines)
-	-- Add dynamic amount
-	local mid =  Vector(mx, my)
-	lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic, cachedCross["Thickness"])
-	local offset = 0 -- pointInwards and 1 or pointOutwards and 1 or 0
-	print("Offset: ", offset)
-	--lines, outlines, gap, totalThickness, lineThickness
-	lineOutlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, lineOutlines, dynamic, 4-offset, cachedCross["Thickness"])
+	polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
+	outlinePolys = CrosshairDesigner.AdjustPolysByDynamicGap(outlinePolys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
 
-	-- Translate to middle of screen
-	lines = CrosshairDesigner.TranslateLines(lines, Vector(mx, my))
-	lineOutlines = CrosshairDesigner.TranslateLines(lineOutlines, Vector(mx, my))
+	polys = CrosshairDesigner.TranslatePolys(polys, Vector(mx, my))
+	outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, Vector(mx, my))
+
+	surface.SetDrawColor(0, 0, 0, 255)
+	for k, poly in pairs(outlinePolys) do
+		surface.DrawPoly(poly)
+	end
+
+	surface.SetDrawColor(drawCol)
+	for k, poly in pairs(polys) do
+		surface.DrawPoly(poly)
+	end
+
+	-- local lines, lineOutlines = CrosshairDesigner.CalculateLines({
+	-- 	lineCount = 4,
+	-- 	rotation = cachedCross["Rotation"],
+	-- 	thickness = cachedCross["Thickness"],
+	-- 	stretch = cachedCross["Stretch"],
+	-- 	gap = cachedCross["Gap"],
+	-- 	length = cachedCross["Length"],
+	-- 	addOutline = true,
+	-- 	outlineWidth = 1,
+	-- 	pointInwards = true,
+	-- 	pointOutwards = false
+	-- })
+
+	-- --PrintTable(lines)
+	-- -- Add dynamic amount
+	-- local mid =  Vector(mx, my)
+	-- lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic, cachedCross["Thickness"])
+	-- local offset = 1 -- pointInwards and 1 or pointOutwards and 1 or 0
+	-- print("Offset: ", offset)
+	-- --lines, outlines, gap, totalThickness, lineThickness
+	-- lineOutlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, lineOutlines, dynamic, 4-offset, cachedCross["Thickness"])
+
+	-- -- Translate to middle of screen
+	-- lines = CrosshairDesigner.TranslateLines(lines, Vector(mx, my))
+	-- lineOutlines = CrosshairDesigner.TranslateLines(lineOutlines, Vector(mx, my))
 
 
 	-- print(lines[1][3], lines[1][4])
@@ -609,16 +613,16 @@ local Crosshair = function()
 	-- 	end
 	-- end
 
-	for k, line in pairs(lines) do
-		-- print(unpack(line))
-		surface.DrawLine(unpack(line))
-	end
+	-- for k, line in pairs(lines) do
+	-- 	-- print(unpack(line))
+	-- 	surface.DrawLine(unpack(line))
+	-- end
 
-	 surface.SetDrawColor(0, 0, 0, 255)
-	for k, line in pairs(lineOutlines) do
-		-- print(unpack(line))
-		surface.DrawLine(unpack(line))
-	end
+	--  surface.SetDrawColor(0, 0, 0, 255)
+	-- for k, line in pairs(lineOutlines) do
+	-- 	-- print(unpack(line))
+	-- 	surface.DrawLine(unpack(line))
+	-- end
 
 	--end
 
