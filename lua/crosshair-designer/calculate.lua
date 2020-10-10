@@ -90,22 +90,53 @@ function CrosshairDesigner.Direction(point1, point2)
    return deg
 end
 
-function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, screenCentre)
+function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, totalThickness, screenCentre)
 	local translated = {}
+	local dynamicAmt = gap
 
 	for k, line in pairs(lines) do
-		local ang = CrosshairDesigner.Direction(Vector(line[3], line[4]), screenCentre)
-		local dynamicAmt = gap
+		local middle = math.ceil(k/totalThickness) * totalThickness - (totalThickness - 1)
+		print(k, middle)
+		local middleLine = lines[middle]
 
-		if (ang >= 270+45 or ang <= 45) then
-			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(-dynamicAmt, 0))}
-		elseif (ang <= 90+45) then
-			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(0, -dynamicAmt))}
-		elseif (ang <= 180+45) then
-			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(dynamicAmt, 0))}
-		else
-			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(0, dynamicAmt))}
-		end
+		local pos = Vector(middleLine[3], middleLine[4])
+		local direction = pos:GetNormalized()
+		local dyanmicGap = direction * dynamicAmt
+
+		translated[k] = {
+			line[1] + dyanmicGap.x,
+			line[2] + dyanmicGap.y,
+			line[3] + dyanmicGap.x,
+			line[4] + dyanmicGap.y
+		}
+	end
+
+	return translated
+end
+
+function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, gap, totalThickness)
+	local translated = {}
+	local dynamicAmt = gap
+
+	print(#lines)
+
+	for k, line in pairs(lines) do
+		local right = (math.ceil(k/totalThickness) * totalThickness - (totalThickness - 1)) + 2
+		local rightLine = lines[right]
+		print(k, right)
+		local leftLine = lines[right+1]
+		--print(rightLine)
+
+		local middle = Vector(rightLine[3], rightLine[4]) - Vector(leftLine[3], leftLine[4])
+		local direction = middle:GetNormalized()
+		local dyanmicGap = direction * dynamicAmt
+
+		translated[k] = {
+			line[1] - dyanmicGap.x,
+			line[2] - dyanmicGap.y,
+			line[3] - dyanmicGap.x,
+			line[4] - dyanmicGap.y
+		}
 	end
 
 	return translated
@@ -286,12 +317,12 @@ function CrosshairDesigner.CalculateLines(config)
 		if addOutline then
 			-- based on | being the line
 			-- right
-			for w=0, outlineWidth do
+			for w=1, outlineWidth do
 				line = {CrosshairDesigner.RotateLine(
 					{CrosshairDesigner.TranslateLine({
-							not pointInwards and lineStart.x-leftThickness-1 - w or lineStart.x,
+							not pointInwards and lineStart.x-leftThickness - w  or lineStart.x,
 							lineStart.y,
-							not pointOutwards and lineEnd.x-leftThickness-1-stretch - w or lineEnd.x,
+							not pointOutwards and lineEnd.x-leftThickness-stretch - w or lineEnd.x,
 							lineEnd.y-stretch
 						},
 						middleOffset
@@ -303,9 +334,9 @@ function CrosshairDesigner.CalculateLines(config)
 				-- left
 				line = {CrosshairDesigner.RotateLine(
 					{CrosshairDesigner.TranslateLine({
-							not pointInwards and lineStart.x+rightThickness + w or lineStart.x,
+							not pointInwards and lineStart.x+rightThickness + w -1 or lineStart.x,
 							lineStart.y,
-							not pointOutwards and lineEnd.x+rightThickness-stretch + w or lineEnd.x,
+							not pointOutwards and lineEnd.x+rightThickness-stretch + w -1 or lineEnd.x,
 							lineEnd.y-stretch
 						},
 						middleOffset
@@ -318,9 +349,9 @@ function CrosshairDesigner.CalculateLines(config)
 				if not pointInwards then
 					line = {CrosshairDesigner.RotateLine(
 						{CrosshairDesigner.TranslateLine({
-								lineStart.x-leftThickness-1-outlineWidth,
+								lineStart.x-leftThickness-outlineWidth,
 								lineStart.y-1 + w,
-								lineStart.x+1+rightThickness+outlineWidth,
+								lineStart.x+rightThickness+outlineWidth,
 								lineStart.y-1 +w
 							},
 							middleOffset
@@ -334,10 +365,10 @@ function CrosshairDesigner.CalculateLines(config)
 				if not pointOutwards then
 					line = {CrosshairDesigner.RotateLine(
 						{CrosshairDesigner.TranslateLine({
-								lineEnd.x-leftThickness-1-stretch-outlineWidth,
-								lineEnd.y-stretch + w,
-								lineEnd.x+1+rightThickness-stretch+outlineWidth,
-								lineEnd.y-stretch + w
+								lineEnd.x-leftThickness-stretch-outlineWidth,
+								lineEnd.y-stretch + w -1,
+								lineEnd.x+rightThickness-stretch+outlineWidth,
+								lineEnd.y-stretch + w -1
 							},
 							middleOffset
 						)},
