@@ -96,7 +96,7 @@ function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness)
 
 	-- Normal line
 	for k, line in pairs(lines) do
-		local middle = math.ceil(k/lineThickness) * lineThickness - (lineThickness - 1)
+		local middle = (math.ceil(k/lineThickness) * lineThickness - (lineThickness - 1) % lines) + 1
 		local middleLine = lines[middle]
 
 		local pos = Vector(middleLine[3], middleLine[4])
