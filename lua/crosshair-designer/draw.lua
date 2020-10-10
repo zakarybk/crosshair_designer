@@ -573,6 +573,7 @@ local Crosshair = function()
 	local length = cachedCross["Length"]
 	local gap = cachedCross["Gap"]
 	local thickness = cachedCross["Thickness"]
+	local stretch = cachedCross["Stretch"]
 
 	-- Based on clockwise with start at the top, so right then left
 	local leftThickness = math.floor(cachedCross["Thickness"]/2)
@@ -581,37 +582,43 @@ local Crosshair = function()
 	-- top left, top right, bottom right, bottom left
 	local topLeft = Vector(-leftThickness, 0)
 	local topRight = Vector(rightThickness, 0)
-	local bottomRight = Vector(rightThickness, length)
-	local bottomLeft = Vector(-leftThickness, length)
+	local bottomRight = Vector(rightThickness-stretch, length)
+	local bottomLeft = Vector(-leftThickness-stretch, length)
 
-	local lines = 10
+	local lines = 5
 
 	mx = (ScrW() / 2) - 1
 	my = ScrH() / 2
+
+	surface.SetDrawColor(drawCol)
 
 	for i=1, lines do
 
 		local rotation = (((360 / lines) * i) - cachedCross["Rotation"]) % 360
 		local middleOffset = Vector(0, 0)
 
+		-- 45 is the rotation offset needed to separate top and left from bottom and right
+		-- This split was chosen because the HL2 crosshair uses the top right pixel
+		-- The rotation goes anti-clockwise, hence using -cachedCross["Rotation"])
+
 		if rotation >= 0+45 and rotation <= (180+45)%360 then
 			local gapOffset = math.ceil(gap/2)
-			surface.SetDrawColor(255, 0, 0, 255)
+
 			if (rotation >=0+45 and rotation <= 90+45) then
-				-- Right side
+				-- Right side (with 0 rotation)
 				middleOffset = Vector(-1, gapOffset) -- x = y, y = x
 			else
-				-- Top side
+				-- Top side (with 0 rotation)
 				middleOffset = Vector(-1, -1 + gapOffset)
 			end
 		else
 			local gapOffset = math.floor((gap/2)) + 1
-			surface.SetDrawColor(drawCol)
+
 			if (rotation > 180+45 and rotation <= 270+45) then
-				-- Left side
+				-- Left side (with 0 rotation)
 				middleOffset = Vector(0, -1 + gapOffset)
 			else
-				-- Bottom side
+				-- Bottom side (with 0 rotation)
 				middleOffset = Vector(0, gapOffset)
 			end
 		end
