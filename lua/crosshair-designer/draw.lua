@@ -565,7 +565,7 @@ local Crosshair = function()
 	-- end
 
 	local lines, lineOutlines = CrosshairDesigner.CalculateLines({
-		lineCount = 4,
+		lineCount = 10,
 		rotation = cachedCross["Rotation"],
 		thickness = cachedCross["Thickness"],
 		stretch = cachedCross["Stretch"],
@@ -573,7 +573,7 @@ local Crosshair = function()
 		length = cachedCross["Length"],
 		addOutline = true,
 		outlineWidth = 2,
-		--pointInwards = true
+		pointInwards = true
 	})
 
 	--PrintTable(lines)
@@ -581,7 +581,26 @@ local Crosshair = function()
 	lines = CrosshairDesigner.TranslateLines(lines, Vector(mx, my))
 	lineOutlines = CrosshairDesigner.TranslateLines(lineOutlines, Vector(mx, my))
 
-	-- PrintTable(lines)
+	lines = CrosshairDesigner.AdjustByDynamicGap(lines, dynamic, Vector(mx, my))
+	lineOutlines = CrosshairDesigner.AdjustByDynamicGap(lineOutlines, dynamic, Vector(mx, my))
+
+	-- print(lines[1][3], lines[1][4])
+	-- local ang = CrosshairDesigner.Direction(Vector(lines[1][3], lines[1][4]), Vector(mx, my)) or 0
+
+	-- for k, line in pairs(lines) do
+	-- 	local ang = CrosshairDesigner.Direction(Vector(line[3], line[4]), Vector(mx, my))
+	-- 	local dynamicAmt = dynamic
+
+	-- 	if (ang <= 45) then
+	-- 		lines[k] = {CrosshairDesigner.TranslateLine(line, Vector(-dynamicAmt, 0))}
+	-- 	elseif (ang <= 90+45) then
+	-- 		lines[k] = {CrosshairDesigner.TranslateLine(line, Vector(0, -dynamicAmt))}
+	-- 	elseif (ang <= 180+45) then
+	-- 		lines[k] = {CrosshairDesigner.TranslateLine(line, Vector(dynamicAmt, 0))}
+	-- 	else
+	-- 		lines[k] = {CrosshairDesigner.TranslateLine(line, Vector(0, dynamicAmt))}
+	-- 	end
+	-- end
 
 	for k, line in pairs(lines) do
 		-- print(unpack(line))

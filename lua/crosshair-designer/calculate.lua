@@ -77,6 +77,40 @@ function CrosshairDesigner.RotateLine(line, rotation)
 		rotatedEnd.x, rotatedEnd.y
 end
 
+function CrosshairDesigner.Direction(point1, point2)
+   local rad = math.atan2(point2.y - point1.y, point2.x - point1.x);
+
+    // Ajust result to be between 0 to 2*Pi
+    if (rad < 0) then
+        rad = rad + (2 * math.pi);
+    end
+
+    local deg = rad * (180 / math.pi);
+
+   return deg
+end
+
+function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, screenCentre)
+	local translated = {}
+
+	for k, line in pairs(lines) do
+		local ang = CrosshairDesigner.Direction(Vector(line[3], line[4]), screenCentre)
+		local dynamicAmt = gap
+
+		if (ang >= 270+45 or ang <= 45) then
+			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(-dynamicAmt, 0))}
+		elseif (ang <= 90+45) then
+			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(0, -dynamicAmt))}
+		elseif (ang <= 180+45) then
+			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(dynamicAmt, 0))}
+		else
+			translated[k] = {CrosshairDesigner.TranslateLine(line, Vector(0, dynamicAmt))}
+		end
+	end
+
+	return translated
+end
+
 function CrosshairDesigner.CalculateLinePolys(config)
 	-- Parameter check
 	if config.lineCount == nil then Error("No lineCount supplied to CalculateLinePolys!") end
