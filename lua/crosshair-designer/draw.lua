@@ -573,6 +573,7 @@ local Crosshair = function()
 		length = cachedCross["Length"],
 		addOutline = outline,
 		outlineWidth = 2,
+		--pointInwards = true
 	})
 
 	--PrintTable(lines)
