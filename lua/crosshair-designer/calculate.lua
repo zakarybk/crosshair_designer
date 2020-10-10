@@ -144,25 +144,17 @@ function CrosshairDesigner.AdjustPolysByDynamicGap(polys, gap, lineThickness, to
 	local translatedPolys = {}
 	local dynamicAmt = gap
 
-
 	-- Normal line
 	for k, poly in pairs(polys) do
-		local middle
-		if k % 2 == 0 then
-			middle = Vector(0, 1)
-		else
-			middle = Vector(0, -1)
-		end
-		local rot = ((360/#polys) * k) - totalRotation % 360
-
-		middle:Rotate(Angle(rot, rot))
+		-- Calculate direction based off of position created + angle offset
+		local rot = math.rad((((360 / #polys) * k) - totalRotation + 90) % 360)
+		local middle = Vector(-math.cos(rot), math.sin(rot))
 
 		local pos = middle
 		local direction = pos:GetNormalized()
 		local dyanmicGap = direction * dynamicAmt
 
 		translatedPolys[k] = CrosshairDesigner.TranslatePoly(poly, dyanmicGap)
-
 	end
 
 	return translatedPolys
