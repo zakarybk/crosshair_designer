@@ -571,7 +571,7 @@ local Crosshair = function()
 		stretch = cachedCross["Stretch"],
 		gap = cachedCross["Gap"],
 		length = cachedCross["Length"],
-		addOutline = outline,
+		addOutline = true,
 		outlineWidth = 2,
 		--pointInwards = true
 	})

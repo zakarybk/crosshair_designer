@@ -201,7 +201,7 @@ function CrosshairDesigner.CalculateLines(config)
 	local gap = config.gap
 	local length = config.length
 	local addOutline = config.addOutline != nil and config.addOutline or false
-	local outlineWidth = outlineWidth or 1
+	local outlineWidth = config.outlineWidth != nil and config.outlineWidth or 1
 	local pointInwards = config.pointInwards != nil and config.pointInwards or false
 	local pointOutwards = config.pointOutwards != nil and config.pointOutwards or false
 
@@ -252,56 +252,12 @@ function CrosshairDesigner.CalculateLines(config)
 		if addOutline then
 			-- based on | being the line
 			-- right
-			line = {CrosshairDesigner.RotateLine(
-				{CrosshairDesigner.TranslateLine({
-						not pointInwards and lineStart.x-outlineWidth-leftThickness or lineStart.x,
-						lineStart.y,
-						not pointOutwards and lineEnd.x-outlineWidth-leftThickness-stretch or lineEnd.x,
-						lineEnd.y-stretch
-					},
-					middleOffset
-				)},
-				rot
-			)}
-			table.insert(outlineLines, line)
-
-			-- left
-			line = {CrosshairDesigner.RotateLine(
-				{CrosshairDesigner.TranslateLine({
-						not pointInwards and lineStart.x+outlineWidth+rightThickness-1 or lineStart.x,
-						lineStart.y,
-						not pointOutwards and lineEnd.x+outlineWidth+rightThickness-1-stretch or lineEnd.x,
-						lineEnd.y-stretch
-					},
-					middleOffset
-				)},
-				rot
-			)}
-			table.insert(outlineLines, line)
-
-			-- inner
-			if not pointInwards then
+			for w=0, outlineWidth do
 				line = {CrosshairDesigner.RotateLine(
 					{CrosshairDesigner.TranslateLine({
-							lineStart.x-leftThickness-1,
-							lineStart.y-outlineWidth,
-							lineStart.x+outlineWidth+rightThickness,
-							lineStart.y-outlineWidth
-						},
-						middleOffset
-					)},
-					rot
-				)}
-				table.insert(outlineLines, line)
-			end
-
-			-- outer
-			if not pointOutwards then
-				line = {CrosshairDesigner.RotateLine(
-					{CrosshairDesigner.TranslateLine({
-							lineEnd.x-leftThickness-1-stretch,
-							lineEnd.y-stretch,
-							lineEnd.x+outlineWidth+rightThickness-stretch,
+							not pointInwards and lineStart.x-leftThickness-1 - w or lineStart.x,
+							lineStart.y,
+							not pointOutwards and lineEnd.x-leftThickness-1-stretch - w or lineEnd.x,
 							lineEnd.y-stretch
 						},
 						middleOffset
@@ -309,6 +265,52 @@ function CrosshairDesigner.CalculateLines(config)
 					rot
 				)}
 				table.insert(outlineLines, line)
+
+				-- left
+				line = {CrosshairDesigner.RotateLine(
+					{CrosshairDesigner.TranslateLine({
+							not pointInwards and lineStart.x+rightThickness + w or lineStart.x,
+							lineStart.y,
+							not pointOutwards and lineEnd.x+rightThickness-stretch + w or lineEnd.x,
+							lineEnd.y-stretch
+						},
+						middleOffset
+					)},
+					rot
+				)}
+				table.insert(outlineLines, line)
+
+				-- inner
+				if not pointInwards then
+					line = {CrosshairDesigner.RotateLine(
+						{CrosshairDesigner.TranslateLine({
+								lineStart.x-leftThickness-1-outlineWidth,
+								lineStart.y-1 + w,
+								lineStart.x+1+rightThickness+outlineWidth,
+								lineStart.y-1 +w
+							},
+							middleOffset
+						)},
+						rot
+					)}
+					table.insert(outlineLines, line)
+				end
+
+				-- outer
+				if not pointOutwards then
+					line = {CrosshairDesigner.RotateLine(
+						{CrosshairDesigner.TranslateLine({
+								lineEnd.x-leftThickness-1-stretch-outlineWidth,
+								lineEnd.y-stretch + w,
+								lineEnd.x+1+rightThickness-stretch+outlineWidth,
+								lineEnd.y-stretch + w
+							},
+							middleOffset
+						)},
+						rot
+					)}
+					table.insert(outlineLines, line)
+				end
 			end
 		end
 
