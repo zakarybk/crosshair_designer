@@ -61,7 +61,7 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 
 			if id then
 				-- If a setting was found in the save, use it
-				if strings[i] != nil then
+				if strings[i] != nil and strings[i] != "" then
 					val = strings[i]
 				else
 				-- Otherwise use the default value
@@ -69,16 +69,23 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 				end
 			end
 
+			print(id.data.id, "\t", val)
+
+			-- Hacky fix for older crosshairs
+			if id.data.id == "Thickness" then
+				val = math.max(1, val)
+			end
+
 			CrosshairDesigner.SetValue(id.data.var, val)
 
 			-- Keep running until the game decides it wants to update our values
 			if tostring(CrosshairDesigner.GetValue(id.data.var)) == tostring(val) then
-				i = i + 1
-
 				if i == count then
 					hook.Run("CrosshairDesigner_CrosshairLoaded")
 					timer.Remove("CrosshairDesigner_StaggeredSettings")
 				end
+
+				i = i + 1
 			end
 		end)
 	else
@@ -269,4 +276,45 @@ end
 -- The friendly readable one
 CrosshairDesigner.GetConvarID = function(convar)
 	return convars[convar] ~= nil and convars[convar].data.id or ""
+end
+
+
+CrosshairDesigner.IsValidCrosshair = function(values)
+	local isValid = true
+	local inValid = {id = "none", expected="none", actual="none"}
+
+	for id, val in pairs(values) do
+		local data = CrosshairDesigner.GetConvarData(id)
+
+		if data.min ~= nil then
+			if tonumber(val) == nil or tonumber(val) < data.min then
+				isValid = false
+				inValid = {
+					id = id,
+					expected="between " + data.min + ":" + data.max,
+					actual=val
+				}
+			end
+		end
+
+		if data.max ~= nil then
+			if tonumber(val) == nil or tonumber(val) > data.max then
+				isValid = false
+				inValid = {
+					id = id,
+					expected="between " + data.min + ":" + data.max,
+					actual=val
+				}
+			end
+		end
+
+		if data.isBool then
+			if tobool(val) == nil then
+				isValid = false
+				inValid = {id = id, expected="true/false", actual=val}
+			end
+		end
+	end
+
+	return isValid, inValid
 end

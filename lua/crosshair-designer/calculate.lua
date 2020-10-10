@@ -122,7 +122,7 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 	-- We use the middle line from lines so that we can move from the middle
 
 	for k, line in pairs(outlines) do
-		local middle = (math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)) % #lines
+		local middle = ((math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)) % #lines) + 1
 		local middleLine = lines[middle]
 		print(k, middle)
 

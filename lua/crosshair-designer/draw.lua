@@ -243,6 +243,23 @@ local LINE_STYLE_INWARDS = 1
 local LINE_STYLE_OUTWARDS = 2
 
 local function updateCalculated()
+	-- Only update if all values are valid
+	local isValid, inValid = CrosshairDesigner.IsValidCrosshair({
+			["Segments"] = cachedCross["Segments"],
+			["Rotation"] = cachedCross["Rotation"],
+			["Thickness"] = cachedCross["Thickness"],
+			["Stretch"] = cachedCross["Stretch"],
+			["Gap"] = cachedCross["Gap"],
+			["Length"] = cachedCross["Length"],
+			["Outline"] = cachedCross["Outline"],
+			["LineStyle"] = cachedCross["LineStyle"]
+	})
+
+	if not isValid then
+		PrintTable(inValid)
+		return
+	end
+
 	-- Poly based
 	if cachedCross["FillDraw"] then
 		local polys, outlinePolys = CrosshairDesigner.CalculateLinePolys({

@@ -73,7 +73,7 @@ else
 			var="cross_arrow",
 			default="0",
 			help="Change the lines on the crosshair to be pointed:\n0 = Rectangle\n1 = Inwards\n2 = Outwards",
-			title="Line Style",
+			title="Line style",
 			min=0,
 			max=2,
 		},
