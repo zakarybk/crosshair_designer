@@ -69,12 +69,13 @@ else
 			isBool=true
 		},
 		{
-			id="UseArrow",
+			id="LineStyle",
 			var="cross_arrow",
 			default="0",
-			help="Change the lines on the crosshair to be pointed",
-			title="Make lines into arrows",
-			isBool=true,
+			help="Change the lines on the crosshair to be pointed:\n0 = Rectangle\n1 = Inwards\n2 = Outwards",
+			title="Line Style",
+			min=0,
+			max=2,
 		},
 		{
 			id="UseCircle",
@@ -300,8 +301,9 @@ else
 			var="crosshair_designer_outline",
 			default="0",
 			help="Outlines the crosshair",
-			title="Outline",
-			isBool=true
+			title="Outline thickness",
+			min=0,
+			max=100
 		},
 		{
 			id="OutlineRed",
@@ -359,6 +361,15 @@ else
 			help="Draw a single shape instead of multiple lines",
 			title="Fill draw",
 			isBool=true
+		},
+		{
+			id="Segments",
+			var="crosshairdesigner_segments",
+			default="4",
+			help="Change the number of segemnts which make up the crosshair",
+			title="Segments",
+			min=1,
+			max=100,
 		},
 	})
 

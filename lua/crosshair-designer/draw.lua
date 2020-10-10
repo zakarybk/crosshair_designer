@@ -87,399 +87,6 @@ local ScrW = ScrW
 local mx, my
 local shouldDraw
 
-local function rotateAroundPoint(point, radians, origin)
-	local cosRadians = math.cos(radians)
-	local sinRadians = math.sin(radians)
-
-    local x, y = point.x, point.y
-    local ox, oy = origin.x, origin.y
-
-    local qx = ox + cosRadians * (x - ox) + sinRadians * (y - oy)
-    local qy = oy + -sinRadians * (x - ox) + cosRadians * (y - oy)
-
-    return qx, qy
-end
-
-local function drawRotated(px, py, ox, oy, screenCentre, rotation)
-	local lineStartX, lineStartY = rotateAroundPoint(Vector(px, py),rotation,screenCentre)
-	local lineEndX, lineEndY = rotateAroundPoint(Vector(ox, oy), rotation, screenCentre)
-
-	--surface.DrawLine(o.x, o.y, p.x, p.y)
-	surface.DrawLine(lineStartX, lineStartY, lineEndX, lineEndY)
-end
-
-local function calcRotated(px, py, ox, oy, screenCentre, rotation)
-	local lineStartX, lineStartY = rotateAroundPoint(Vector(px, py),rotation,screenCentre)
-	local lineEndX, lineEndY = rotateAroundPoint(Vector(ox, oy), rotation, screenCentre)
-
-	return {lineStartX, lineStartY, lineEndX, lineEndY}
-end
-
-local function generatePolys()
-	local gap = cachedCross["Gap"] + dynamic
-	local length = cachedCross["Length"]
-	local rotation = math.rad(cachedCross["Rotation"])
-
-	local gapLeft = math.floor((gap/2)) + 1
-	local gapRight = math.ceil(gap/2)
-	local topOffset = math.floor(cachedCross["Thickness"]/2) + 1
-	local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
-
-	local boolNum = {["false"] = 0, ["true"] = 1, ["nil"] = 0, [""] = 0}
-	local fillOutline = boolNum[tostring(cachedCross["Outline"])]
-	fillOutline = fillOutline or 0
-
-	-- Function to call this needs to translate the poly
-	local mx = 0
-	local my = 0
-	local screenCentre = Vector(0, 0)
-
-	local polys = {}
-
-	-- left
-	local x1, y1 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-	local x2, y2 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
-	local x3, y3 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
-	local x4, y4 = rotateAroundPoint(Vector(mx-gapLeft+fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-	-- bottom
-	x1, y1 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
-	x2, y2 = rotateAroundPoint(Vector(mx-topOffset+1-fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
-	x3, y3 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft-fillOutline), rotation, screenCentre) -- top
-	x4, y4 = rotateAroundPoint(Vector(mx+bottomOffset+fillOutline, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-	-- right
-	x1, y1 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my+topOffset+fillOutline), rotation, screenCentre) -- bottom
-	x2, y2 = rotateAroundPoint(Vector(mx+gapRight-fillOutline, my-bottomOffset+1-fillOutline), rotation, screenCentre) -- top
-	x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-bottomOffset+1-fillOutline), rotation, screenCentre) -- top
-	x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+topOffset+fillOutline), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-	-- top
-	x1, y1 = rotateAroundPoint(Vector(mx-bottomOffset+1-fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
-	x2, y2 = rotateAroundPoint(Vector(mx-bottomOffset+1-fillOutline, my-length-gapRight+1-fillOutline), rotation, screenCentre) -- top
-	x3, y3 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight-length+1-fillOutline), rotation, screenCentre) -- top
-	x4, y4 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight+1+fillOutline), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-
-	return polys
-end
-
-local function generateArrowPolys()
-	local gap = cachedCross["Gap"] + dynamic
-	local length = cachedCross["Length"]
-	local rotation = math.rad(cachedCross["Rotation"])
-
-	local gapLeft = math.floor((gap/2)) + 1
-	local gapRight = math.ceil(gap/2)
-	local topOffset = math.floor(cachedCross["Thickness"]/2) + 1
-	local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
-
-	local boolNum = {["false"] = 0, ["true"] = 1, ["nil"] = 0, [""] = 0}
-	local fillOutline = boolNum[tostring(cachedCross["Outline"])]
-	fillOutline = fillOutline or 0
-
-	-- Function to call this needs to translate the poly
-	local mx = 0
-	local my = 0
-	local screenCentre = Vector(0, 0)
-
-	local polys = {}
-
-	-- left
-	local x1, y1 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-	local x2, y2 = rotateAroundPoint(Vector(mx-length-gapLeft-fillOutline+1, my-topOffset+1-fillOutline), rotation, screenCentre) -- top
-	local x3, y3 = rotateAroundPoint(Vector(mx-gapLeft, my), rotation, screenCentre) -- top
-	local x4, y4 = rotateAroundPoint(Vector(mx-gapLeft, my), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-	-- bottom
-	x1, y1 = rotateAroundPoint(Vector(mx-topOffset+1, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
-	x2, y2 = rotateAroundPoint(Vector(mx, my+gapLeft), rotation, screenCentre) -- top
-	x3, y3 = rotateAroundPoint(Vector(mx, my+gapLeft), rotation, screenCentre) -- top
-	x4, y4 = rotateAroundPoint(Vector(mx+bottomOffset, my+gapLeft+length+fillOutline), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-	-- right
-	x1, y1 = rotateAroundPoint(Vector(mx+gapRight, my), rotation, screenCentre) -- bottom
-	x2, y2 = rotateAroundPoint(Vector(mx+gapRight, my), rotation, screenCentre) -- top
-	x3, y3 = rotateAroundPoint(Vector(mx+gapRight+length+fillOutline, my-topOffset+1), rotation, screenCentre) -- top
-	x4, y4 = rotateAroundPoint(Vector(mx+length+gapRight+fillOutline, my+bottomOffset+fillOutline), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-	-- top
-	x1, y1 = rotateAroundPoint(Vector(mx, my-gapRight+1), rotation, screenCentre) -- bottom
-	x2, y2 = rotateAroundPoint(Vector(mx-bottomOffset+1, my-length-gapRight+1-fillOutline), rotation, screenCentre) -- top
-	x3, y3 = rotateAroundPoint(Vector(mx+topOffset+fillOutline, my-gapRight-length+1-fillOutline), rotation, screenCentre) -- top
-	x4, y4 = rotateAroundPoint(Vector(mx, my-gapRight+1), rotation, screenCentre) -- bottom
-	table.insert(polys, {
-		{x = x1, y = y1},
-		{x = x2, y = y2},
-		{x = x3, y = y3},
-		{x = x4, y = y4}
-	})
-
-	return polys
-end
-
-local function generateArrowLines()
-	-- Function to call this needs to translate the poly
-	local mx = 0
-	local my = 0
-	local screenCentre = Vector(0, 0)
-	local rotation = math.rad(cachedCross["Rotation"])
-	local stretch = cachedCross["Stretch"]
-	local gap = cachedCross["Gap"] + dynamic
-	local length = cachedCross["Length"]
-	local stretch = cachedCross["Stretch"]
-
-	local gapLeft = math.floor((gap/2)) + 1
-	local gapRight = math.ceil(gap/2)
-
-	local lines = {}
-
-	-- Draw the inital lines
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft+1, my, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft-1, screenCentre, rotation)) -- bottom
-
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch, mx+gapRight-1, my, screenCentre, rotation)) -- right
-	table.insert(lines, calcRotated(mx-stretch, my-length-stretch-gapRight, mx, my-gapRight+1, screenCentre, rotation)) -- top
-
-	--Arrows
-	for i=2,cachedCross["Thickness"] do
-
-		local offset = math.floor(i/2)
-
-		if i % 2 == 0 then
-			-- Draw clockwise on other side of the line
-			table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft+1, my, screenCentre, rotation)) -- left
-			table.insert(lines, calcRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx, my+gapLeft-1, screenCentre, rotation)) -- bottom
-
-			table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight-1, my, screenCentre, rotation)) -- right
-			table.insert(lines, calcRotated(mx-stretch+offset, my-length-stretch-gapRight, mx, my-gapRight+1, screenCentre, rotation)) -- top
-
-		else
-			-- Draw anti-clockwise on other side of the line
-			table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft+1, my, screenCentre, rotation)) -- left
-			table.insert(lines, calcRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx, my+gapLeft-1, screenCentre, rotation)) -- bottom
-
-			table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight-1, my, screenCentre, rotation)) -- right
-			table.insert(lines, calcRotated(mx-stretch-offset, my-length-stretch-gapRight, mx, my-gapRight+1, screenCentre, rotation)) -- top
-
-		end
-	end
-
-	return lines
-end
-
-local function generateLines()
-	-- Function to call this needs to translate the poly
-	local mx = 0
-	local my = 0
-	local screenCentre = Vector(0, 0)
-	local rotation = math.rad(cachedCross["Rotation"])
-	local stretch = cachedCross["Stretch"]
-	local gap = cachedCross["Gap"] + dynamic
-	local length = cachedCross["Length"]
-	local stretch = cachedCross["Stretch"]
-
-	local gapLeft = math.floor((gap/2)) + 1
-	local gapRight = math.ceil(gap/2)
-
-	local lines = {}
-
-	-- Draw the inital lines
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch, mx-gapLeft+1, my, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx+stretch, my+length+stretch+gapLeft, mx, my+gapLeft-1, screenCentre, rotation)) -- bottom
-
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch, mx+gapRight-1, my, screenCentre, rotation)) -- right
-	table.insert(lines, calcRotated(mx-stretch, my-length-stretch-gapRight, mx, my-gapRight+1, screenCentre, rotation)) -- top
-
-	for i=2,cachedCross["Thickness"] do
-		local offset = math.floor(i/2)
-
-		if i % 2 == 0 then
-			-- Draw clockwise on other side of the line
-			table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch-offset, mx-gapLeft+1, my-offset, screenCentre, rotation)) -- left
-			table.insert(lines, calcRotated(mx+stretch-offset, my+length+stretch+gapLeft, mx-offset, my+gapLeft-1, screenCentre, rotation)) -- bottom
-
-			table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch+offset, mx+gapRight-1, my+offset, screenCentre, rotation)) -- right
-			table.insert(lines, calcRotated(mx-stretch+offset, my-length-stretch-gapRight, mx+offset, my-gapRight+1, screenCentre, rotation)) -- top
-
-		else
-			-- Draw anti-clockwise on other side of the line
-			table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch+offset, mx-gapLeft+1, my+offset, screenCentre, rotation)) -- left
-			table.insert(lines, calcRotated(mx+stretch+offset, my+length+stretch+gapLeft, mx+offset, my+gapLeft-1, screenCentre, rotation)) -- bottom
-
-			table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch-offset, mx+gapRight-1, my-offset, screenCentre, rotation)) -- right
-			table.insert(lines, calcRotated(mx-stretch-offset, my-length-stretch-gapRight, mx-offset, my-gapRight+1, screenCentre, rotation)) -- top
-
-		end
-	end
-
-	return lines
-end
-
-local function generateArrowOutline()
-	-- Function to call this needs to translate the poly
-	local mx = 0
-	local my = 0
-	local screenCentre = Vector(0, 0)
-
-	local lines = {}
-
-	-- Outline for arrow crosshair
-	local topOffset = math.floor(cachedCross["Thickness"]/2) + 1
-	local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
-	local stretch = cachedCross["Stretch"]
-	local gap = cachedCross["Gap"] + dynamic
-	local length = cachedCross["Length"]
-	local stretch = cachedCross["Stretch"]
-	local rotation = math.rad(cachedCross["Rotation"])
-
-	local gapLeft = math.floor((gap/2)) + 1
-	local gapRight = math.ceil(gap/2)
-
-	-- Outline left
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft, my, screenCentre, rotation)) -- top
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-gapLeft, my, screenCentre, rotation)) -- bottom
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft-1, my+stretch+bottomOffset, mx-stretch-length-gapLeft-1, my-topOffset+stretch, screenCentre, rotation)) -- left
-
-	-- Outline bottom
-	table.insert(lines, calcRotated(mx-topOffset+stretch, my+gapLeft+stretch+length+1, mx+bottomOffset+stretch, my+gapLeft+stretch+length+1, screenCentre, rotation)) -- bottom
-	table.insert(lines, calcRotated(mx+stretch-topOffset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx+stretch+bottomOffset, my+length+stretch+gapLeft, mx, my+gapLeft, screenCentre, rotation)) -- right
-
-	-- Outline right
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight-1, my-stretch-topOffset, mx+gapRight-1, my, screenCentre, rotation)) -- top
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight-1, my-stretch+topOffset-1, mx+gapRight-1, my, screenCentre, rotation)) -- bottom
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch-bottomOffset-1, mx+gapRight+length+stretch, my+topOffset-stretch, screenCentre, rotation)) -- right
-
-	-- Outline top
-	table.insert(lines, calcRotated(mx-stretch-bottomOffset, my-length-stretch-gapRight-1, mx+topOffset-stretch, my-gapRight-length-stretch-1, screenCentre, rotation)) -- top
-	table.insert(lines, calcRotated(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx-stretch+topOffset, my-length-stretch-gapRight, mx, my-gapRight, screenCentre, rotation)) -- right
-
-
-	return lines
-end
-
-local function generateOutline()
-	-- Function to call this needs to translate the poly
-	local mx = 0
-	local my = 0
-	local screenCentre = Vector(0, 0)
-
-	local lines = {}
-
-	-- Outline for rectangle crosshair
-	local topOffset = math.floor(cachedCross["Thickness"]/2) + 1
-	local bottomOffset = math.ceil(cachedCross["Thickness"]/2)
-	local gap = cachedCross["Gap"] + dynamic
-	local length = cachedCross["Length"]
-	local stretch = cachedCross["Stretch"]
-	local rotation = math.rad(cachedCross["Rotation"])
-
-	local gapLeft = math.floor((gap/2)) + 1
-	local gapRight = math.ceil(gap/2)
-
-	-- Outline left
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch-topOffset, mx-gapLeft+1, my-topOffset, screenCentre, rotation)) -- top
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft+1, my+stretch+bottomOffset, mx-gapLeft+1, my+bottomOffset, screenCentre, rotation)) -- bottom
-	table.insert(lines, calcRotated(mx-stretch-length-gapLeft, my+stretch+bottomOffset, mx-stretch-length-gapLeft, my-topOffset+stretch, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx-gapLeft+1, my+bottomOffset, mx-gapLeft+1, my-topOffset-1, screenCentre, rotation)) -- right
-
-	-- Outline bottom
-	table.insert(lines, calcRotated(mx-topOffset, my+gapLeft-1, mx+bottomOffset+1, my+gapLeft-1, screenCentre, rotation)) -- top
-	table.insert(lines, calcRotated(mx-topOffset+stretch, my+gapLeft+stretch+length, mx+bottomOffset+stretch+1, my+gapLeft+stretch+length, screenCentre, rotation)) -- bottom
-	table.insert(lines, calcRotated(mx+stretch-topOffset, my+length+stretch+gapLeft-1, mx-topOffset, my+gapLeft-1, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx+stretch+bottomOffset, my+length+stretch+gapLeft-1, mx+bottomOffset, my+gapLeft-1, screenCentre, rotation)) -- right
-
-	-- Outline right
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight-1, my-stretch-bottomOffset, mx+gapRight-1, my-bottomOffset, screenCentre, rotation)) -- top
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch+topOffset, mx+gapRight-1, my+topOffset, screenCentre, rotation)) -- bottom
-	table.insert(lines, calcRotated(mx+gapRight-1, my-bottomOffset, mx+gapRight-1, my+topOffset+1, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx+stretch+length+gapRight, my-stretch-bottomOffset, mx+gapRight+length+stretch, my+topOffset-stretch, screenCentre, rotation)) -- right
-
-	-- Outline top
-	table.insert(lines, calcRotated(mx-stretch-topOffset+1, my-length-stretch-gapRight, mx+topOffset-stretch+1, my-gapRight-length-stretch, screenCentre, rotation)) -- top
-	table.insert(lines, calcRotated(mx-bottomOffset, my-gapRight+1, mx+topOffset+1, my-gapRight+1, screenCentre, rotation)) -- bottom
-	table.insert(lines, calcRotated(mx-stretch-bottomOffset, my-length-stretch-gapRight, mx-bottomOffset, my-gapRight+1, screenCentre, rotation)) -- left
-	table.insert(lines, calcRotated(mx-stretch+topOffset, my-length-stretch-gapRight+1, mx+topOffset, my-gapRight+1, screenCentre, rotation)) -- right
-
-	return lines
-end
-
-local function translatePolys(polys, newPos)
-	local translated = {}
-
-	for k, tbl in pairs(polys) do
-		translated[k] = {}
-		for _, pos in pairs(tbl) do
-			table.insert(translated[k], {x = pos.x + newPos.x, y = pos.y + newPos.y})
-		end
-	end
-
-	return translated
-end
-
-local function translateLines(lines, newPos)
-	local translated = {}
-
-	for k, tbl in pairs(lines) do
-		translated[k] = {}
-		for i, pos in pairs(tbl) do
-			local p
-			if i % 2 == 1 then
-				p = pos + newPos.x
-			else
-				p = pos + newPos.y
-			end
-			table.insert(translated[k], p)
-		end
-	end
-
-	return translated
-end
-
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
@@ -522,51 +129,56 @@ local Crosshair = function()
 		)
 	end
 
-	surface.SetDrawColor(drawCol)
-
-	-- Gap will vary depending on rotation
-
 	local rotation = 90
 	local length = cachedCross["Length"]
 	local gap = cachedCross["Gap"]
 	local thickness = cachedCross["Thickness"]
 	local stretch = cachedCross["Stretch"]
+	local outlineColor = Color(
+		cachedCross["OutlineRed"],
+		cachedCross["OutlineGreen"],
+		cachedCross["OutlineBlue"],
+		cachedCross["OutlineAlpha"]
+	)
 
 	local boolNum = {["false"] = 0, ["true"] = 1, ["nil"] = 0, [""] = 0}
 	local outline = boolNum[tostring(cachedCross["Outline"])]
 	outline = outline or 0
+	--
+	-- Draw poly
+	--
 
-	-- Aling with HL2 crosshair
-	mx = (ScrW() / 2) - 1
-	my = ScrH() / 2
+	-- local polys, outlinePolys = CrosshairDesigner.CalculateLinePolys({
+	-- 	lineCount = 4,
+	-- 	rotation = cachedCross["Rotation"],
+	-- 	thickness = cachedCross["Thickness"],
+	-- 	stretch = cachedCross["Stretch"],
+	-- 	gap = cachedCross["Gap"],
+	-- 	length = cachedCross["Length"],
+	-- 	addOutline = outline,
+	-- 	outlineWidth = 2,
+	-- 	pointInwards = true
+	-- })
 
-	local polys, outlinePolys = CrosshairDesigner.CalculateLinePolys({
-		lineCount = 4,
-		rotation = cachedCross["Rotation"],
-		thickness = cachedCross["Thickness"],
-		stretch = cachedCross["Stretch"],
-		gap = cachedCross["Gap"],
-		length = cachedCross["Length"],
-		addOutline = outline,
-		outlineWidth = 2,
-		pointInwards = true
-	})
+	-- polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
+	-- outlinePolys = CrosshairDesigner.AdjustPolysByDynamicGap(outlinePolys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
 
-	polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
-	outlinePolys = CrosshairDesigner.AdjustPolysByDynamicGap(outlinePolys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
+	-- polys = CrosshairDesigner.TranslatePolys(polys, Vector(mx, my))
+	-- outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, Vector(mx, my))
 
-	polys = CrosshairDesigner.TranslatePolys(polys, Vector(mx, my))
-	outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, Vector(mx, my))
+	-- surface.SetDrawColor(0, 0, 0, 255)
+	-- for k, poly in pairs(outlinePolys) do
+	-- 	surface.DrawPoly(poly)
+	-- end
 
-	surface.SetDrawColor(0, 0, 0, 255)
-	for k, poly in pairs(outlinePolys) do
-		surface.DrawPoly(poly)
-	end
+	-- surface.SetDrawColor(drawCol)
+	-- for k, poly in pairs(polys) do
+	-- 	surface.DrawPoly(poly)
+	-- end
 
-	surface.SetDrawColor(drawCol)
-	for k, poly in pairs(polys) do
-		surface.DrawPoly(poly)
-	end
+	--
+	-- Draw lines
+	--
 
 	-- local lines, lineOutlines = CrosshairDesigner.CalculateLines({
 	-- 	lineCount = 4,
@@ -626,9 +238,6 @@ local Crosshair = function()
 
 	--end
 
-
-	if true then return end
-
 	-- Thanks Simple ThirdPerson - https://github.com/Metastruct/simplethirdperson/blob/master/lua/autorun/thirdperson.lua#L933
 	if cachedCross["TraceDraw"] then
 		if not alreadyTraced then
@@ -641,6 +250,7 @@ local Crosshair = function()
 		local pos = traceResult.HitPos:ToScreen()
 		mx, my = pos.x, pos.y
 	else
+		-- Align with HL2 crosshair
 		mx = (ScrW() / 2) - 1
 		my = ScrH() / 2
 	end
@@ -648,58 +258,55 @@ local Crosshair = function()
 	local screenCentre = Vector(mx, my)
 
 	if cachedCross["FillDraw"] then
-		local polys = {}
+		local polys = cachedCross["LinePolys"]
+		local outlinePolys = cachedCross["OutlinePolys"]
 
-		if cachedCross["UseArrow"] then
-			polys = translatePolys(cachedCross["ArrowPolys"], screenCentre)
-		else
-			polys = translatePolys(cachedCross["Polys"], screenCentre)
+		-- Apply dynamic offset
+		if cachedCross["Dynamic"] then
+			polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
+			outlinePolys = CrosshairDesigner.AdjustPolysByDynamicGap(outlinePolys, dynamic, cachedCross["Thickness"], cachedCross["Rotation"])
+		end
+
+		-- Translate to middle of screen
+		polys = CrosshairDesigner.TranslatePolys(polys, screenCentre)
+		outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, screenCentre)
+
+
+		-- Draw
+		surface.SetDrawColor(outlineColor)
+		for k, poly in pairs(outlinePolys) do
+			surface.DrawPoly(poly)
 		end
 
 		surface.SetDrawColor(drawCol)
-		draw.NoTexture()
+		for k, poly in pairs(polys) do
+			surface.DrawPoly(poly)
+		end
+	else
+		local lines = cachedCross["Lines"]
+		local outlines = cachedCross["Outlines"]
+		local offset = cachedCross["LineStyle"] > 0 and 1 or 0 -- pointInwards and 1 or pointOutwards and 1 or 0
 
-		for k, v in pairs(polys) do
-			surface.DrawPoly(v)
+		-- Apply dynamic offset
+		if cachedCross["Dynamic"] then
+			lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic, cachedCross["Thickness"])
+			lineOutlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, lineOutlines, dynamic, 4-offset, cachedCross["Thickness"])
+		end
+
+		-- Translate to middle of screen
+		lines = CrosshairDesigner.TranslateLines(lines, screenCentre)
+		lineOutlines = CrosshairDesigner.TranslateLines(lineOutlines, screenCentre)
+
+		for k, line in pairs(lines) do
+			surface.DrawLine(unpack(line))
+		end
+
+		surface.SetDrawColor(outlineColor)
+		for k, line in pairs(lineOutlines) do
+			surface.DrawLine(unpack(line))
 		end
 	end
 
-	if not cachedCross["FillDraw"] then
-		local lines = {}
-
-		if cachedCross["UseArrow"] then
-			lines = translateLines(cachedCross["ArrowLines"], screenCentre)
-		else
-			lines = translateLines(cachedCross["Lines"], screenCentre)
-		end
-
-		surface.SetDrawColor(drawCol)
-
-		for k, v in pairs(lines) do
-			surface.DrawLine(v[1], v[2], v[3], v[4])
-		end
-	end
-
-	if cachedCross["Outline"] then
-		local lines = {}
-
-		if cachedCross["UseArrow"] then
-			lines = translateLines(cachedCross["ArrowOutline"], screenCentre)
-		else
-			lines = translateLines(cachedCross["Outline"], screenCentre)
-		end
-
-		surface.SetDrawColor(
-			cachedCross["OutlineRed"],
-			cachedCross["OutlineGreen"],
-			cachedCross["OutlineBlue"],
-			cachedCross["OutlineAlpha"]
-		)
-
-		for k, v in pairs(lines) do
-			surface.DrawLine(v[1], v[2], v[3], v[4])
-		end
-	end
 
 	if cachedCross["UseCircle"] then
 		surface.SetDrawColor(drawCol)
@@ -707,7 +314,7 @@ local Crosshair = function()
 			-- Pixel perfect under the HL2 crosshair
 			surface.DrawRect(mx, my, 1, 1)
 		else
-			-- If the circle pos is based off of tracing, 
+			-- If the circle pos is based off of tracing,
 			-- then it needs updating every frame
 			if cachedCross["TraceDraw"] then
 				generateCircle(
@@ -724,29 +331,44 @@ local Crosshair = function()
 
 end
 
+local LINE_STYLE_RECTANLE = 0
+local LINE_STYLE_INWARDS = 1
+local LINE_STYLE_OUTWARDS = 2
+
 local function updateCalculated()
+	-- Poly based
 	if cachedCross["FillDraw"] then
-		if cachedCross["UseArrow"] then
-			cachedCross["ArrowPolys"] = generateArrowPolys()
-		else
-			cachedCross["Polys"] = generatePolys()
-		end
-	end
+		local polys, outlinePolys = CrosshairDesigner.CalculateLinePolys({
+			lineCount = cachedCross["Segments"],
+			rotation = cachedCross["Rotation"],
+			thickness = cachedCross["Thickness"],
+			stretch = cachedCross["Stretch"],
+			gap = cachedCross["Gap"],
+			length = cachedCross["Length"],
+			addOutline = cachedCross["Outline"] > 0,
+			outlineWidth = cachedCross["Outline"],
+			pointInwards = cachedCross["LineStyle"] == LINE_STYLE_INWARDS,
+			pointOutwards = cachedCross["LineStyle"] == LINE_STYLE_OUTWARDS,
+		})
+		cachedCross["LinePolys"] = polys
+		cachedCross["OutlinePolys"] = outlinePolys
 
-	if not cachedCross["FillDraw"] then
-		if cachedCross["UseArrow"] then
-			cachedCross["ArrowLines"] = generateArrowLines()
-		else
-			cachedCross["Lines"] = generateLines()
-		end
-	end
-
-	if cachedCross["Outline"] then
-		if cachedCross["UseArrow"] then
-			cachedCross["ArrowOutline"] = generateArrowOutline()
-		else
-			cachedCross["Outline2"] = generateOutline()
-		end
+	else
+	-- Line based
+		local lines, lineOutlines = CrosshairDesigner.CalculateLines({
+			lineCount = cachedCross["Segments"],
+			rotation = cachedCross["Rotation"],
+			thickness = cachedCross["Thickness"],
+			stretch = cachedCross["Stretch"],
+			gap = cachedCross["Gap"],
+			length = cachedCross["Length"],
+			addOutline = cachedCross["Outline"] > 0,
+			outlineWidth = cachedCross["Outline"],
+			pointInwards = cachedCross["LineStyle"] == LINE_STYLE_INWARDS,
+			pointOutwards = cachedCross["LineStyle"] == LINE_STYLE_OUTWARDS,
+		})
+		cachedCross["Lines"] = lines
+		cachedCross["Outlines"] = lineOutlines
 	end
 end
 
