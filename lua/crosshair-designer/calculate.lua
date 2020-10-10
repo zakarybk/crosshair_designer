@@ -122,10 +122,8 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 	-- We use the middle line from lines so that we can move from the middle
 
 	for k, line in pairs(outlines) do
-		local middle = math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)
+		local middle = (math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)) % #lines
 		local middleLine = lines[middle]
-
-		print(middle)
 
 		local pos = Vector(middleLine[3], middleLine[4])
 		local direction = pos:GetNormalized()
@@ -185,7 +183,7 @@ function CrosshairDesigner.CalculateLinePolys(config)
 	local gap = config.gap
 	local length = config.length
 	local addOutline = config.addOutline != nil and config.addOutline or false
-	local outlineWidth = outlineWidth or 1
+	local outlineWidth = config.outlineWidth or 1
 	local pointInwards = config.pointInwards != nil and config.pointInwards or false
 	local pointOutwards = config.pointOutwards != nil and config.pointOutwards or false
 

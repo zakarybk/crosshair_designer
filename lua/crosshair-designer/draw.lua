@@ -290,19 +290,20 @@ local Crosshair = function()
 		-- Apply dynamic offset
 		if cachedCross["Dynamic"] then
 			lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic, cachedCross["Thickness"])
-			lineOutlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, lineOutlines, dynamic, 4-offset, cachedCross["Thickness"])
+			outlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, dynamic, 4-offset, cachedCross["Thickness"])
 		end
 
 		-- Translate to middle of screen
 		lines = CrosshairDesigner.TranslateLines(lines, screenCentre)
-		lineOutlines = CrosshairDesigner.TranslateLines(lineOutlines, screenCentre)
+		outlines = CrosshairDesigner.TranslateLines(outlines, screenCentre)
 
+		surface.SetDrawColor(drawCol)
 		for k, line in pairs(lines) do
 			surface.DrawLine(unpack(line))
 		end
 
 		surface.SetDrawColor(outlineColor)
-		for k, line in pairs(lineOutlines) do
+		for k, line in pairs(outlines) do
 			surface.DrawLine(unpack(line))
 		end
 	end
