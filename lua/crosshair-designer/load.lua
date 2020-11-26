@@ -476,12 +476,27 @@ else
 		end
 	)
 
+	--ArcCW
+	CrosshairDesigner.AddSwepCheck("ArcCW",
+		function(ply, wep) -- ShouldUse
+			if string.Left(wep:GetClass(), 6) == "arccw_" then
+				return wep.Sighted ~= nil
+			end
+		end,
+		function(ply, wep) -- ShouldDraw
+			return not (
+				CrosshairDesigner.GetBool("HideOnADS") and
+				wep.Sighted
+			)
+		end
+	)
+
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
 	local gm = engine.ActiveGamemode()
 	if gm == "prop_hunt" then
 		CrosshairDesigner.DisableFeature("ColOnTarget", false, "Giving away positions in Prop Hunt!")
 	elseif gm == "guesswho" then
-		CrosshairDesigner.DisableFeature("ColOnTarget", false, "Giving away position in Guess Who!")
+		CrosshairDesigner.DisableFeature("ColOnTarget", false, "Giving away positions in Guess Who!")
 	end
 
 	-- Directory where everything is saved
