@@ -177,6 +177,9 @@ local Crosshair = function()
 			polys = CrosshairDesigner.TranslatePolys(polys, screenCentre)
 			outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, screenCentre)
 
+			-- Ignore texture set by other addons
+			draw.NoTexture()
+
 			-- Draw outline
 			surface.SetDrawColor(outlineColor)
 			for k, poly in pairs(outlinePolys) do
@@ -226,6 +229,7 @@ local Crosshair = function()
 		surface.SetDrawColor(drawCol)
 		if cachedCross["CircleRadius"] == 1 then
 			-- Pixel perfect under the HL2 crosshair
+			draw.NoTexture()
 			surface.DrawRect(mx, my, 1, 1)
 		else
 			-- If the circle pos is based off of tracing,
