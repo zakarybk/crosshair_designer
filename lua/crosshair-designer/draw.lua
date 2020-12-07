@@ -167,6 +167,9 @@ local Crosshair = function()
 			local polys = cachedCross["LinePolys"]
 			local outlinePolys = cachedCross["OutlinePolys"]
 
+			dynamic = wep.CurrentCrosshairInaccuracy == nil and dynamic or wep:CurrentCrosshairInaccuracy()
+			dynamic = dynamic * 1
+
 			-- Apply dynamic offset
 			if cachedCross["Dynamic"] then
 				polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Rotation"])

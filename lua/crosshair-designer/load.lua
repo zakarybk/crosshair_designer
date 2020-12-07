@@ -411,6 +411,28 @@ else
 				CrosshairDesigner.GetBool("HideOnADS") and
 				wep:GetIronSights()
 			)
+		end,
+		function(ply, wep) -- OnSet
+			if wep.CurrentCrosshairInaccuracy == nil then
+				local cgapscale_cvar = GetConVar("cl_tfa_hud_crosshair_gap_scale")
+				local clen_usepixels = GetConVar("cl_tfa_hud_crosshair_length_use_pixels")
+				local crosslen_cvar = GetConVar("cl_tfa_hud_crosshair_length")
+				if cgapscale_cvar == nil or clen_usepixels == nil then return end
+				function wep:CurrentCrosshairInaccuracy()
+					local s_cone = self:CalculateConeRecoil()
+					local scale = (s_cone * 90) / self:GetOwner():GetFOV() * ScrH() / 1.44 * cgapscale_cvar:GetFloat()
+					local gap = math.Round(scale / 2) * 2
+					local crosslen = crosslen_cvar:GetFloat() * 0.01
+
+					if not clen_usepixels:GetBool() then
+						length = gap + ScrH() * 1.777 * crosslen
+					else
+						length = gap + crosslen * 100
+					end
+
+					return gap
+				end
+			end
 		end
 	)
 
@@ -488,6 +510,41 @@ else
 				CrosshairDesigner.GetBool("HideOnADS") and
 				wep.Sighted
 			)
+		end,
+		function(ply, wep) -- OnSet
+			if wep.CurrentCrosshairInaccuracy == nil then
+				local size = 0
+				local cw = nil
+				function wep:CurrentCrosshairInaccuracy()
+					-- taken from ArcCW/lua/weapons/arccw_base/cl_crosshair.lua
+					local gap = ScreenScale(24)
+				            * (GetConVar("arccw_crosshair_static"):GetBool() and 0.25 or math.Clamp(self:GetDispersion() / 1000, 0.1, 100))
+				            * GetConVar("arccw_crosshair_gap"):GetFloat()
+				    gap = gap + ScreenScale(8) * math.Clamp(self.RecoilAmount, 0, 1)
+
+				    cw = cw or self
+
+				    if GetConVar("arccw_crosshair_equip"):GetBool() and (self:GetBuff_Override("Override_ShootEntity") or self.ShootEntity) then
+				        gap = gap * 1.5
+				    end
+
+				    if GetConVar("arccw_crosshair_equip"):GetBool() and self.PrimaryBash then
+				        gap = gap * 2
+				    end
+
+				    size = math.Approach(size, gap, RealFrameTime() * 32 * gap)
+
+				    if cw != self then
+				        size = gap
+				    end
+
+				    cw = self
+
+				    gap = size
+
+				    return gap
+				end
+			end
 		end
 	)
 
