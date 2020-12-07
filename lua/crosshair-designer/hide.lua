@@ -96,7 +96,7 @@ CrosshairShouldDraw = function(ply, wep) -- local
 		(not ply:Alive()) or
 		(cachedCross["HideInVeh"] and ply:InVehicle()) or
 		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR) or
-		(not cachedCross["TraceDraw"] and GetViewEntity() ~= ply)
+		(cachedCross["HideInCameraView"] and GetViewEntity() ~= ply)
 		then
 		return false
 	end

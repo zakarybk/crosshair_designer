@@ -371,6 +371,14 @@ else
 			min=1,
 			max=100,
 		},
+		{
+			id="HideInCameraView",
+			var="crosshairdesigner_hideincameraview",
+			default="0",
+			help="Hides the crosshair when looking through a camera",
+			title="Hide in camera view",
+			isBool=true
+		},
 	})
 
 	--[[
