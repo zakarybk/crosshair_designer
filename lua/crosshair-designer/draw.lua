@@ -105,6 +105,164 @@ util.TraceLine = _G.util.TraceLine
 local draw = {}
 draw.NoTexture = _G.draw.NoTexture
 
+CACHE_DEPTH = 5
+
+-- Cache prototype
+-- TODO: Look at removing code duplication though it seems tricky due to
+-- all the minor differences
+
+local cache2 = {}
+cache2Ordered = {}
+local key
+local function cacheAdjustPolysByDynamicGap(polys, isOutline, dynamic, rotation)
+	-- Do not need to hash polys or rotation
+	key = tostring(isOutline) .. '-' .. tostring(dynamic)
+	if cache2[key] then
+		-- move the cache hit to the front
+		table.RemoveByValue(cache2Ordered, key)
+		table.insert(cache2Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache2Ordered > CACHE_DEPTH then
+			miss_key = cache2Ordered[#cache2Ordered]
+			table.RemoveByValue(cache2Ordered, miss_key)
+			cache2[miss_key] = nil
+		end
+		return cache2[key]
+	else
+		-- calc new result for cache
+		result = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, rotation)
+		cache2[key] = result
+		table.insert(cache2Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache2Ordered > CACHE_DEPTH then
+			miss_key = cache2Ordered[#cache2Ordered]
+			table.RemoveByValue(cache2Ordered, miss_key)
+			cache2[miss_key] = nil
+		end
+		return result
+	end
+end
+
+local cache3 = {}
+cache3Ordered = {}
+local function cacheTranslatePolys(polys, isOutline, screenCentre, dynamic)
+	key = tostring(isOutline) .. '-' .. tostring(screenCentre) .. '-' .. tostring(dynamic)
+	if cache3[key] then
+		-- move the cache hit to the front
+		table.RemoveByValue(cache3Ordered, key)
+		table.insert(cache3Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache3Ordered > CACHE_DEPTH then
+			miss_key = cache3Ordered[#cache3Ordered]
+			table.RemoveByValue(cache3Ordered, miss_key)
+			cache3[miss_key] = nil
+		end
+		return cache3[key]
+	else
+		-- calc new result for cache
+		result = CrosshairDesigner.TranslatePolys(polys, screenCentre)
+		cache3[key] = result
+		table.insert(cache3Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache3Ordered > CACHE_DEPTH then
+			miss_key = cache3Ordered[#cache3Ordered]
+			table.RemoveByValue(cache3Ordered, miss_key)
+			cache3[miss_key] = nil
+		end
+		return result
+	end
+end
+
+local cache4 = {}
+cache4Ordered = {}
+local function cacheAdjustLinesByDynamicGap(lines, dynamic)
+	key = tostring(dynamic)
+	if cache4[key] then
+		-- move the cache hit to the front
+		table.RemoveByValue(cache4Ordered, key)
+		table.insert(cache4Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache4Ordered > CACHE_DEPTH then
+			miss_key = cache4Ordered[#cache4Ordered]
+			table.RemoveByValue(cache4Ordered, miss_key)
+			cache4[miss_key] = nil
+		end
+		return cache4[key]
+	else
+		-- calc new result for cache
+		result = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic)
+		cache4[key] = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic)
+		table.insert(cache4Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache4Ordered > CACHE_DEPTH then
+			miss_key = cache4Ordered[#cache4Ordered]
+			table.RemoveByValue(cache4Ordered, miss_key)
+			cache4[miss_key] = nil
+		end
+		return result
+	end
+end
+
+local cache5 = {}
+cache5Ordered = {}
+local function cacheAdjustOutlinesByDynamicGap(outlines, dynamic)
+	key = tostring(dynamic)
+	if cache5[key] then
+		-- move the cache hit to the front
+		table.RemoveByValue(cache5Ordered, key)
+		table.insert(cache5Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache5Ordered > (CACHE_DEPTH / 2) then
+			miss_key = cache5Ordered[#cache5Ordered]
+			table.RemoveByValue(cache5Ordered, miss_key)
+			cache5[miss_key] = nil
+		end
+		return cache5[key]
+	else
+		-- calc new result for cache
+		result = CrosshairDesigner.AdjustOutlinesByDynamicGap(outlines, dynamic)
+		cache5[key] = result
+		table.insert(cache5Ordered, 1, key)
+		-- remove a miss from the end
+		if #cache5Ordered > (CACHE_DEPTH / 2) then
+			miss_key = cache5Ordered[#cache5Ordered]
+			table.RemoveByValue(cache5Ordered, miss_key)
+			cache5[miss_key] = nil
+		end
+		return result
+	end
+end
+
+local cache6 = {}
+cache6Ordered = {}
+local function cacheTranslateLines(lines, isOutline, screenCentre, dynamic)
+	key =  tostring(isOutline) .. '-' .. tostring(screenCentre) .. '-' .. tostring(dynamic)
+	if cache6[key] then
+		-- move the cache hit to the front
+		table.RemoveByValue(cache6Ordered, key)
+		table.insert(cache6Ordered, 0, key)
+		-- remove a miss from the end
+		if #cache6Ordered > (CACHE_DEPTH / 2) then
+			miss_key = cache6Ordered[#cache5Ordered]
+			table.RemoveByValue(cache6Ordered, miss_key)
+			cache6[miss_key] = nil
+		end
+		return cache6[key]
+	else
+		-- calc new result for cache
+		result = CrosshairDesigner.TranslateLines(lines, screenCentre)
+		cache6[key] = result
+		table.insert(cache6Ordered, 0, key)
+		-- remove a miss from the end
+		if #cache6Ordered > (CACHE_DEPTH / 2) then
+			miss_key = cache6Ordered[#cache5Ordered]
+			table.RemoveByValue(cache6Ordered, miss_key)
+			cache6[miss_key] = nil
+		end
+		return result
+	end
+end
+
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
@@ -157,6 +315,8 @@ local Crosshair = function()
 		screenCentre.y = my
 	end
 
+	dynamicGap = math.Round(dynamic)
+
 	if cachedCross["UseLine"] then
 
 		if cachedCross["FillDraw"] then
@@ -168,13 +328,17 @@ local Crosshair = function()
 
 			-- Apply dynamic offset
 			if cachedCross["Dynamic"] then
-				polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Rotation"])
-				outlinePolys = CrosshairDesigner.AdjustPolysByDynamicGap(outlinePolys, dynamic, cachedCross["Rotation"])
+				--polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Rotation"])
+				--outlinePolys = CrosshairDesigner.AdjustPolysByDynamicGap(outlinePolys, dynamic, cachedCross["Rotation"])
+				polys = cacheAdjustPolysByDynamicGap(polys, false, dynamicGap, cachedCross["Rotation"])
+				outlinePolys = cacheAdjustPolysByDynamicGap(outlinePolys, true, dynamicGap, cachedCross["Rotation"])
 			end
 
 			-- Translate to middle of screen
-			polys = CrosshairDesigner.TranslatePolys(polys, screenCentre)
-			outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, screenCentre)
+			--polys = CrosshairDesigner.TranslatePolys(polys, screenCentre)
+			--outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, screenCentre)
+			polys = cacheTranslatePolys(polys, false, screenCentre, dynamicGap)
+			outlinePolys = cacheTranslatePolys(outlinePolys, true, screenCentre, dynamicGap)
 
 			-- Ignore texture set by other addons
 			draw.NoTexture()
@@ -200,13 +364,17 @@ local Crosshair = function()
 
 			-- Apply dynamic offset
 			if cachedCross["Dynamic"] then
-				lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic)
-				outlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(outlines, dynamic)
+				--lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamicGap)
+				--outlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(outlines, dynamicGap)
+				lines = cacheAdjustLinesByDynamicGap(lines, dynamicGap)
+				outlines = cacheAdjustOutlinesByDynamicGap(outlines, dynamicGap)
 			end
 
 			-- Translate to middle of screen
-			lines = CrosshairDesigner.TranslateLines(lines, screenCentre)
-			outlines = CrosshairDesigner.TranslateLines(outlines, screenCentre)
+			--lines = CrosshairDesigner.TranslateLines(lines, screenCentre)
+			--outlines = CrosshairDesigner.TranslateLines(outlines, screenCentre)
+			lines = cacheTranslateLines(lines, false, screenCentre, dynamicGap)
+			outlines = cacheTranslateLines(outlines, true, screenCentre, dynamicGap)
 
 			-- Draw outline
 			surface.SetDrawColor(drawCol)
@@ -257,6 +425,18 @@ local LINE_STYLE = {
 }
 
 local function updateCalculated()
+	-- clear cache
+	cache2 = {}
+	cache2Ordered = {}
+	cache3 = {}
+	cache3Ordered = {}
+	cache4 = {}
+	cache4Ordered = {}
+	cache5 = {}
+	cache5Ordered = {}
+	cache6 = {}
+	cache6Ordered = {}
+
 	-- Only update if all values are valid
 	local isValid, inValid = CrosshairDesigner.IsValidCrosshair({
 			["Segments"] = cachedCross["Segments"],
@@ -404,4 +584,9 @@ hook.Add("CrosshairDesigner_DetectedResolutionChange", "CenterCircle", function(
 		cachedCross["CircleRadius"],
 		cachedCross["CircleSegments"]
 	)
+end)
+
+concommand.Add("crosshair_designer_cache_size", function()
+	size = table.Count(cache2) + table.Count(cache3) + table.Count(cache4) + table.Count(cache5) + table.Count(cache6)
+	print(size)
 end)

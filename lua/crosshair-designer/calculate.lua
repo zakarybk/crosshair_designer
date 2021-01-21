@@ -1,9 +1,21 @@
-local DefaultDirection = Vector(1, 1)
+local ORIGIN = Vector(0, 0)
+local DEFAULT_DIRECTION = Vector(1, 1)
+
+local math = {}
+math.sin = _G.math.sin
+math.cos = _G.math.cos
+math.rad = _G.math.rad
+math.ceil = _G.math.ceil
+math.floor = _G.math.floor
+math.sin = _G.math.sin
+
+local Vector = Vector
 
 function CrosshairDesigner.PointsToPoly(positions)
 	local output = {}
-	for i, pos in pairs(positions) do
-		table.insert(output, Vector(pos.x, pos.y))
+
+	for k=1, #positions do
+		table.insert(output, Vector(positions[k].x, positions[k].y))
 	end
 	return output
 end
@@ -11,11 +23,11 @@ end
 function CrosshairDesigner.TranslatePoly(poly, newPos)
 	local translated = {}
 
-	for k, pos in pairs(poly) do
-		translated[k] = {x = pos.x + newPos.x, y = pos.y + newPos.y}
+	for k=1, #poly do
+		translated[k] = {x = poly[k].x + newPos.x, y = poly[k].y + newPos.y}
 	end
 
-	translated.dir = newPos.dir or DefaultDirection
+	translated.dir = newPos.dir or DEFAULT_DIRECTION
 
 	return translated
 end
@@ -23,8 +35,8 @@ end
 function CrosshairDesigner.TranslatePolys(polys, newPos)
 	local translated = {}
 
-	for k, poly in pairs(polys) do
-		translated[k] = CrosshairDesigner.TranslatePoly(poly, newPos)
+	for k=1, #polys do
+		translated[k] = CrosshairDesigner.TranslatePoly(polys[k], newPos)
 	end
 
 	return translated
@@ -33,14 +45,14 @@ end
 function CrosshairDesigner.TranslateLine(line, newPos)
 	return line[1] + newPos.x, line[2] + newPos.y,
 		line[3] + newPos.x, line[4] + newPos.y,
-		newPos.dir or DefaultDirection
+		newPos.dir or DEFAULT_DIRECTION
 end
 
 function CrosshairDesigner.TranslateLines(lines, newPos)
 	local translated = {}
 
-	for k, line in pairs(lines) do
-		translated[k] = {CrosshairDesigner.TranslateLine(line, newPos)}
+	for k=1, #lines do
+		translated[k] = {CrosshairDesigner.TranslateLine(lines[k], newPos)}
 	end
 
 	return translated
@@ -60,12 +72,12 @@ function CrosshairDesigner.RotateAroundPoint(point, radians, origin)
 end
 
 function CrosshairDesigner.RotatePoly(poly, rotation)
-	local origin = Vector(0, 0)
 	local radians = math.rad(rotation)
 	local output = {}
 
-	for i, point in pairs(poly) do
-		output[i] = CrosshairDesigner.RotateAroundPoint(point, radians, origin)
+	-- Loop through each point which makes up a poly
+	for k=1, #poly do
+		output[k] = CrosshairDesigner.RotateAroundPoint(poly[k], radians, ORIGIN)
 	end
 
 	output.dir = Vector(math.sin(radians), math.cos(radians))
@@ -74,11 +86,10 @@ function CrosshairDesigner.RotatePoly(poly, rotation)
 end
 
 function CrosshairDesigner.RotateLine(line, rotation)
-	local origin = Vector(0, 0)
 	local radians = math.rad(rotation)
 
-	local rotatedStart = CrosshairDesigner.RotateAroundPoint(Vector(line[1], line[2]), radians, origin)
-	local rotatedEnd = CrosshairDesigner.RotateAroundPoint(Vector(line[3], line[4]), radians, origin)
+	local rotatedStart = CrosshairDesigner.RotateAroundPoint(Vector(line[1], line[2]), radians, ORIGIN)
+	local rotatedEnd = CrosshairDesigner.RotateAroundPoint(Vector(line[3], line[4]), radians, ORIGIN)
 
 	return rotatedStart.x, rotatedStart.y,
 		rotatedEnd.x, rotatedEnd.y,
