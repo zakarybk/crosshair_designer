@@ -83,8 +83,8 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 		end
 
 		-- update the cache stat
-		local stat = tostring(math.Round(CrosshairDesigner.CacheHitRatio(), 2)) or "0"
-		CrosshairDesigner.Sheet.Advanced.Stat:SetText("Current cache hit ratio: " .. stat .. "%")
+		local stat = tostring(math.Round(CrosshairDesigner.CacheHitPercent(), 2)) or "0"
+		CrosshairDesigner.Sheet.Advanced.Stat:SetText("Current cache hit percent: " .. stat .. "%")
 
 		CrosshairDesigner.Sheet.Advanced.Mem.Recalculate()
 		CrosshairDesigner.Sheet.Advanced.Info.Recalculate()
@@ -336,7 +336,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
     label:SetTextColor(Color(255, 255, 255, 255))
     label:SetAutoStretchVertical(true)
     label:SetWrap(true)
-    label:SetText("Cache the calculations used to generate the crosshair at each position on the screen. The bigger the cache, the more memory used but the less you need to re-calculate and the higher the cache hit ratio.")
+    label:SetText("Cache the calculations used to generate the crosshair at each position on the screen. The bigger the cache, the more memory used but the less you need to re-calculate and the higher the cache hit percent.")
     label:SetDark(1)
     label:Dock(TOP)
 	label:DockMargin(0, 5, 0, 0)
@@ -350,8 +350,8 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
     label:Dock(TOP)
 	label:DockMargin(0, 5, 0, 0)
 	label.Recalculate = function()
-		local stat = tostring(math.Round(CrosshairDesigner.CacheHitRatio(), 2)) or "0"
-		label:SetText("Current cache hit ratio: " .. stat .. "%")
+		local stat = tostring(math.Round(CrosshairDesigner.CacheHitPercent(), 2)) or "0"
+		label:SetText("Current cache hit percent: " .. stat .. "%")
 	end
 	CrosshairDesigner.Sheet.Advanced.Stat = label
 	CrosshairDesigner.Sheet.Advanced.Stat.Recalculate()

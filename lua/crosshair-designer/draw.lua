@@ -41,7 +41,7 @@ hook.Add("CrosshairDesigner_MenuClosed", "StopCacheStats", function()
 	menuOpenState = 0
 end)
 
-CrosshairDesigner.CacheHitRatio = function()
+CrosshairDesigner.CacheHitPercent = function()
 	return (cacheHits / (cacheHits + cacheMisses)) * 100
 end
 
@@ -716,7 +716,7 @@ concommand.Add("crosshair_designer_cache_size", function()
 end)
 
 concommand.Add("crosshairdesigner_cache_hit_ratio", function()
-	local accuracy = math.Round(CrosshairDesigner.CacheHitRatio(), 2)
+	local accuracy = math.Round(CrosshairDesigner.CacheHitPercent(), 2)
 	print(accuracy)
 	print(CrosshairDesigner.FormatBytes(CrosshairDesigner.CalcMemoryUsage()))
 end)

@@ -1,9 +1,9 @@
 CrosshairDesigner.Directory = "crosshair_designer"
 CrosshairDesigner.FutureDirectory = "crosshair_designer/remastered" -- old crosshair has good file restriction so may not need new dir
 -- but it would make it more clear for users
-
--- Outdated - the way I handled crosshair naming back in 2016 
--- so that it's forwards and backwards compatible
+local defaultCrosshair = "0 1 1 1 0 0 12 0 255 255 7 11 1 0 2 14 1 255 0 0 221 0 50 1 1 1 1 1 0 1 182 182 182 186 0 1 4 0"
+-- Outdated - the way I handled crosshair naming back in 2016
+-- so that it's forwards and backwards compatible -- To-Do: Refactor this whole file and improve saving and allow for temporary crosshairs and undos
 local saveNameConvars = {}
 table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_1", "Save 1", true, false))
 table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_2", "Save 2", true, false))
@@ -123,7 +123,7 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 		end)
 	else
 		-- Hacky - remove?
-		file.Write(saveFile, "0 1 1 1 0 0 50 250 50 255 2 7 2 0 8 0 1 250 46 46 255 0 50 1 1 1 1 1") -- default config (thanks Necro)
+		file.Write(saveFile, defaultCrosshair)
 		CrosshairDesigner.Load(crossID)
 	end
 end
