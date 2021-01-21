@@ -51,10 +51,17 @@ timer.Create("CrosshairDesigner.ResolutionChangeCheck", 1, 0, function()
 end)
 
 CrosshairDesigner.IsMenuOpen = function()
-	return CrosshairDesigner.Menu ~= nil and 
+	return CrosshairDesigner.Menu ~= nil and
 			IsValid(CrosshairDesigner.Menu) and
 			CrosshairDesigner.Menu:IsVisible()
 end
+
+hook.Add("CrosshairDesigner_ValueChanged", "UpdateStats", function(convar, val)
+	if IsValid(CrosshairDesigner.Menu) then
+		CrosshairDesigner.Sheet.Advanced.Mem.Recalculate()
+		CrosshairDesigner.Sheet.Advanced.Info.Recalculate()
+	end
+end)
 
 CrosshairDesigner.OpenMenu = function(resolutionChanged)
 
@@ -75,6 +82,13 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 			CrosshairDesigner.Menu:SetVisible(true)
 		end
 
+		-- update the cache stat
+		local stat = tostring(math.Round(CrosshairDesigner.CacheHitRatio(), 2)) or "0"
+		CrosshairDesigner.Sheet.Advanced.Stat:SetText("Current cache hit ratio: " .. stat .. "%")
+
+		CrosshairDesigner.Sheet.Advanced.Mem.Recalculate()
+		CrosshairDesigner.Sheet.Advanced.Info.Recalculate()
+
 		hook.Run("CrosshairDesigner_MenuOpened", CrosshairDesigner.Menu)
 
 		return
@@ -84,8 +98,8 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	CrosshairDesigner.Menu:SetSize(frameW, frameH)
 	CrosshairDesigner.Menu:SetPos(frameX, frameY)
 	CrosshairDesigner.Menu:MakePopup(false)
-	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer V3.1" )
-	CrosshairDesigner.Menu.btnClose.DoClick = function(button) 
+	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer V3.2" )
+	CrosshairDesigner.Menu.btnClose.DoClick = function(button)
 		CrosshairDesigner.Menu:SetVisible(false)
 		hook.Run("CrosshairDesigner_MenuClosed", CrosshairDesigner.Menu)
 	end
@@ -94,16 +108,22 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
     CrosshairDesigner.Sheet:Dock(FILL)
 
    	CrosshairDesigner.Sheet.Settings = vgui.Create("DPanel", CrosshairDesigner.Sheet)
-    CrosshairDesigner.Sheet.Settings.Paint = function(self, w, h) 
+    CrosshairDesigner.Sheet.Settings.Paint = function(self, w, h)
     	draw.RoundedBox(4, 0, 0, w, h, Color(0, 0, 0, 0))
     end
     CrosshairDesigner.Sheet:AddSheet("Settings", CrosshairDesigner.Sheet.Settings)
 
 	CrosshairDesigner.Sheet.Saving = vgui.Create("DPanel", CrosshairDesigner.Sheet)
-    CrosshairDesigner.Sheet.Saving.Paint = function(self, w, h) 
-    	draw.RoundedBox(4, 0, 0, w, h, Color(0, 0, 0, 0)) 
+    CrosshairDesigner.Sheet.Saving.Paint = function(self, w, h)
+    	draw.RoundedBox(4, 0, 0, w, h, Color(0, 0, 0, 0))
     end
     CrosshairDesigner.Sheet:AddSheet("Saving", CrosshairDesigner.Sheet.Saving)
+
+    CrosshairDesigner.Sheet.Advanced = vgui.Create("DPanel", CrosshairDesigner.Sheet)
+    CrosshairDesigner.Sheet.Advanced.Paint = function(self, w, h)
+    	draw.RoundedBox(4, 0, 0, w, h, Color(0, 0, 0, 0))
+    end
+    CrosshairDesigner.Sheet:AddSheet("Advanced", CrosshairDesigner.Sheet.Advanced)
 
 
 	local convarDatas = CrosshairDesigner.GetConvarDatas()
@@ -310,6 +330,103 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 			function(text) end
 		)
 	end
+
+	-- Advanced TAB
+	local label = vgui.Create("DLabel", CrosshairDesigner.Sheet.Advanced)
+    label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetAutoStretchVertical(true)
+    label:SetWrap(true)
+    label:SetText("Cache the calculations used to generate the crosshair at each position on the screen. The bigger the cache, the more memory used but the less you need to re-calculate and the higher the cache hit ratio.")
+    label:SetDark(1)
+    label:Dock(TOP)
+	label:DockMargin(0, 5, 0, 0)
+
+	local label = vgui.Create("DLabel", CrosshairDesigner.Sheet.Advanced)
+    label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetAutoStretchVertical(true)
+    label:SetWrap(true)
+	label:SetText("Placeholder")
+    label:SetDark(1)
+    label:Dock(TOP)
+	label:DockMargin(0, 5, 0, 0)
+	label.Recalculate = function()
+		local stat = tostring(math.Round(CrosshairDesigner.CacheHitRatio(), 2)) or "0"
+		label:SetText("Current cache hit ratio: " .. stat .. "%")
+	end
+	CrosshairDesigner.Sheet.Advanced.Stat = label
+	CrosshairDesigner.Sheet.Advanced.Stat.Recalculate()
+
+	local cacheTickbox = vgui.Create("DCheckBoxLabel", CrosshairDesigner.Sheet.Advanced)
+    cacheTickbox:SetText("Enable cache")
+    cacheTickbox:SetValue(CrosshairDesigner.CacheEnabled())
+    cacheTickbox:Dock( TOP )
+	cacheTickbox:DockMargin( 0, 5, 0, 0 )
+	cacheTickbox:SetTooltip("Enable for more performance")
+	hook.Add("CrosshairDesigner_CacheSizeUpdate", "MenuUpdate", function(newVal)
+		CrosshairDesigner.Sheet.Advanced.cacheSlider:SetVisible(newVal >= 2)
+		if newVal >= 2 then
+			CrosshairDesigner.Sheet.Advanced.cacheSlider:SetValue(newVal)
+		end
+		CrosshairDesigner.Sheet.Advanced.Mem.Recalculate()
+		CrosshairDesigner.Sheet.Advanced.Stat.Recalculate()
+	end)
+	cacheTickbox.OnChange = function(self, newVal)
+		if newVal then
+			CrosshairDesigner.SetCacheSize(5)
+		else
+			CrosshairDesigner.SetCacheSize(0)
+		end
+	end
+
+	local cacheSlider = vgui.Create("DNumSlider", CrosshairDesigner.Sheet.Advanced)
+    cacheSlider:SetMin(CrosshairDesigner.CacheMinSize)
+    cacheSlider:SetMax(CrosshairDesigner.CacheMaxSize)
+    cacheSlider:SetDecimals(0)
+	cacheSlider:SetValue(CrosshairDesigner.CacheSize())
+	cacheSlider:Dock(TOP)
+	cacheSlider:DockMargin(0, 0, 0, 0)
+	cacheSlider:SetVisible(CrosshairDesigner.CacheEnabled())
+	cacheSlider.OnValueChanged = function(self, val)
+		CrosshairDesigner.SetCacheSize(val)
+		CrosshairDesigner.Sheet.Advanced.Stat.Recalculate()
+	end
+	CrosshairDesigner.Sheet.Advanced.cacheSlider = cacheSlider
+
+	local label = vgui.Create("DLabel", CrosshairDesigner.Sheet.Advanced)
+    label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetAutoStretchVertical(true)
+    label:SetWrap(true)
+	label:SetText("Current estimated memory usage: Unknown")
+    label:SetDark(1)
+    label:Dock(TOP)
+	label:DockMargin(0, 5, 0, 0)
+	label.Recalculate = function()
+		local crossMem = CrosshairDesigner.CalcMemoryUsage()
+		local cacheSize = math.max(CrosshairDesigner.CacheSize(), 1)
+		local mem = crossMem * cacheSize
+		label:SetText("Current estimated memory usage: " .. CrosshairDesigner.FormatBytes(mem))
+	end
+	label.Recalculate()
+	CrosshairDesigner.Sheet.Advanced.Mem = label
+
+	local label = vgui.Create("DLabel", CrosshairDesigner.Sheet.Advanced)
+    label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetAutoStretchVertical(true)
+    label:SetWrap(true)
+	label:SetText("Placeholder")
+    label:SetDark(1)
+    label:Dock(TOP)
+	label:DockMargin(0, 5, 0, 0)
+	label.Recalculate = function()
+		local info = CrosshairDesigner.CalcInfo()
+		local txt = "Crosshair stats:\n"
+		txt = txt .. "Lines: " .. info.lines .. "\n"
+		txt = txt .. "Polys: " .. info.polys .. "\n"
+		label:SetText(txt)
+	end
+	CrosshairDesigner.Sheet.Advanced.Info = label
+	CrosshairDesigner.Sheet.Advanced.Info.Recalculate()
+
 
 	-- Always at bottom
 	hook.Run("CrosshairDesigner_MenuOpened", CrosshairDesigner.Menu)

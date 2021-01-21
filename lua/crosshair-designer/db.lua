@@ -19,6 +19,39 @@ table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_10", "Save 10", t
 local convars = {}
 local indexed = {}
 
+-- Temporary workaround for saving the cache value
+local cacheID = "crosshairdesigner_cache"
+CrosshairDesigner.CacheSetting = CreateClientConVar(cacheID, "5", true, false)
+local cacheSize = CrosshairDesigner.CacheSetting:GetInt()
+CrosshairDesigner.SetCacheSize = function(val) RunConsoleCommand(cacheID, tostring(math.Round(val))) end
+CrosshairDesigner.CacheSize = function() return cacheSize end
+CrosshairDesigner.CacheEnabled = function() return cacheSize >= 2 end
+CrosshairDesigner.CacheMaxSize = 200
+CrosshairDesigner.CacheMinSize = 2
+-- excluding cache min size to allow value to be set below, but still 2 is the lowest val where the cache will work
+local withinCacheRange = function(val) return val ~= nil and val >= 0 and val <= CrosshairDesigner.CacheMaxSize end
+-- Secure console command values
+cvars.RemoveChangeCallback(cacheID, "CrosshairDesigner." .. cacheID)
+cvars.AddChangeCallback(cacheID, function(convarName, oldVal, newVal)
+	newVal = tonumber(newVal)
+	oldVal = tonumber(oldVal)
+
+	if not withinCacheRange(newVal) then
+		-- revert to old value if valid and new value not valid
+		if withinCacheRange(oldVal) then
+			RunConsoleCommand(cacheID, tostring(oldVal))
+		else
+			-- invalid value - fallback and turn off cache
+			RunConsoleCommand(cacheID, tostring(0))
+		end
+	else
+		-- valid value - allow update
+		newVal = math.Round(newVal)
+		cacheSize = newVal
+		hook.Run("CrosshairDesigner_CacheSizeUpdate", newVal)
+	end
+end, "CrosshairDesigner." .. cacheID)
+
 --[[
 	Needs to be forwards and backwards compatible since servers run different versions
 ]]--
@@ -69,7 +102,7 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 				end
 			end
 
-			print(id.data.id, "\t", val)
+			-- print(id.data.id, "\t", val)
 
 			-- Hacky fix for older crosshairs
 			if id.data.id == "Thickness" then

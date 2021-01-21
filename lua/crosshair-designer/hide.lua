@@ -65,6 +65,7 @@ local cachedCross = {}
 
 local LocalPlayer = LocalPlayer
 local IsValid = IsValid
+local GetViewEntity = GetViewEntity
 
 -- GM:PlayerSwitchWeapon "This hook is predicted. This means that in singleplayer,
 -- it will not be called in the Client realm."
@@ -175,12 +176,10 @@ CrosshairDesigner.MakeSwepCheckTopPriority = function(name) -- untested
 end
 
 hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
-	-- Hide our crosshair
-	if not shouldDraw and name == "CrosshairDesiger_Crosshair" then
-		return false
-	end
-	--Hide HL2 (+TFA) crosshair
-	if name == "CHudCrosshair" and not cachedCross["ShowHL2"] then
+		-- Hide our crosshair
+	if (not shouldDraw and name == "CrosshairDesiger_Crosshair") or
+		--Hide HL2 (+TFA) crosshair
+		(name == "CHudCrosshair" and not cachedCross["ShowHL2"]) then
 		return false
 	end
 end)

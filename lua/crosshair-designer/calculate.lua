@@ -9,6 +9,9 @@ math.ceil = _G.math.ceil
 math.floor = _G.math.floor
 math.sin = _G.math.sin
 
+local table = {}
+table.insert = _G.table.insert
+
 local Vector = Vector
 
 function CrosshairDesigner.PointsToPoly(positions)
@@ -24,7 +27,7 @@ function CrosshairDesigner.TranslatePoly(poly, newPos)
 	local translated = {}
 
 	for k=1, #poly do
-		translated[k] = {x = poly[k].x + newPos.x, y = poly[k].y + newPos.y}
+		translated[k] = {x = poly[k].x + newPos[1], y = poly[k].y + newPos[2]}
 	end
 
 	translated.dir = newPos.dir or DEFAULT_DIRECTION
@@ -43,8 +46,8 @@ function CrosshairDesigner.TranslatePolys(polys, newPos)
 end
 
 function CrosshairDesigner.TranslateLine(line, newPos)
-	return line[1] + newPos.x, line[2] + newPos.y,
-		line[3] + newPos.x, line[4] + newPos.y,
+	return line[1] + newPos[1], line[2] + newPos[2],
+		line[3] + newPos[1], line[4] + newPos[2],
 		newPos.dir or DEFAULT_DIRECTION
 end
 
