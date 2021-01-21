@@ -328,15 +328,11 @@ local Crosshair = function()
 
 			-- Apply dynamic offset
 			if cachedCross["Dynamic"] then
-				--polys = CrosshairDesigner.AdjustPolysByDynamicGap(polys, dynamic, cachedCross["Rotation"])
-				--outlinePolys = CrosshairDesigner.AdjustPolysByDynamicGap(outlinePolys, dynamic, cachedCross["Rotation"])
 				polys = cacheAdjustPolysByDynamicGap(polys, false, dynamicGap, cachedCross["Rotation"])
 				outlinePolys = cacheAdjustPolysByDynamicGap(outlinePolys, true, dynamicGap, cachedCross["Rotation"])
 			end
 
 			-- Translate to middle of screen
-			--polys = CrosshairDesigner.TranslatePolys(polys, screenCentre)
-			--outlinePolys = CrosshairDesigner.TranslatePolys(outlinePolys, screenCentre)
 			polys = cacheTranslatePolys(polys, false, screenCentre, dynamicGap)
 			outlinePolys = cacheTranslatePolys(outlinePolys, true, screenCentre, dynamicGap)
 
@@ -364,15 +360,11 @@ local Crosshair = function()
 
 			-- Apply dynamic offset
 			if cachedCross["Dynamic"] then
-				--lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamicGap)
-				--outlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(outlines, dynamicGap)
 				lines = cacheAdjustLinesByDynamicGap(lines, dynamicGap)
 				outlines = cacheAdjustOutlinesByDynamicGap(outlines, dynamicGap)
 			end
 
 			-- Translate to middle of screen
-			--lines = CrosshairDesigner.TranslateLines(lines, screenCentre)
-			--outlines = CrosshairDesigner.TranslateLines(outlines, screenCentre)
 			lines = cacheTranslateLines(lines, false, screenCentre, dynamicGap)
 			outlines = cacheTranslateLines(outlines, true, screenCentre, dynamicGap)
 
