@@ -1,3 +1,5 @@
+local DefaultDirection = Vector(1, 1)
+
 function CrosshairDesigner.PointsToPoly(positions)
 	local output = {}
 	for i, pos in pairs(positions) do
@@ -12,6 +14,8 @@ function CrosshairDesigner.TranslatePoly(poly, newPos)
 	for k, pos in pairs(poly) do
 		translated[k] = {x = pos.x + newPos.x, y = pos.y + newPos.y}
 	end
+
+	translated.dir = newPos.dir or DefaultDirection
 
 	return translated
 end
@@ -28,7 +32,8 @@ end
 
 function CrosshairDesigner.TranslateLine(line, newPos)
 	return line[1] + newPos.x, line[2] + newPos.y,
-		line[3] + newPos.x, line[4] + newPos.y
+		line[3] + newPos.x, line[4] + newPos.y,
+		newPos.dir or DefaultDirection
 end
 
 function CrosshairDesigner.TranslateLines(lines, newPos)
@@ -63,6 +68,8 @@ function CrosshairDesigner.RotatePoly(poly, rotation)
 		output[i] = CrosshairDesigner.RotateAroundPoint(point, radians, origin)
 	end
 
+	output.dir = Vector(math.sin(radians), math.cos(radians))
+
 	return output
 end
 
@@ -74,34 +81,20 @@ function CrosshairDesigner.RotateLine(line, rotation)
 	local rotatedEnd = CrosshairDesigner.RotateAroundPoint(Vector(line[3], line[4]), radians, origin)
 
 	return rotatedStart.x, rotatedStart.y,
-		rotatedEnd.x, rotatedEnd.y
-end
-
-function CrosshairDesigner.Direction(point1, point2)
-   local rad = math.atan2(point2.y - point1.y, point2.x - point1.x);
-
-    // Ajust result to be between 0 to 2*Pi
-    if (rad < 0) then
-        rad = rad + (2 * math.pi);
-    end
-
-    local deg = rad * (180 / math.pi);
-
-   return deg
+		rotatedEnd.x, rotatedEnd.y,
+		Vector(math.sin(radians), math.cos(radians))
 end
 
 function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness)
 	local translatedLines = {}
 	local dynamicAmt = gap
 
-	-- Normal line
-	for k, line in pairs(lines) do
-		local middle = math.Clamp((math.ceil(k/lineThickness) * lineThickness - (lineThickness - 1) % (#lines+1)), 1, #lines)
-		local middleLine = lines[middle]
+	local line, direction, dyanmicGap
 
-		local pos = Vector(middleLine[3], middleLine[4])
-		local direction = pos:GetNormalized()
-		local dyanmicGap = direction * dynamicAmt
+	for k=1, #lines do
+		line = lines[k]
+		direction = line[5]
+		dyanmicGap = direction * dynamicAmt
 
 		translatedLines[k] = {
 			line[1] + dyanmicGap.x,
@@ -115,21 +108,16 @@ function CrosshairDesigner.AdjustLinesByDynamicGap(lines, gap, lineThickness)
 	return translatedLines
 end
 
-function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, totalThickness, lineThickness)
+function CrosshairDesigner.AdjustOutlinesByDynamicGap(outlines, gap)
 	local translated = {}
 	local dynamicAmt = gap
 
-	-- We use the middle line from lines so that we can move from the middle
+	local line, direction, dyanmicGap
 
-	for k, line in pairs(outlines) do
-		local middle = math.Clamp(((math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1)) % (#lines+1)), 1, #lines)
-		local middleLine = lines[middle]
-		-- print(math.ceil(k/totalThickness) * lineThickness - (lineThickness - 1))
-		-- print(k, middle)
-
-		local pos = Vector(middleLine[3], middleLine[4])
-		local direction = pos:GetNormalized()
-		local dyanmicGap = direction * dynamicAmt
+	for k=1, #outlines do
+		line = outlines[k]
+		direction = line[5]
+		dyanmicGap = direction * dynamicAmt
 
 		translated[k] = {
 			line[1] + dyanmicGap.x,
@@ -142,19 +130,16 @@ function CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, gap, tota
 	return translated
 end
 
-function CrosshairDesigner.AdjustPolysByDynamicGap(polys, gap, totalRotation)
+function CrosshairDesigner.AdjustPolysByDynamicGap(polys, gap)
 	local translatedPolys = {}
 	local dynamicAmt = gap
 
-	-- Normal line
-	for k, poly in pairs(polys) do
-		-- Calculate direction based off of position created + angle offset
-		local rot = math.rad((((360 / #polys) * k) - totalRotation + 90) % 360)
-		local middle = Vector(-math.cos(rot), math.sin(rot))
+	local poly, direction, dyanmicGap
 
-		local pos = middle
-		local direction = pos:GetNormalized()
-		local dyanmicGap = direction * dynamicAmt
+	for k=1, #polys do
+		poly = polys[k]
+		direction = poly.dir
+		dyanmicGap = direction * dynamicAmt
 
 		translatedPolys[k] = CrosshairDesigner.TranslatePoly(poly, dyanmicGap)
 	end

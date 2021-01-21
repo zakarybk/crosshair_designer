@@ -76,23 +76,41 @@ end
 local trace = {}
 local traceResult = nil
 local target
-local setColour = false
 local alreadyTraced = false
 local LocalPlayer = LocalPlayer
 local surface = surface
-local math = math
 local ScrH = ScrH
 local ScrW = ScrW
+local IsValid = IsValid
+local unpack = unpack
+local math_Round = math.Round
 local mx, my
-local shouldDraw
+local shouldDraw = true
+local screenCentre = Vector(0, 0)
+local defaultColour = Color(0,0,0,255)
+local drawCol = defaultColour
+
+local surface = {}
+surface.SetDrawColor = _G.surface.SetDrawColor
+surface.DrawPoly = _G.surface.DrawPoly
+surface.DrawLine = _G.surface.DrawLine
+surface.DrawRect = _G.surface.DrawRect
+
+local math = {}
+math.Round = _G.math.Round
+
+local util = {}
+util.TraceLine = _G.util.TraceLine
+
+local draw = {}
+draw.NoTexture = _G.draw.NoTexture
 
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
 	shouldDraw = hook.Run("HUDShouldDraw", "CrosshairDesiger_Crosshair")
-	ply = LocalPlayer()
-	local drawCol = Color(0,0,0,255)
-	setColour, alreadyTraced = false, false
+	drawCol = defaultColour
+	alreadyTraced = false
 
 	if not shouldDraw or not IsValid(ply) then
 		return
@@ -108,36 +126,13 @@ local Crosshair = function()
 
 		target = traceResult.Entity
 		if IsValid(target) and (target:IsPlayer() or target:IsNPC()) then
-			drawCol = Color(
-				cachedCross["TargetRed"],
-				cachedCross["TargetGreen"],
-				cachedCross["TargetBlue"],
-				cachedCross["TargetAlpha"]
-			)
-			setColour = true
+			drawCol = cachedCross["TargetColour"]
+		else
+			drawCol = cachedCross["Colour"]
 		end
+	else
+		drawCol = cachedCross["Colour"]
 	end
-
-	if not setColour then
-		-- Cross Colour
-		drawCol = Color(
-			cachedCross["Red"],
-			cachedCross["Green"],
-			cachedCross["Blue"],
-			cachedCross["Alpha"]
-		)
-	end
-
-	local outlineColor = Color(
-		cachedCross["OutlineRed"],
-		cachedCross["OutlineGreen"],
-		cachedCross["OutlineBlue"],
-		cachedCross["OutlineAlpha"]
-	)
-
-	local boolNum = {["false"] = 0, ["true"] = 1, ["nil"] = 0, [""] = 0}
-	local outline = boolNum[tostring(cachedCross["Outline"])]
-	outline = outline or 0
 
 	-- Thanks Simple ThirdPerson - https://github.com/Metastruct/simplethirdperson/blob/master/lua/autorun/thirdperson.lua#L933
 	if cachedCross["TraceDraw"] then
@@ -150,13 +145,17 @@ local Crosshair = function()
 
 		local pos = traceResult.HitPos:ToScreen()
 		mx, my = pos.x - 1, pos.y
+		-- smooth out jitter caused by tracing from eyes
+		screenCentre.x = math.Round(mx)
+		screenCentre.y = math.Round(my)
 	else
 		-- Align with HL2 crosshair
 		mx = (ScrW() / 2) - 1
 		my = ScrH() / 2
+		--
+		screenCentre.x = mx
+		screenCentre.y = my
 	end
-
-	local screenCentre = Vector(mx, my)
 
 	if cachedCross["UseLine"] then
 
@@ -181,15 +180,15 @@ local Crosshair = function()
 			draw.NoTexture()
 
 			-- Draw outline
-			surface.SetDrawColor(outlineColor)
-			for k, poly in pairs(outlinePolys) do
-				surface.DrawPoly(poly)
+			surface.SetDrawColor(cachedCross["OutlineColour"])
+			for k=1, #outlinePolys do
+				surface.DrawPoly(outlinePolys[k])
 			end
 
 			-- Draw crosshair inner
 			surface.SetDrawColor(drawCol)
-			for k, poly in pairs(polys) do
-				surface.DrawPoly(poly)
+			for k=1, #polys do
+				surface.DrawPoly(polys[k])
 			end
 		else
 			--
@@ -201,8 +200,8 @@ local Crosshair = function()
 
 			-- Apply dynamic offset
 			if cachedCross["Dynamic"] then
-				lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic, cachedCross["Thickness"])
-				outlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(lines, outlines, dynamic, (4-offset) * cachedCross["Outline"], cachedCross["Thickness"])
+				lines = CrosshairDesigner.AdjustLinesByDynamicGap(lines, dynamic)
+				outlines = CrosshairDesigner.AdjustOutlinesByDynamicGap(outlines, dynamic)
 			end
 
 			-- Translate to middle of screen
@@ -211,14 +210,16 @@ local Crosshair = function()
 
 			-- Draw outline
 			surface.SetDrawColor(drawCol)
-			for k, line in pairs(lines) do
-				surface.DrawLine(unpack(line))
+			for k=1, #lines do
+				surface.DrawLine(unpack(lines[k]))
 			end
 
+			surface.DrawLine(unpack({0, 0, 10, 10}))
+
 			-- Draw crosshair inner
-			surface.SetDrawColor(outlineColor)
-			for k, line in pairs(outlines) do
-				surface.DrawLine(unpack(line))
+			surface.SetDrawColor(cachedCross["OutlineColour"])
+			for k=1, #outlines do
+				surface.DrawLine(unpack(outlines[k]))
 			end
 		end
 
@@ -249,9 +250,11 @@ local Crosshair = function()
 
 end
 
-local LINE_STYLE_RECTANLE = 0
-local LINE_STYLE_INWARDS = 1
-local LINE_STYLE_OUTWARDS = 2
+local LINE_STYLE = {
+	RECTANLE = 0,
+	INWARDS = 1,
+	OUTWARDS = 2
+}
 
 local function updateCalculated()
 	-- Only update if all values are valid
@@ -282,8 +285,8 @@ local function updateCalculated()
 			length = cachedCross["Length"],
 			addOutline = cachedCross["Outline"] > 0,
 			outlineWidth = cachedCross["Outline"],
-			pointInwards = cachedCross["LineStyle"] == LINE_STYLE_INWARDS,
-			pointOutwards = cachedCross["LineStyle"] == LINE_STYLE_OUTWARDS,
+			pointInwards = cachedCross["LineStyle"] == LINE_STYLE.INWARDS,
+			pointOutwards = cachedCross["LineStyle"] == LINE_STYLE.OUTWARDS,
 		})
 		cachedCross["LinePolys"] = polys
 		cachedCross["OutlinePolys"] = outlinePolys
@@ -299,12 +302,35 @@ local function updateCalculated()
 			length = cachedCross["Length"],
 			addOutline = cachedCross["Outline"] > 0,
 			outlineWidth = cachedCross["Outline"],
-			pointInwards = cachedCross["LineStyle"] == LINE_STYLE_INWARDS,
-			pointOutwards = cachedCross["LineStyle"] == LINE_STYLE_OUTWARDS,
+			pointInwards = cachedCross["LineStyle"] == LINE_STYLE.INWARDS,
+			pointOutwards = cachedCross["LineStyle"] == LINE_STYLE.OUTWARDS,
 		})
 		cachedCross["Lines"] = lines
 		cachedCross["Outlines"] = lineOutlines
 	end
+end
+
+local function updateColours()
+	cachedCross["Colour"] = Color(
+			cachedCross["Red"],
+			cachedCross["Green"],
+			cachedCross["Blue"],
+			cachedCross["Alpha"]
+		)
+
+	cachedCross["TargetColour"] = Color(
+		cachedCross["TargetRed"],
+		cachedCross["TargetGreen"],
+		cachedCross["TargetBlue"],
+		cachedCross["TargetAlpha"]
+	)
+
+	cachedCross["OutlineColour"] = Color(
+		cachedCross["OutlineRed"],
+		cachedCross["OutlineGreen"],
+		cachedCross["OutlineBlue"],
+		cachedCross["OutlineAlpha"]
+	)
 end
 
 -- Update cached values
@@ -332,6 +358,8 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 		end
 	end
 
+	ply = LocalPlayer()
+	updateColours()
 	updateCalculated()
 end)
 
@@ -355,9 +383,15 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 		cachedCross["CircleSegments"]
 	)
 
-	ply = LocalPlayer()
-
+	updateColours()
 	updateCalculated()
+
+	timer.Create("CrosshairDesigner_WaitForValidPly", 0.2, 0, function()
+		ply = LocalPlayer()
+		if IsValid(ply) then
+			timer.Remove("CrosshairDesigner_WaitForValidPly")
+		end
+	end)
 
 	hook.Add("HUDPaint", "CrosshairDesigner_DrawCrosshair", Crosshair)
 	hc_dynamiccorsshair()
