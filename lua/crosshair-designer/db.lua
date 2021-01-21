@@ -316,7 +316,23 @@ CrosshairDesigner.IsValidCrosshair = function(values)
 	local isValid = true
 	local inValid = {id = "none", expected="none", actual="none"}
 
-	for id, val in pairs(values) do
+	local keys = {"Segments", "Rotation", "Thickness", "Stretch", "Gap" ,"Length", "Outline", "LineStyle"}
+
+	for k=1, #keys do
+		local key = keys[k]
+		local id = key
+		local val = values[key]
+
+		if val == nil or val == "" or val == "nil" then
+			isValid = false
+			inValid = {
+				id = id,
+				expected="Any value",
+				actual=val
+			}
+			break
+		end
+
 		local data = CrosshairDesigner.GetConvarData(id)
 
 		if data.min ~= nil then
@@ -327,6 +343,7 @@ CrosshairDesigner.IsValidCrosshair = function(values)
 					expected="between " + data.min + ":" + data.max,
 					actual=val
 				}
+				break
 			end
 		end
 
@@ -338,6 +355,7 @@ CrosshairDesigner.IsValidCrosshair = function(values)
 					expected="between " + data.min + ":" + data.max,
 					actual=val
 				}
+				break
 			end
 		end
 
@@ -345,6 +363,7 @@ CrosshairDesigner.IsValidCrosshair = function(values)
 			if tobool(val) == nil then
 				isValid = false
 				inValid = {id = id, expected="true/false", actual=val}
+				break
 			end
 		end
 	end

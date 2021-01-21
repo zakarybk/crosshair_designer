@@ -186,6 +186,7 @@ end)
 
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, val)
 	local data = CrosshairDesigner.GetConvarData(convar)
+	if not data then return end
 	cachedCross[data.id] = val
 
 	ply = LocalPlayer()

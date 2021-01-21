@@ -384,8 +384,8 @@ local Crosshair = function()
 			--
 			-- Draw poly renderer
 			--
-			local polys = cachedCross["LinePolys"]
-			local outlinePolys = cachedCross["OutlinePolys"]
+			local polys = cachedCross["LinePolys"] or {}
+			local outlinePolys = cachedCross["OutlinePolys"] or {}
 
 			-- Apply dynamic offset
 			if cachedCross["Dynamic"] then
@@ -415,8 +415,8 @@ local Crosshair = function()
 			--
 			-- Draw line renderer
 			--
-			local lines = cachedCross["Lines"]
-			local outlines = cachedCross["Outlines"]
+			local lines = cachedCross["Lines"] or {}
+			local outlines = cachedCross["Outlines"] or {}
 			local offset = cachedCross["LineStyle"] > 0 and 1 or 0 -- pointInwards and 1 or pointOutwards and 1 or 0
 
 			-- Apply dynamic offset
@@ -640,6 +640,7 @@ end
 -- Update cached values
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, val)
 	local data = CrosshairDesigner.GetConvarData(convar)
+	if not data then return end
 	cachedCross[data.id] = val
 
 	if data.id == "CircleRadius" or data.id == "CircleSegments" then
