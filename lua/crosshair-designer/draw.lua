@@ -487,7 +487,7 @@ local Crosshair = function()
 			lines = cacheTranslateLines(lines, false, screenCentre, dynamicGap)
 			outlines = cacheTranslateLines(outlines, true, screenCentre, dynamicGap)
 
-			-- Draw outline
+			-- Draw lines
 			surface.SetDrawColor(drawCol)
 			for k=1, #lines do
 				surface.DrawLine(unpack(lines[k]))
@@ -495,7 +495,7 @@ local Crosshair = function()
 
 			surface.DrawLine(unpack({0, 0, 10, 10}))
 
-			-- Draw crosshair inner
+			-- Draw crosshair outline
 			surface.SetDrawColor(outlineCol)
 			for k=1, #outlines do
 				surface.DrawLine(unpack(outlines[k]))
