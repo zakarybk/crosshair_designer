@@ -379,6 +379,22 @@ else
 			title="Hide in camera view",
 			isBool=true
 		},
+		{
+			id="InvertCol",
+			var="crosshairdesigner_invertcol",
+			default="0",
+			help="Inverts the colour of the crosshair",
+			title="Invert crosshair colour",
+			isBool=true
+		},
+		{
+			id="InvertOutlineCol",
+			var="crosshairdesigner_invertoutlinecol",
+			default="0",
+			help="Inverts the colour of the outline",
+			title="Invert outline colour",
+			isBool=true
+		},
 	})
 
 	--[[

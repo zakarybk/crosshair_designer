@@ -10,16 +10,16 @@ surface.DrawPoly = _G.surface.DrawPoly
 surface.DrawLine = _G.surface.DrawLine
 surface.DrawRect = _G.surface.DrawRect
 
-local math = {}
-math.Round = _G.math.Round
-math.sin = _G.math.sin
-math.cos = _G.math.cos
-math.rad = _G.math.rad
-math.max = _G.math.max
-math.min = _G.math.min
-math.floor = _G.math.floor
-math.log = _G.math.log
-math.pow = _G.math.pow
+local math = table.Copy(math)
+-- math.Round = _G.math.Round
+-- math.sin = _G.math.sin
+-- math.cos = _G.math.cos
+-- math.rad = _G.math.rad
+-- math.max = _G.math.max
+-- math.min = _G.math.min
+-- math.floor = _G.math.floor
+-- math.log = _G.math.log
+-- math.pow = _G.math.pow
 
 local util = {}
 util.TraceLine = _G.util.TraceLine
@@ -142,6 +142,7 @@ local shouldDraw = true
 local screenCentre = Vector(0, 0)
 local defaultColour = Color(0,0,0,255)
 local drawCol = defaultColour
+local outlineCol = defaultColour
 
 -- Cache prototype
 -- TODO: Look at removing code duplication though it seems tricky due to
@@ -324,33 +325,46 @@ local function cacheTranslateLines(lines, isOutline, screenCentre, dynamic)
 	end
 end
 
+local previousDrawCol = Color(0,0,0,255)
+local nextDrawCol = Color(0,0,0,255)
+local Lerp = Lerp
+
+local function LerpColor(t, from, to)
+	return Color(
+		Lerp(t, from.r, to.r),
+		Lerp(t, from.g, to.g),
+		Lerp(t, from.b, to.b),
+		Lerp(t, from.a, to.a)
+	)
+end
+
+local cumulativeDrawFrameTime = 0
+
+local function calcInvertedColours(previousCol)
+	local updateRate = 0.2
+	cumulativeDrawFrameTime = cumulativeDrawFrameTime + RealFrameTime()
+
+	if cumulativeDrawFrameTime > updateRate then
+		previousDrawCol = previousCol
+		render.CapturePixels()
+		local a, b, c = render.ReadPixel(mx, my)
+		local r, g, b = 255 - a, 255 - b, 255 - c
+		nextDrawCol = Color(r, g, b, 255)
+		cumulativeDrawFrameTime = 0
+	end
+
+	return LerpColor(cumulativeDrawFrameTime / (updateRate / 2), previousDrawCol, nextDrawCol)
+end
+
 local Crosshair = function()
 
 	-- Conditions for crosshair to be drawn
 	shouldDraw = hook.Run("HUDShouldDraw", "CrosshairDesiger_Crosshair")
-	drawCol = defaultColour
+	-- drawCol = defaultColour
 	alreadyTraced = false
 
 	if not shouldDraw or not IsValid(ply) then
 		return
-	end
-
-	-- Change col on target
-	if cachedCross["ColOnTarget"] then
-		trace.start = ply:GetShootPos()
-		trace.endpos = trace.start + ply:GetAimVector() * 9000
-		trace.filter = ply
-		traceResult = util.TraceLine(trace)
-		alreadyTraced = true
-
-		target = traceResult.Entity
-		if IsValid(target) and (target:IsPlayer() or target:IsNPC()) then
-			drawCol = cachedCross["TargetColour"]
-		else
-			drawCol = cachedCross["Colour"]
-		end
-	else
-		drawCol = cachedCross["Colour"]
 	end
 
 	-- Thanks Simple ThirdPerson - https://github.com/Metastruct/simplethirdperson/blob/master/lua/autorun/thirdperson.lua#L933
@@ -374,6 +388,50 @@ local Crosshair = function()
 		--
 		screenCentre.x = mx
 		screenCentre.y = my
+	end
+
+	-- Change col on target
+	if cachedCross["ColOnTarget"] then
+		trace.start = ply:GetShootPos()
+		trace.endpos = trace.start + ply:GetAimVector() * 9000
+		trace.filter = ply
+		traceResult = util.TraceLine(trace)
+		alreadyTraced = true
+
+		target = traceResult.Entity
+		if IsValid(target) and (target:IsPlayer() or target:IsNPC()) then
+			drawCol = cachedCross["TargetColour"]
+		else
+			if cachedCross["InvertCol"] then
+				drawCol = calcInvertedColours(drawCol)
+				if cachedCross["InvertOutlineCol"] then
+					outlineCol = drawCol
+				else
+					outlineCol = cachedCross["OutlineColour"]
+				end
+			elseif cachedCross["InvertOutlineCol"] then
+				outlineCol = calcInvertedColours(outlineCol)
+				drawCol = cachedCross["Colour"]
+			else
+				drawCol = cachedCross["Colour"]
+				outlineCol = cachedCross["OutlineColour"]
+			end
+		end
+	else
+		if cachedCross["InvertCol"] then
+			drawCol = calcInvertedColours(drawCol)
+			if cachedCross["InvertOutlineCol"] then
+				outlineCol = drawCol
+			else
+				outlineCol = cachedCross["OutlineColour"]
+			end
+		elseif cachedCross["InvertOutlineCol"] then
+			outlineCol = calcInvertedColours(outlineCol)
+			drawCol = cachedCross["Colour"]
+		else
+			drawCol = cachedCross["Colour"]
+			outlineCol = cachedCross["OutlineColour"]
+		end
 	end
 
 	dynamicGap = math.Round(dynamic)
@@ -401,7 +459,7 @@ local Crosshair = function()
 			draw.NoTexture()
 
 			-- Draw outline
-			surface.SetDrawColor(cachedCross["OutlineColour"])
+			surface.SetDrawColor(outlineCol)
 			for k=1, #outlinePolys do
 				surface.DrawPoly(outlinePolys[k])
 			end
@@ -438,7 +496,7 @@ local Crosshair = function()
 			surface.DrawLine(unpack({0, 0, 10, 10}))
 
 			-- Draw crosshair inner
-			surface.SetDrawColor(cachedCross["OutlineColour"])
+			surface.SetDrawColor(outlineCol)
 			for k=1, #outlines do
 				surface.DrawLine(unpack(outlines[k]))
 			end
