@@ -493,8 +493,6 @@ local Crosshair = function()
 				surface.DrawLine(unpack(lines[k]))
 			end
 
-			surface.DrawLine(unpack({0, 0, 10, 10}))
-
 			-- Draw crosshair outline
 			surface.SetDrawColor(outlineCol)
 			for k=1, #outlines do

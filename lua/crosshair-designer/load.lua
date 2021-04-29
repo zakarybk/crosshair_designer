@@ -397,6 +397,17 @@ else
 		},
 	})
 
+	function isExpectedBaseOrClass(swep, expectedBase, expectedClassPrefix)
+		if swep and swep.Base and swep.Base == expectedBase then
+			return true
+		elseif swep and swep.GetClass and
+			string.Left(swep:GetClass(), #expectedClassPrefix) == expectedClassPrefix then
+			return true
+		else
+			return false
+		end
+	end
+
 	--[[
 		SWEP should draw custom crosshair checks
 
@@ -407,7 +418,7 @@ else
 	]]--
 	CrosshairDesigner.AddSwepCheck("FA:S",
 		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 5) == "fas2_" then
+			if isExpectedBaseOrClass(wep, "fas2_base", "fas2_") then
 				if wep.dt ~= nil and wep.dt.Status ~= nil then
 					return true
 				end
@@ -424,7 +435,7 @@ else
 	-- TFA
 	CrosshairDesigner.AddSwepCheck("TFA",
 		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 4) == "tfa_" then
+			if isExpectedBaseOrClass(wep, "tfa_gun_base", "tfa_") then
 				if wep.GetIronSights ~= nil then
 					return true
 				end
@@ -443,7 +454,7 @@ else
 	-- M9k Remastered + Legacy
 	CrosshairDesigner.AddSwepCheck("M9K",
 		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 4) == "m9k_" then
+			if isExpectedBaseOrClass(wep, "bobs_scoped_base", "m9k_") then
 				if wep.GetIronsights ~= nil and
 					wep.IronSightsPos ~= nil and
 					wep.RunSightsPos ~= nil
@@ -471,7 +482,7 @@ else
 	-- CW
 	CrosshairDesigner.AddSwepCheck("CW",
 		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 3) == "cw_" then
+			if isExpectedBaseOrClass(wep, "cw_base", "cw_") then
 				if wep.dt ~= nil and wep.dt.State ~= nil then
 					return true
 				end
@@ -488,7 +499,7 @@ else
 	-- Scifi
 	CrosshairDesigner.AddSwepCheck("Scifi",
 		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 4) == "sfw_" then
+			if isExpectedBaseOrClass(wep, "weapon_base", "sfw_") then
 				return wep.GetIronSights ~= nil
 			end
 		end,
@@ -500,10 +511,10 @@ else
 		end
 	)
 
-	--ArcCW
+	-- ArcCW
 	CrosshairDesigner.AddSwepCheck("ArcCW",
 		function(ply, wep) -- ShouldUse
-			if string.Left(wep:GetClass(), 6) == "arccw_" then
+			if isExpectedBaseOrClass(wep, "arccw_base", "arccw_") then
 				return wep.Sighted ~= nil
 			end
 		end,
