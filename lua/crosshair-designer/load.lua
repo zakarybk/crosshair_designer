@@ -455,7 +455,7 @@ else
 	-- ArcCW
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['fnIsValid'] = function(wep)
-			return wep.Sighted ~= nil
+			return wep.Sighted ~= nil and ArcCW ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep.Sighted or wep:GetState() == ArcCW.STATE_SIGHTS
