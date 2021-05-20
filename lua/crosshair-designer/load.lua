@@ -458,7 +458,7 @@ else
 			return wep.Sighted ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
-			return wep.Sighted
+			return wep.Sighted or wep:GetState() == ArcCW.STATE_SIGHTS
 		end,
 		['forceOnBaseClasses'] = {
 			'arccw_base'
