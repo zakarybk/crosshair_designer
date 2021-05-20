@@ -50,10 +50,8 @@
 local UpdateVisibility = function() end
 local UpdateSWEPCheck = function() end
 
-local DefaultCurrentCheck = {ShouldDraw=function() return true end}
-local currentCheck = DefaultCurrentCheck
-local DefaultSWEPShouldDraw = currentCheck.ShouldDraw
-local SWEPShouldDraw = DefaultSWEPShouldDraw
+local DefaultSWEPShouldHide = function() return false end
+local SWEPShouldHide = DefaultSWEPShouldHide
 
 local activeWeapon = nil
 local ply
@@ -66,6 +64,92 @@ local cachedCross = {}
 local LocalPlayer = LocalPlayer
 local IsValid = IsValid
 local GetViewEntity = GetViewEntity
+
+local oddCrossChecks = {} -- When weapon packs do not conform to the norm
+local normCrossChecks = {} -- For everything else which can be generic
+local cachedCrossChecks = {}
+
+function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
+	local fnIsValid = tbl['fnIsValid']
+	local fnShouldHide = tbl['fnShouldHide']
+	table.insert(normCrossChecks, {fnIsValid, fnShouldHide})
+
+	if tbl['forceOnBaseClasses'] then
+		for k, class in pairs(tbl['forceOnBaseClasses']) do
+			oddCrossChecks[class] = oddCrossChecks[class] or {}
+			table.insert(oddCrossChecks[class], {fnIsValid, fnShouldHide})
+		end
+	end
+end
+
+local ISVALID = 1
+local SHOULDHIDE = 2
+local function weaponCrossCheck(wep)
+	local wepClass = wep:GetClass()
+	local baseClass = wep.Base
+
+	-- Use cached
+	if cachedCrossChecks[wepClass] then
+		return cachedCrossChecks[wepClass]
+	end
+
+	-- Find weapon specific
+	if oddCrossChecks[baseClass] then
+		local fnShouldHides = {}
+
+		for k, tbl in pairs(oddCrossChecks[baseClass]) do
+			if tbl[ISVALID](wep) then
+				table.insert(fnShouldHides, tbl[SHOULDHIDE])
+			end
+		end
+
+		if #fnShouldHides >=1 then
+			cachedCrossChecks[wepClass] = fnShouldHides
+			return fnShouldHides
+		end
+
+	end
+
+	-- Find generic checks
+	local fnShouldHides = {}
+
+	for k, tbl in pairs(normCrossChecks) do
+		if tbl[ISVALID](wep) then
+			table.insert(fnShouldHides, tbl[SHOULDHIDE])
+		end
+	end
+
+	-- Return generic checks and save lookup
+	if #fnShouldHides >= 1 then
+		cachedCrossChecks[wepClass] = fnShouldHides
+		return fnShouldHides
+	else
+		-- Return dumby if nothing found
+		return {function() return false end}
+	end
+
+end
+
+local UpdateSWEPCheck = function(ply, wep) -- local
+	SWEPShouldHide = function(wep)
+		for k, fn in pairs(weaponCrossCheck(wep)) do
+			if fn(wep) then return true end
+		end
+		return false
+	end
+end
+
+-- Update weapon on weapon change + update vis for every tick
+local CrosshairShouldHide = function(ply, wep) -- local
+	return (
+		not cachedCross["ShowCross"]
+		or not cachedCross["HideOnADS"]
+		or not ply:Alive()
+		or (cachedCross["HideInVeh"] and ply:InVehicle())
+		or (cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR)
+		or (cachedCross["HideInCameraView"] and GetViewEntity() ~= ply)
+	)
+end
 
 -- GM:PlayerSwitchWeapon "This hook is predicted. This means that in singleplayer,
 -- it will not be called in the Client realm."
@@ -82,50 +166,16 @@ local function WeaponSwitchMonitor()
 				activeWeapon = wep
 				UpdateSWEPCheck(ply, wep)
 			end
-			shouldDraw = SWEPShouldDraw(ply, wep) and CrosshairShouldDraw(ply, wep)
+			shouldHide = SWEPShouldHide(wep) or CrosshairShouldHide(ply, wep)
 		else
-			shouldDraw = CrosshairShouldDraw(ply, wep)
+			shouldHide = CrosshairShouldHide(ply, wep)
 		end
 
 	end
 
 end
 
--- Update weapon on weapon change + update vis for every tick
-CrosshairShouldDraw = function(ply, wep) -- local
-	if (not cachedCross["ShowCross"]) or
-		(not ply:Alive()) or
-		(cachedCross["HideInVeh"] and ply:InVehicle()) or
-		(cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR) or
-		(cachedCross["HideInCameraView"] and GetViewEntity() ~= ply)
-		then
-		return false
-	end
-	return true
-end
-
-UpdateSWEPCheck = function(ply, wep) -- local
-	for i, check in pairs(SWEPChecks) do
-		if check.enabled and check.ShouldUse(ply, wep) then
-
-			if currentCheck.OnRemove != nil then
-				currentCheck.OnRemove(ply, wep)
-			end
-
-			SWEPShouldDraw = check.ShouldDraw
-			currentCheck = check
-
-			if currentCheck.OnSet != nil then
-				currentCheck.OnSet(ply, wep)
-			end
-
-			return
-		end
-	end
-	SWEPShouldDraw = DefaultSWEPShouldDraw
-	currentCheck = DefaultCurrentCheck
-end
-
+-- Deprecated
 CrosshairDesigner.AddSwepCheck = function(
 	name,
 	shouldUseFunc,
@@ -134,50 +184,19 @@ CrosshairDesigner.AddSwepCheck = function(
 	onRemove,
 	enabled)
 
-	table.insert(SWEPChecks, {
-		name=name,
-		ShouldUse=shouldUseFunc,
-		ShouldDraw=shouldDrawFunc,
-		OnSet=onSet,
-		OnRemove=onRemove,
-		enabled=enabled ~= nil and enabled or true
+	-- Sorry if anyone was using the ply arg
+	shouldUseFunc = function(wep) return shouldUseFunc(nil, wep) end
+	shouldDrawFunc = function(wep) return shouldDrawFunc(nil, wep) end
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = shouldUseFunc,
+		['fnShouldHide'] = shouldDrawFunc
 	})
-end
-
-local IndexOfSwepCheck = function(name)
-	local index = 0
-
-	for i, check in pairs(SWEPChecks) do
-		if check.name == name then
-			index = i
-			break
-		end
-	end
-
-	return index
-end
-
-CrosshairDesigner.SetSwepCheckEnabled = function(name, newVal)
-	local index = IndexOfSwepCheck(name)
-
-	if index and tobool(newVal) ~= nil then
-		SWEPChecks[index].enabled = newVal
-	end
-end
-
-CrosshairDesigner.MakeSwepCheckTopPriority = function(name) -- untested
-	local index = IndexOfSwepCheck(name)
-
-	if index then
-		local copy = table.Copy(SWEPChecks[index])
-		table.remove(SWEPChecks, index)
-		table.insert(SWEPChecks, 1, copy)
-	end
 end
 
 hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
 		-- Hide our crosshair
-	if (not shouldDraw and name == "CrosshairDesiger_Crosshair") or
+	if (shouldHide and name == "CrosshairDesiger_Crosshair") or
 		--Hide HL2 (+TFA) crosshair
 		(name == "CHudCrosshair" and not cachedCross["ShowHL2"]) then
 		return false
@@ -242,3 +261,4 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", func
 
 	hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", WeaponSwitchMonitor)
 end)
+

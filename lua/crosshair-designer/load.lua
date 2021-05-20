@@ -409,122 +409,148 @@ else
 	end
 
 	--[[
-		SWEP should draw custom crosshair checks
+		Crosshair checks
 
-		ply and wep will always be valid
-
-		Only one of these can be valid at once so the most
-		any one of these will be called is once per frame
+		Checks the currently held weapon and tries to read
+		information from the weapon to workout if our
+		custom crosshair should be hidden. Such as if
+		the player is using the aiming down sights.
 	]]--
-	CrosshairDesigner.AddSwepCheck("FA:S",
-		function(ply, wep) -- ShouldUse
-			if isExpectedBaseOrClass(wep, "fas2_base", "fas2_") then
-				if wep.dt ~= nil and wep.dt.Status ~= nil then
-					return true
-				end
-			end
-		end,
-		function(ply, wep) -- ShouldDraw
-			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and
-				wep.dt.Status == FAS_STAT_ADS
-			)
-		end
-	)
 
-	-- TFA
-	CrosshairDesigner.AddSwepCheck("TFA",
-		function(ply, wep) -- ShouldUse
-			if isExpectedBaseOrClass(wep, "tfa_gun_base", "tfa_") then
-				if wep.GetIronSights ~= nil then
-					return true
-				end
-			end
-		end,
-		function(ply, wep) -- ShouldDraw
-			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and
-				wep:GetIronSights()
-			)
-		end
-	)
+	-- The more odd they are, the further down the
+	-- list they should be placed, so they don't
+	-- interfer with anything.
+	--
+	-- If they're specific then add the param
+	-- forceOnBaseClasses, and they will be
+	-- used before anything else
 
-	-- M9K is not listed as a setting since it doesn't draw its own crosshair
-	-- We only need to hide our crosshair when aiming down sights
-	-- M9k Remastered + Legacy
-	CrosshairDesigner.AddSwepCheck("M9K",
-		function(ply, wep) -- ShouldUse
-			if isExpectedBaseOrClass(wep, "bobs_scoped_base", "m9k_") then
-				if wep.GetIronsights ~= nil and
-					wep.IronSightsPos ~= nil and
-					wep.RunSightsPos ~= nil
-					then return true -- M9k Legacy
-				else
-					return true -- M9k Remastered
-				end
-			end
-		end,
-		function(ply, wep) -- ShouldDraw
-			return not (
-				-- Legacy
-				(not MMM_M9k_IsBaseInstalled and
-				CrosshairDesigner.GetBool("HideOnADS") and
-				wep:GetIronsights() and -- returns true when running....
-				wep.IronSightsPos ~= wep.RunSightsPos) or -- so also check pos
-				-- Remastered
-				(MMM_M9k_IsBaseInstalled and
-				CrosshairDesigner.GetBool("HideOnADS") and
-				(wep.IronSightState ~= nil and wep.IronSightState or wep:GetNWInt("ScopeState") > 0))
-			)
-		end
-	)
+	-- Also use forceOnBaseClasses to speedup lookup
+	-- for known combinations
 
-	-- CW
-	CrosshairDesigner.AddSwepCheck("CW",
-		function(ply, wep) -- ShouldUse
-			if isExpectedBaseOrClass(wep, "cw_base", "cw_") then
-				if wep.dt ~= nil and wep.dt.State ~= nil then
-					return true
-				end
-			end
+	-- TFA -- thank you TFA for being simple!
+	-- + Scifi weapons
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.GetIronSights ~= nil
 		end,
-		function(ply, wep) -- ShouldDraw
-			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and
-				wep.dt.State == CW_AIMING
-			)
-		end
-	)
+		['fnShouldHide'] = function(wep)
+			return wep:GetIronSights()
+		end,
+		['forceOnBaseClasses'] = {
+			'tfa_gun_base'
+		}
+	})
 
-	-- Scifi
-	CrosshairDesigner.AddSwepCheck("Scifi",
-		function(ply, wep) -- ShouldUse
-			if isExpectedBaseOrClass(wep, "weapon_base", "sfw_") then
-				return wep.GetIronSights ~= nil
-			end
+	-- Modern Warfare 2459720887
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.GetIsAiming ~= nil
 		end,
-		function(ply, wep) -- ShouldDraw
-			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and
-				wep:GetIronSights()
-			)
+		['fnShouldHide'] = function(wep)
+			return wep:GetIsAiming()
 		end
-	)
+	})
 
 	-- ArcCW
-	CrosshairDesigner.AddSwepCheck("ArcCW",
-		function(ply, wep) -- ShouldUse
-			if isExpectedBaseOrClass(wep, "arccw_base", "arccw_") then
-				return wep.Sighted ~= nil
-			end
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.Sighted ~= nil
 		end,
-		function(ply, wep) -- ShouldDraw
-			return not (
-				CrosshairDesigner.GetBool("HideOnADS") and
-				wep.Sighted
-			)
+		['fnShouldHide'] = function(wep)
+			return wep.Sighted
+		end,
+		['forceOnBaseClasses'] = {
+			'arccw_base'
+		}
+	})
+
+	-- DayOfDefeat weapons
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.Weapon ~= nil and
+				wep.Weapon:GetNetworkedBool("Ironsights", nil) ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.Weapon:GetNetworkedBool("Ironsights", false)
 		end
-	)
+	})
+
+	-- FA:S
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.dt ~= nil and wep.dt.Status ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.dt.Status == FAS_STAT_ADS
+		end,
+		['forceOnBaseClasses'] = {
+			'fas2_base',
+		}
+	})
+
+	-- CW 2.0
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.dt ~= nil and wep.dt.State ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.dt.State == CW_AIMING
+		end,
+		['forceOnBaseClasses'] = {
+			'cw_base',
+		}
+	})
+
+	-- M9K Legacy
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.GetIronSights ~= nil and
+				wep.IronSightsPos ~= nil and
+				wep.RunSightsPos ~= nil and
+				not MMM_M9k_IsBaseInstalled
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetIronSights() and
+				wep.IronSightsPos ~= wep.RunSightsPos
+		end,
+		['forceOnBaseClasses'] = {
+			'bobs_gun_base',
+			'bobs_scoped_base',
+			'bobs_shotty_base'
+		}
+	})
+
+	-- M9K Remastered -- scoped
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep:GetNWInt("ScopeState", nil) ~= nil and
+				MMM_M9k_IsBaseInstalled
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.IronSightState or
+				wep:GetNWInt("ScopeState") > 0
+		end,
+		['forceOnBaseClasses'] = {
+			'bobs_scoped_base',
+		}
+	})
+
+	-- M9K Remastered -- un scoped
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['fnIsValid'] = function(wep)
+			return wep.IronSightState ~= nil and
+				MMM_M9k_IsBaseInstalled
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.IronSightState ~= nil and
+				wep.IronSightState
+		end,
+		['forceOnBaseClasses'] = {
+			'bobs_gun_base',
+			'bobs_shotty_base'
+		}
+	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
 	local gm = engine.ActiveGamemode()
