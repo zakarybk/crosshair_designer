@@ -406,17 +406,6 @@ else
 		},
 	})
 
-	function isExpectedBaseOrClass(swep, expectedBase, expectedClassPrefix)
-		if swep and swep.Base and swep.Base == expectedBase then
-			return true
-		elseif swep and swep.GetClass and
-			string.Left(swep:GetClass(), #expectedClassPrefix) == expectedClassPrefix then
-			return true
-		else
-			return false
-		end
-	end
-
 	--[[
 		Crosshair checks
 
