@@ -349,7 +349,17 @@ local function calcInvertedColours(previousCol)
 		render.CapturePixels()
 		local a, b, c = render.ReadPixel(mx, my)
 		local r, g, b = 255 - a, 255 - b, 255 - c
-		nextDrawCol = Color(r, g, b, 255)
+
+		if cachedCross['HighContrastInvertedCol'] then
+			local constrast = r * 0.299 + g * 0.587 + b * 0.114
+			if constrast > 186 then
+				nextDrawCol = Color(255, 255, 255, 255)
+			else
+				nextDrawCol = Color(0, 0, 0, 255)
+			end
+		else
+			nextDrawCol = Color(r, g, b, 255)
+		end
 		cumulativeDrawFrameTime = 0
 	end
 

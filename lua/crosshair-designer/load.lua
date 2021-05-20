@@ -1,4 +1,5 @@
 CrosshairDesigner = CrosshairDesigner or {}
+CrosshairDesigner.VERSION = 3.3
 
 print("Loading crosshair designer (590788321)")
 
@@ -393,6 +394,14 @@ else
 			default="0",
 			help="Inverts the colour of the outline",
 			title="Invert outline colour",
+			isBool=true
+		},
+		{
+			id="HighContrastInvertedCol",
+			var="crosshairdesigner_highconstrastinvertedcol",
+			default="0",
+			help="Forces the inverted colour to be either black or white",
+			title="High contrast inverted colour",
 			isBool=true
 		},
 	})
