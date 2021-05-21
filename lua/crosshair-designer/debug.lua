@@ -115,9 +115,9 @@ local function SWEPAddon(swep)
 	-- but if they're in different directories, then you can.
 	-- Although this should not be a problem when looking up SWEPs
 
-	workshopMatches = workshopAddonsContainingLuaFolder(fileOrFolderToFind)
+	local workshopMatches = workshopAddonsContainingLuaFolder(fileOrFolderToFind)
 
-	localMatches = pathsToFileOrFolder('addons', 'GAME', fileOrFolderToFind)
+	local localMatches = pathsToFileOrFolder('addons', 'GAME', fileOrFolderToFind)
 
 	return {
 		"These are the found files relating to the SWEP you're holding (can be empty)",

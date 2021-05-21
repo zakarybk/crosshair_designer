@@ -78,7 +78,6 @@ end
 function CrosshairDesigner.IndexesOfCrossChecks(checks)
 	local function indexOfCheck(check)
 		for i, tbl in pairs(normCrossChecks) do
-			print(tbl[SHOULDHIDE], check)
 			if tbl[SHOULDHIDE] == check then
 				return i
 			end
