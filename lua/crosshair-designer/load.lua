@@ -11,6 +11,7 @@ if SERVER then
 	AddCSLuaFile("draw.lua")
 	AddCSLuaFile("menu.lua")
 	AddCSLuaFile("disable.lua")
+	AddCSLuaFile("debug.lua")
 
 	--[[
 		Chat command to open menu - OnPlayerChat wasn't working in TTT
@@ -32,6 +33,7 @@ else
 	include("draw.lua")
 	include("menu.lua")
 	include("disable.lua")
+	include("debug.lua")
 
 	--[[
 		Setup the client convars and callbacks to verify values
@@ -561,6 +563,9 @@ else
 	-- Directory where everything is saved
 	if not file.IsDir( "crosshair_designer", "DATA" ) then
 		file.CreateDir( "crosshair_designer", "DATA" )
+	end
+	if not file.IsDir( "crosshair_designer/debug", "DATA" ) then
+		file.CreateDir( "crosshair_designer/debug", "DATA" )
 	end
 end
 

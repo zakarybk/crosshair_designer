@@ -5,43 +5,33 @@
 	The crosshair settings can control whether the external factors should
 	be a factor when deciding to hide the crosshair.
 
-
-
 	--- API quick doc
 
 	This is made to be used by other addons if they wish through
 
-	CrosshairDesigner.AddSwepCheck( -- see load.lua for examples
-		name,
-		shouldUse(ply, wep),  -- always passes through valid values
-		shouldDraw(ply, wep), -- always passes through valid values
-		onSet(ply, wep),	  -- when the check is picked as shouldUse returned true
-		onRemove(ply, wep),   -- when shouldUse returns false
-		enabled (optional, default=true)
+	CrosshairDesigner.AddSWEPCrosshairCheck( -- see load.lua for examples
+		['fnIsValid'] = function(swep) <your code> return end,
+		['fnShouldHide'] = function(swep) <your code> return end,
+		['forceOnBaseClasses'] = ['some_base_class', 'some_other']
 	)
 
-	shouldUse will be called whenever the player swaps SWEPs or changes
+	fnIsValid will be called whenever the player swaps SWEPs or changes
 	crosshair settings if the player and active SWEP are valid
 
+	fnShouldHide is called every frame if your check is used, and will
+	hide the crosshair if you return True
 
-
-	Since only ever one of the SWEP checks will be used (first to return shouldUse=true),
-	you can modify the priority so that yours can be checked before the rest with
-
-	CrosshairDesigner.MakeSwepCheckTopPriority(
-		name
-	)
-
-
+	Crosshair checks will stack for weapons that have no Base class match with any check
+	using forceOnBaseClasses. This allows the system to 'guess' the right response, as
+	only one fnShouldHide from all those which passed fnIsValid, needs to return True
+	to hide the crosshair.
 
 	These can all be setup when CrosshairDesigner_FullyLoaded is called for example
 
 	hook.Add("CrosshairDesigner_FullyLoaded", "MyCustomHook", function(crossTbl)
-		crossTbl.AddSwepCheck(...)
-		crossTbl.AddSwepCheck(...)
-		crossTbl.AddSwepCheck(...)
-
-		crossTbl.MakeSwepCheckTopPriority(...)
+		crossTbl.AddSWEPCrosshairCheck(...)
+		crossTbl.AddSWEPCrosshairCheck(...)
+		crossTbl.AddSWEPCrosshairCheck(...)
 	end)
 	---
 
@@ -56,7 +46,7 @@ local SWEPShouldHide = DefaultSWEPShouldHide
 local activeWeapon = nil
 local ply
 local wep
-local shouldDraw = false
+local shouldHide = false
 
 local SWEPChecks = {} -- SWEPChecks[n].ShouldUse() SWEPChecks[n].ShouldUse.ShouldDraw()
 local cachedCross = {}
@@ -68,6 +58,9 @@ local GetViewEntity = GetViewEntity
 local oddCrossChecks = {} -- When weapon packs do not conform to the norm
 local normCrossChecks = {} -- For everything else which can be generic
 local cachedCrossChecks = {}
+
+local ISVALID = 1
+local SHOULDHIDE = 2
 
 function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
 	local fnIsValid = tbl['fnIsValid']
@@ -82,8 +75,26 @@ function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
 	end
 end
 
-local ISVALID = 1
-local SHOULDHIDE = 2
+function CrosshairDesigner.IndexesOfCrossChecks(checks)
+	local function indexOfCheck(check)
+		for i, tbl in pairs(normCrossChecks) do
+			print(tbl[SHOULDHIDE], check)
+			if tbl[SHOULDHIDE] == check then
+				return i
+			end
+		end
+		return "Unknown"
+	end
+
+	local indexes = {}
+
+	for k, check in pairs(checks) do
+		table.insert(indexes, indexOfCheck(check))
+	end
+
+	return indexes
+end
+
 local function weaponCrossCheck(wep)
 	local wepClass = wep:GetClass()
 	local baseClass = wep.Base
@@ -129,6 +140,7 @@ local function weaponCrossCheck(wep)
 	end
 
 end
+CrosshairDesigner.WeaponCrossCheck = weaponCrossCheck
 
 local UpdateSWEPCheck = function(ply, wep) -- local
 	SWEPShouldHide = function(wep)
@@ -150,6 +162,7 @@ local CrosshairShouldHide = function(ply, wep) -- local
 		or (cachedCross["HideInCameraView"] and GetViewEntity() ~= ply)
 	)
 end
+CrosshairDesigner.CrosshairShouldHide = CrosshairShouldHide
 
 -- GM:PlayerSwitchWeapon "This hook is predicted. This means that in singleplayer,
 -- it will not be called in the Client realm."
@@ -187,6 +200,12 @@ CrosshairDesigner.AddSwepCheck = function(
 	-- Sorry if anyone was using the ply arg
 	shouldUseFunc = function(wep) return shouldUseFunc(nil, wep) end
 	shouldDrawFunc = function(wep) return shouldDrawFunc(nil, wep) end
+
+	ErrorNoHalt(
+		"Call to deprecated function CrosshairDesigner.AddSwepCheck!\n"
+		.. "Please update to use CrosshairDesigner.AddSWEPCrosshairCheck instead.\n"
+		.. "CrosshairDesigner.AddSwepCheck will be removed in July 2021"
+	)
 
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['fnIsValid'] = shouldUseFunc,
