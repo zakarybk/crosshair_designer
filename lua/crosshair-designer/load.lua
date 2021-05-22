@@ -1,5 +1,6 @@
 CrosshairDesigner = CrosshairDesigner or {}
 CrosshairDesigner.VERSION = 3.3
+CrosshairDesigner.WSID = 590788321
 
 print("Loading crosshair designer (590788321)")
 

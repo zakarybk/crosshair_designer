@@ -66,6 +66,16 @@ CrosshairDesigner.CurrentToString = function()
 	return data
 end
 
+CrosshairDesigner.CurrentToTable = function()
+	local data = {}
+
+	for i, convarData in pairs(indexed) do
+		data[convarData.data.id] = tostring(CrosshairDesigner.GetInt(convarData.data.var))
+	end
+
+	return data
+end
+
 CrosshairDesigner.Save = function(crossID)
 	local saveFile = "crosshair_designer/save_" .. crossID .. ".txt" -- temporary - if replacing watchout for duplicates
 

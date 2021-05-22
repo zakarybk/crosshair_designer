@@ -1,3 +1,33 @@
+local function getOS()
+	if system.IsWindows() then
+		return "Windows"
+	elseif system.IsLinux() then
+		return "Linux"
+	elseif system.IsOSX() then
+		return "MacOS"
+	end
+	return "Unknown"
+end
+
+local function CrosshairDesignerVersion()
+	local workshopVersion = "None"
+	local internalVersion = CrosshairDesigner.VERSION
+
+	local crossWSID = tostring(CrosshairDesigner.WSID)
+
+	for k, v in pairs(engine.GetAddons()) do
+		if v.mounted and v.wsid == crossWSID then
+			workshopVersion =  v.wsid
+			break
+		end
+	end
+
+	return {
+		['workshop'] = workshopVersion,
+		['internal'] = internalVersion
+	}
+end
+
 -- Only works on Windows - looks for drive letter
 local function guessDataPathBasedOnAddons()
 	local path = nil
@@ -136,35 +166,8 @@ local function any(tbl)
 	return false
 end
 
-concommand.Add("crosshairdesigner_debugdump", function()
-	local ply = LocalPlayer()
-	local swep = LocalPlayer():GetActiveWeapon()
-	local swepAddons = SWEPAddon(swep)
-
-	print("--------------------------------------------------------------------")
-	print()
-	print()
-
-	print("Crosshair Designer Debug Dump:")
-	print("Current Crosshair: " .. CrosshairDesigner.CurrentToString())
-	print("Held SWEP: " .. swep:GetClass())
-	print("SWEP Base: " .. (swep.Base or "No base class"))
-	print("More details saved in the text file below!")
-	PrintTable(swepAddons)
-
+local function fileToSystemPath(savePath)
 	local dataPath = guessDataPathBasedOnAddons()
-	local savePath = CrosshairDesigner.Directory .. "\\debug\\debugdump.txt"
-	file.Write(savePath, util.TableToJSON({
-		['Current Crosshair'] = CrosshairDesigner.CurrentToString(),
-		['Held SWEP'] = swep:GetClass(),
-		['SWEP Base'] = (swep.Base or "No base class"),
-		['SWEP Addons'] = swepAddons,
-		['Is Hiding'] = {
-			['CrosshairShouldHide'] = CrosshairDesigner.CrosshairShouldHide(ply, wep),
-			['WeaponCrossCheck'] = any(CrosshairDesigner.WeaponCrossCheck(wep)),
-			['Checks'] = CrosshairDesigner.IndexesOfCrossChecks(CrosshairDesigner.WeaponCrossCheck(wep))
-		}
-	}, true))
 
 	if dataPath then
 		savePath = dataPath .. savePath
@@ -172,7 +175,43 @@ concommand.Add("crosshairdesigner_debugdump", function()
 		savePath = "GarrysMod\\garrysmod\\data\\" .. savePath
 	end
 
-	print("Output written to " .. savePath)
+	return savePath
+end
+
+concommand.Add("crosshairdesigner_debugdump", function()
+	local ply = LocalPlayer()
+	local swep = LocalPlayer():GetActiveWeapon()
+	local swepAddons = SWEPAddon(swep)
+
+	local log = {
+		['Operating System'] = getOS(),
+		['Current Crosshair'] = {
+			['Short'] = CrosshairDesigner.CurrentToString(),
+			['Long'] = CrosshairDesigner.CurrentToTable()
+		},
+		['Held SWEP'] = swep:GetClass(),
+		['SWEP Base'] = (swep.Base or "No base class"),
+		['SWEP Addons'] = swepAddons,
+		['Is Hiding'] = {
+			['CrosshairShouldHide'] = CrosshairDesigner.CrosshairShouldHide(ply, wep),
+			['WeaponCrossCheck'] = any(CrosshairDesigner.WeaponCrossCheck(wep)),
+			['Checks'] = CrosshairDesigner.IndexesOfCrossChecks(CrosshairDesigner.WeaponCrossCheck(wep))
+		},
+		['VERSION'] = CrosshairDesignerVersion()
+	}
+
+	print("--------------------------------------------------------------------")
+	print()
+	print()
+
+	print("Crosshair Designer Debug Dump:")
+
+	PrintTable(log)
+
+	local savePath = CrosshairDesigner.Directory .. "\\debug\\debugdump.txt"
+	file.Write(savePath, util.TableToJSON(log, true))
+
+	print("Output written to " .. fileToSystemPath(savePath))
 
 	print()
 	print()
@@ -211,17 +250,66 @@ concommand.Add("crosshairdesigner_debugswepdump", function()
 	print("Crosshair Designer found these addons which contain SWEPS")
 	PrintTable(addons)
 
-	local dataPath = guessDataPathBasedOnAddons()
 	local savePath = CrosshairDesigner.Directory .. "\\debug\\debugswepdump.txt"
 	file.Write(savePath, util.TableToJSON(addons, true))
 
-	if dataPath then
-		savePath = dataPath .. savePath
-	else
-		savePath = "GarrysMod\\garrysmod\\data\\" .. savePath
+	print("Output written to " .. fileToSystemPath(savePath))
+
+	print()
+	print()
+	print("--------------------------------------------------------------------")
+end)
+
+local function dict_intersect(dict, selection)
+	local intersection = {}
+
+	for _, key in pairs(selection) do
+		if dict[key] ~= nil then
+			intersection[key] = dict[key]
+		end
 	end
 
-	print("Output written to " .. savePath)
+	return intersection
+end
+
+concommand.Add("crosshairdesigner_debugaddondump", function()
+	local workshopAddons = {}
+	local localAddons = {}
+
+	local saveKeys = {
+		'downloaded',
+		'title',
+		'mounted',
+		'wsid',
+		'updated'
+	}
+
+	for k, v in pairs(engine.GetAddons()) do
+		if v.mounted then
+			table.Add(
+				workshopAddons,
+				{dict_intersect(v, saveKeys)}
+			)
+		end
+	end
+
+	local _, localAddons = file.Find('addons/*', 'GAME')
+
+	local addons = {
+		['Workshop'] = workshopAddons,
+		['Local'] = localAddons
+	}
+
+	print("--------------------------------------------------------------------")
+	print()
+	print()
+
+	PrintTable(addons)
+
+	local savePath = CrosshairDesigner.Directory .. "\\debug\\debugaddondump.txt"
+	file.Write(savePath, util.TableToJSON(addons, true))
+
+	print("Output written to " .. fileToSystemPath(savePath))
 
 	print()
 	print()
