@@ -86,7 +86,8 @@ local function pathsToFileOrFolder(path, dir, fileOrFolderToFind)
 	if files then
 		for i, _file in pairs(files) do
 			-- print("file", joinPath(path, _file))
-			if string.StripExtension(_file) == fileOrFolderToFind then
+			if _file == fileOrFolderToFind
+				or string.StripExtension(_file) == fileOrFolderToFind then
 				table.insert(candidates, joinPath(path, _file))
 			end
 		end
@@ -156,6 +157,36 @@ local function SWEPAddon(swep)
 	}
 end
 
+local function traceShouldDraw()
+	local calls = {}
+	local hooks = hook.GetTable()
+	local hideHooks = hooks["HUDShouldDraw"]
+
+	for k, fn in pairs(hideHooks) do
+		-- Find hooks asking to hide our crosshair
+		local returnVal = fn("CrosshairDesiger_Crosshair")
+
+		if returnVal == false then
+			local debugInfo = debug.getinfo(fn)
+			local fileName = string.GetFileFromFilename(debugInfo['short_src'])
+			table.insert(
+				calls,
+				{
+					['Hook'] = {'HUDShouldDraw', k},
+					['File'] = (debugInfo['short_src'] or 'Unknown'),
+					['References'] = {
+						['Workshop'] = workshopAddonsContainingLuaFolder(fileName),
+						['Local'] = pathsToFileOrFolder('addons', 'GAME', fileName)
+					},
+					['Func'] = debugInfo['func']
+				}
+			)
+		end
+	end
+
+	return calls
+end
+
 local function any(tbl)
 	local swep = LocalPlayer():GetActiveWeapon()
 	for k, shouldHide in pairs(tbl) do
@@ -197,7 +228,8 @@ concommand.Add("crosshairdesigner_debugdump", function()
 			['WeaponCrossCheck'] = any(CrosshairDesigner.WeaponCrossCheck(wep)),
 			['Checks'] = CrosshairDesigner.IndexesOfCrossChecks(CrosshairDesigner.WeaponCrossCheck(wep))
 		},
-		['VERSION'] = CrosshairDesignerVersion()
+		['VERSION'] = CrosshairDesignerVersion(),
+		['HUDShouldDraw'] = traceShouldDraw()
 	}
 
 	print("--------------------------------------------------------------------")
@@ -229,7 +261,8 @@ concommand.Add("crosshairdesigner_debugswepdump", function()
 				moreSweps = moreSweps or {}
 				if #sweps + #moreSweps > 0 then
 					table.Add(sweps, moreSweps)
-					table.Add(addons, {
+					table.insert(
+						addons,
 						{
 							['title'] = v.title,
 							['wsid'] = v.wsid,
@@ -237,7 +270,7 @@ concommand.Add("crosshairdesigner_debugswepdump", function()
 							['mounted'] = v.mounted,
 							['SWEPS'] = sweps
 						}
-					})
+					)
 				end
 			end
 		end
@@ -286,9 +319,9 @@ concommand.Add("crosshairdesigner_debugaddondump", function()
 
 	for k, v in pairs(engine.GetAddons()) do
 		if v.mounted then
-			table.Add(
+			table.insert(
 				workshopAddons,
-				{dict_intersect(v, saveKeys)}
+				dict_intersect(v, saveKeys)
 			)
 		end
 	end
@@ -314,4 +347,32 @@ concommand.Add("crosshairdesigner_debugaddondump", function()
 	print()
 	print()
 	print("--------------------------------------------------------------------")
+end)
+
+concommand.Add("crosshairdesigner_patchdrawhooks", function()
+	local problems = traceShouldDraw()
+
+	if #problems == 0 then
+		print("Crosshair appears to be drawing")
+		print("There's no HUDShouldDraw interference!")
+		return
+	end
+
+	for k, tbl in pairs(problems) do
+		local hookName = tbl['Hook'] -- ['HUDShouldDraw', 'identifier']
+		local fn = tbl['Func']
+
+		print("Patching hook: " .. hookName[1] .. " " .. hookName[2])
+
+		hook.Add(hookName[1], hookName[2], function(name, ...)
+			if name ~= 'CrosshairDesiger_Crosshair' then
+				return fn(name, ...)
+			end
+		end)
+
+		print("Patched hook: " .. hookName[1]  .. " " .. hookName[2] .. "!")
+
+		print("If you can now see the crosshair then please send me the below conflict information")
+		PrintTable(tbl)
+	end
 end)
