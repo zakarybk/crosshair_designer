@@ -1,3 +1,8 @@
+-- Format used by Steam Workshop
+local function formatToSteamTime(time)
+	return os.date("%d %b, %Y @ %I:%M%p", time)
+end
+
 local function getOS()
 	if system.IsWindows() then
 		return "Windows"
@@ -120,12 +125,15 @@ local function workshopAddonsContainingLuaFolder(fileOrFolderToFind)
 		if v.mounted then
 			paths = pathsToFileOrFolder('', v.title, fileOrFolderToFind)
 			if #paths > 0 then
+				local addonInfo = v
+				addonInfo['updated'] = formatToSteamTime(addonInfo['updated'])
+				addonInfo['timeadded'] = formatToSteamTime(addonInfo['timeadded'])
 				table.Add(
 					addons,
 					{
 						-- Keep number index with key values inside
 						{
-							["ADDON"] = v,
+							["ADDON"] = addonInfo,
 							["REFERENCES"] = paths
 						}
 					}
@@ -209,6 +217,18 @@ local function fileToSystemPath(savePath)
 	return savePath
 end
 
+local function dict_intersect(dict, selection)
+	local intersection = {}
+
+	for _, key in pairs(selection) do
+		if dict[key] ~= nil then
+			intersection[key] = dict[key]
+		end
+	end
+
+	return intersection
+end
+
 concommand.Add("crosshairdesigner_debugdump", function()
 	local ply = LocalPlayer()
 	local swep = LocalPlayer():GetActiveWeapon()
@@ -253,6 +273,14 @@ end)
 concommand.Add("crosshairdesigner_debugswepdump", function()
 	local addons = {}
 
+	local saveKeys = {
+		'downloaded',
+		'title',
+		'mounted',
+		'wsid',
+		'updated'
+	}
+
 	for k, v in pairs(engine.GetAddons()) do
 		if v.mounted then
 			local sweps, moreSweps = file.Find("lua/weapons/*", v.title)
@@ -261,16 +289,12 @@ concommand.Add("crosshairdesigner_debugswepdump", function()
 				moreSweps = moreSweps or {}
 				if #sweps + #moreSweps > 0 then
 					table.Add(sweps, moreSweps)
-					table.insert(
-						addons,
-						{
-							['title'] = v.title,
-							['wsid'] = v.wsid,
-							['downloaded'] = v.downloaded,
-							['mounted'] = v.mounted,
-							['SWEPS'] = sweps
-						}
-					)
+
+					local addonInfo = dict_intersect(v, saveKeys)
+					addonInfo['updated'] = formatToSteamTime(addonInfo['updated'])
+					addonInfo['SWEPS'] = sweps
+
+					table.insert(addons, addonInfo)
 				end
 			end
 		end
@@ -293,18 +317,6 @@ concommand.Add("crosshairdesigner_debugswepdump", function()
 	print("--------------------------------------------------------------------")
 end)
 
-local function dict_intersect(dict, selection)
-	local intersection = {}
-
-	for _, key in pairs(selection) do
-		if dict[key] ~= nil then
-			intersection[key] = dict[key]
-		end
-	end
-
-	return intersection
-end
-
 concommand.Add("crosshairdesigner_debugaddondump", function()
 	local workshopAddons = {}
 	local localAddons = {}
@@ -319,9 +331,11 @@ concommand.Add("crosshairdesigner_debugaddondump", function()
 
 	for k, v in pairs(engine.GetAddons()) do
 		if v.mounted then
+			local addonInfo = v
+			addonInfo['updated'] = formatToSteamTime(addonInfo['updated'])
 			table.insert(
 				workshopAddons,
-				dict_intersect(v, saveKeys)
+				dict_intersect(addonInfo, saveKeys)
 			)
 		end
 	end
