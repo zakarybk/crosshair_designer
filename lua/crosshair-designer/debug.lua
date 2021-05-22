@@ -145,9 +145,9 @@ local function workshopAddonsContainingLuaFolder(fileOrFolderToFind)
 	return addons
 end
 
-local function SWEPAddon(swep)
+local function SWEPAddon(swepClass)
 	-- folder or file.lua
-	local fileOrFolderToFind = swep:GetClass()
+	local fileOrFolderToFind = swepClass
 
 	-- Find locations of everywhere the weapon could be
 	-- Yes you cannot have two lua files with the same name,
@@ -159,7 +159,6 @@ local function SWEPAddon(swep)
 	local localMatches = pathsToFileOrFolder('addons', 'GAME', fileOrFolderToFind)
 
 	return {
-		"These are the found files relating to the SWEP you're holding (can be empty)",
 		['Workshop Addons'] = workshopMatches,
 		['Local Addons'] = localMatches
 	}
@@ -232,7 +231,12 @@ end
 concommand.Add("crosshairdesigner_debugdump", function()
 	local ply = LocalPlayer()
 	local swep = LocalPlayer():GetActiveWeapon()
-	local swepAddons = SWEPAddon(swep)
+
+	print("--------------------------------------------------------------------")
+	print()
+	print()
+
+	print("Crosshair Designer Debug Dump: (this make take a while)")
 
 	local log = {
 		['Operating System'] = getOS(),
@@ -241,8 +245,8 @@ concommand.Add("crosshairdesigner_debugdump", function()
 			['Long'] = CrosshairDesigner.CurrentToTable()
 		},
 		['Held SWEP'] = swep:GetClass(),
+		['Held SWEP Addons'] = SWEPAddon(swep:GetClass()),
 		['SWEP Base'] = (swep.Base or "No base class"),
-		['SWEP Addons'] = swepAddons,
 		['Is Hiding'] = {
 			['CrosshairShouldHide'] = CrosshairDesigner.CrosshairShouldHide(ply, wep),
 			['WeaponCrossCheck'] = any(CrosshairDesigner.WeaponCrossCheck(wep)),
@@ -252,11 +256,9 @@ concommand.Add("crosshairdesigner_debugdump", function()
 		['HUDShouldDraw'] = traceShouldDraw()
 	}
 
-	print("--------------------------------------------------------------------")
-	print()
-	print()
-
-	print("Crosshair Designer Debug Dump:")
+	if swep.Base then
+		log['SWEP Base Addons'] = SWEPAddon(swep.Base)
+	end
 
 	PrintTable(log)
 
