@@ -248,9 +248,9 @@ concommand.Add("crosshairdesigner_debugdump", function()
 		['Held SWEP Addons'] = SWEPAddon(swep:GetClass()),
 		['SWEP Base'] = (swep.Base or "No base class"),
 		['Is Hiding'] = {
-			['CrosshairShouldHide'] = CrosshairDesigner.CrosshairShouldHide(ply, wep),
-			['WeaponCrossCheck'] = any(CrosshairDesigner.WeaponCrossCheck(wep)),
-			['Checks'] = CrosshairDesigner.IndexesOfCrossChecks(CrosshairDesigner.WeaponCrossCheck(wep))
+			['CrosshairShouldHide'] = CrosshairDesigner.CrosshairShouldHide(ply, swep),
+			['WeaponCrossCheck'] = any(CrosshairDesigner.WeaponCrossCheck(swep)),
+			['Checks'] = CrosshairDesigner.IndexesOfCrossChecks(CrosshairDesigner.WeaponCrossCheck(swep))
 		},
 		['VERSION'] = CrosshairDesignerVersion(),
 		['HUDShouldDraw'] = traceShouldDraw()
