@@ -61,16 +61,18 @@ local cachedCrossChecks = {}
 
 local ISVALID = 1
 local SHOULDHIDE = 2
+local ID = 3
 
 function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
 	local fnIsValid = tbl['fnIsValid']
 	local fnShouldHide = tbl['fnShouldHide']
-	table.insert(normCrossChecks, {fnIsValid, fnShouldHide})
+	local id = tbl['id'] or 'None'
+	table.insert(normCrossChecks, {fnIsValid, fnShouldHide, id})
 
 	if tbl['forceOnBaseClasses'] then
 		for k, class in pairs(tbl['forceOnBaseClasses']) do
 			oddCrossChecks[class] = oddCrossChecks[class] or {}
-			table.insert(oddCrossChecks[class], {fnIsValid, fnShouldHide})
+			table.insert(oddCrossChecks[class], {fnIsValid, fnShouldHide, id})
 		end
 	end
 end
@@ -88,7 +90,9 @@ function CrosshairDesigner.IndexesOfCrossChecks(checks)
 	local indexes = {}
 
 	for k, check in pairs(checks) do
-		table.insert(indexes, indexOfCheck(check))
+		local index = indexOfCheck(check)
+		local id = normCrossChecks[index][ID]
+		table.insert(indexes, {index = index, id = id})
 	end
 
 	return indexes

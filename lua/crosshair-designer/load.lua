@@ -432,6 +432,7 @@ else
 	-- TFA -- thank you TFA for being simple!
 	-- + Scifi weapons
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'GetIronSights',
 		['fnIsValid'] = function(wep)
 			return wep.GetIronSights ~= nil
 		end,
@@ -443,8 +444,58 @@ else
 		}
 	})
 
+	-- DarkRP special case for ls_sniper
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'ls_sniper',
+		['fnIsValid'] = function(wep)
+			return wep.GetIronsights ~= nil and wep:GetClass() == "ls_sniper"
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetIronsights() and wep:GetScopeLevel() > 1
+		end,
+		['forceOnBaseClasses'] = {
+			'weapon_cs_base2'
+		}
+	})
+
+	-- DarkRP uses lower case sights
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'GetIron[s]ights',
+		['fnIsValid'] = function(wep)
+			return wep.GetIronsights ~= nil and wep:GetClass() ~= "ls_sniper"
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetIronsights()
+		end,
+		['forceOnBaseClasses'] = {
+			'weapon_cs_base2'
+		}
+	})
+
+	-- If DarkRP has lower case sights, maybe some other addon has
+	-- something similar with iron, or the whole thing
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Get[i]ron[s]ights',
+		['fnIsValid'] = function(wep)
+			return wep.Getironsights ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:Getironsights()
+		end,
+	})
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = '[g]et[i]ron[s]ights',
+		['fnIsValid'] = function(wep)
+			return wep.getironsights ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:getironsights()
+		end,
+	})
+
 	-- Modern Warfare 2459720887
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'GetIsAiming',
 		['fnIsValid'] = function(wep)
 			return wep.GetIsAiming ~= nil
 		end,
@@ -455,6 +506,7 @@ else
 
 	-- ArcCW
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'ArcCW',
 		['fnIsValid'] = function(wep)
 			return wep.Sighted ~= nil and ArcCW ~= nil
 		end,
@@ -468,6 +520,7 @@ else
 
 	-- DayOfDefeat weapons
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'GetNetworkedBool Iron[s]ights',
 		['fnIsValid'] = function(wep)
 			return wep.Weapon ~= nil and
 				wep.Weapon:GetNetworkedBool("Ironsights", nil) ~= nil
@@ -477,8 +530,21 @@ else
 		end
 	})
 
+	-- Potentially another with IronSights
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'GetNetworkedBool IronSights',
+		['fnIsValid'] = function(wep)
+			return wep.Weapon ~= nil and
+				wep.Weapon:GetNetworkedBool("IronSights", nil) ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.Weapon:GetNetworkedBool("IronSights", false)
+		end
+	})
+
 	-- FA:S
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'FA:S',
 		['fnIsValid'] = function(wep)
 			return wep.dt ~= nil and wep.dt.Status ~= nil
 		end,
@@ -492,6 +558,7 @@ else
 
 	-- CW 2.0
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'CW 2.0',
 		['fnIsValid'] = function(wep)
 			return wep.dt ~= nil and wep.dt.State ~= nil
 		end,
@@ -505,6 +572,7 @@ else
 
 	-- M9K Legacy
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'M9K Legacy',
 		['fnIsValid'] = function(wep)
 			return wep.GetIronSights ~= nil and
 				wep.IronSightsPos ~= nil and
@@ -524,6 +592,7 @@ else
 
 	-- M9K Remastered -- scoped
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'M9K Remastered scoped',
 		['fnIsValid'] = function(wep)
 			return wep:GetNWInt("ScopeState", nil) ~= nil and
 				MMM_M9k_IsBaseInstalled
@@ -539,6 +608,7 @@ else
 
 	-- M9K Remastered -- un scoped
 	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'M9K Remastered un scoped',
 		['fnIsValid'] = function(wep)
 			return wep.IronSightState ~= nil and
 				MMM_M9k_IsBaseInstalled
