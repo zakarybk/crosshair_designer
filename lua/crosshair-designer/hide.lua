@@ -62,17 +62,19 @@ local cachedCrossChecks = {}
 local ISVALID = 1
 local SHOULDHIDE = 2
 local ID = 3
+local ONSWITCH = 4
 
 function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
 	local fnIsValid = tbl['fnIsValid']
 	local fnShouldHide = tbl['fnShouldHide']
+	local fnOnSwitch = tbl['onSwitch']
 	local id = tbl['id'] or 'None'
-	table.insert(normCrossChecks, {fnIsValid, fnShouldHide, id})
+	table.insert(normCrossChecks, {fnIsValid, fnShouldHide, id, fnOnSwitch})
 
 	if tbl['forceOnBaseClasses'] then
 		for k, class in pairs(tbl['forceOnBaseClasses']) do
 			oddCrossChecks[class] = oddCrossChecks[class] or {}
-			table.insert(oddCrossChecks[class], {fnIsValid, fnShouldHide, id})
+			table.insert(oddCrossChecks[class], {fnIsValid, fnShouldHide, id, fnOnSwitch})
 		end
 	end
 end
@@ -91,7 +93,7 @@ function CrosshairDesigner.IndexesOfCrossChecks(checks)
 
 	for k, check in pairs(checks) do
 		local index = indexOfCheck(check)
-		local id = normCrossChecks[index][ID]
+		local id = normCrossChecks[index] and normCrossChecks[index][ID] or 'dumby'
 		table.insert(indexes, {index = index, id = id})
 	end
 
@@ -146,8 +148,9 @@ end
 CrosshairDesigner.WeaponCrossCheck = weaponCrossCheck
 
 local UpdateSWEPCheck = function(ply, wep) -- local
+	local checks = weaponCrossCheck(wep)
 	SWEPShouldHide = function(wep)
-		for k, fn in pairs(weaponCrossCheck(wep)) do
+		for k, fn in pairs(checks) do
 			if fn(wep) then return true end
 		end
 		return false
@@ -167,6 +170,22 @@ local CrosshairShouldHide = function(ply, wep) -- local
 end
 CrosshairDesigner.CrosshairShouldHide = CrosshairShouldHide
 
+local function RunAnyOnSwitchListeners(wep)
+	local checks = weaponCrossCheck(wep)
+	local checkIndexes = CrosshairDesigner.IndexesOfCrossChecks(checks)
+
+	for i, tbl in pairs(checkIndexes) do
+		local index = tbl.index
+		local id = tbl.id
+
+		if index ~= 'Unknown' and id ~= 'dumby' then
+			if normCrossChecks[index][ONSWITCH] then
+				normCrossChecks[index][ONSWITCH](wep)
+			end
+		end
+	end
+end
+
 -- GM:PlayerSwitchWeapon "This hook is predicted. This means that in singleplayer,
 -- it will not be called in the Client realm."
 -- https://wiki.facepunch.com/gmod/GM:PlayerSwitchWeapon
@@ -181,6 +200,7 @@ local function WeaponSwitchMonitor()
 			if activeWeapon ~= wep then
 				activeWeapon = wep
 				UpdateSWEPCheck(ply, wep)
+				RunAnyOnSwitchListeners(wep)
 			end
 			shouldHide = SWEPShouldHide(wep) or CrosshairShouldHide(ply, wep)
 		else
@@ -242,13 +262,7 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 
 	local id = CrosshairDesigner.GetConvarID(convar)
 
-	if id == "HideFAS" then
-		if val then
-			CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
-		else
-			CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
-		end
-	elseif id == "HideCW" then
+	if id == "HideCW" then
 		if val then
 			CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 		else
@@ -270,11 +284,6 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", func
 	end
 
 	-- Load detours if set to active
-	if cachedCross["HideFAS"] then
-		CrosshairDesigner.AddConvarDetour("fas2_nohud", 1)
-	else
-		CrosshairDesigner.RemoveConvarDetour("fas2_nohud")
-	end
 	if cachedCross["HideCW"] then
 		CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 	else

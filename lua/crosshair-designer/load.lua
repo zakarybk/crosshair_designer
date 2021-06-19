@@ -553,7 +553,34 @@ else
 		end,
 		['forceOnBaseClasses'] = {
 			'fas2_base',
-		}
+		},
+		['onSwitch'] = function(wep)
+			-- Hide FA:S 2 crosshair by setting alpha to 0
+			if not wep.CrosshairDesignerDetoured then
+				local original = wep.DrawHUD
+
+				wep.CrosshairDesignerDetoured = true
+				wep.DrawHUD = function(...)
+					if CrosshairDesigner.GetBool('HideFAS') then
+						wep.CrossAlpha = 0
+						-- Temp set firemode to safe to force cross alpha to 0
+						-- Also temp hide grenade crosshair
+						local originalVehicle = wep.Vehicle
+						wep.Vehicle = true
+
+						-- Call original draw hud
+						local drawHUDResult = original(...)
+
+						-- Revert back overrides
+						wep.Vehicle = originalVehicle
+
+						return drawHUDResult
+					else
+						return original(...)
+					end
+				end
+			end
+		end
 	})
 
 	-- CW 2.0
