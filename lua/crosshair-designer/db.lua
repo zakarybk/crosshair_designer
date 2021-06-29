@@ -15,6 +15,12 @@ table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_7", "Save 7", tru
 table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_8", "Save 8", true, false))
 table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_9", "Save 9", true, false))
 table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_10", "Save 10", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_11", "Save 11", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_12", "Save 12", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_13", "Save 13", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_14", "Save 14", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_15", "Save 15", true, false))
+table.insert(saveNameConvars, CreateClientConVar("Hc_crosssave_16", "Save 16", true, false))
 
 local convars = {}
 local indexed = {}
@@ -136,6 +142,10 @@ CrosshairDesigner.Load = function(crossID, dataStr)
 		file.Write(saveFile, defaultCrosshair)
 		CrosshairDesigner.Load(crossID)
 	end
+end
+
+CrosshairDesigner.LoadDefaultCrosshair = function()
+	CrosshairDesigner.Load(0, defaultCrosshair)
 end
 
 CrosshairDesigner.SetUpConvars = function(convars)

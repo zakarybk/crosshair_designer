@@ -161,7 +161,6 @@ end
 local CrosshairShouldHide = function(ply, wep) -- local
 	return (
 		not cachedCross["ShowCross"]
-		or not cachedCross["HideOnADS"]
 		or not ply:Alive()
 		or (cachedCross["HideInVeh"] and ply:InVehicle())
 		or (cachedCross["HideInSpectate"] and ply:Team() == TEAM_SPECTATOR)
@@ -202,9 +201,9 @@ local function WeaponSwitchMonitor()
 				UpdateSWEPCheck(ply, wep)
 				RunAnyOnSwitchListeners(wep)
 			end
-			shouldHide = SWEPShouldHide(wep) or CrosshairShouldHide(ply, wep)
+			shouldHide = cachedCross["HideOnADS"] and (SWEPShouldHide(wep) or CrosshairShouldHide(ply, wep))
 		else
-			shouldHide = CrosshairShouldHide(ply, wep)
+			shouldHide = cachedCross["HideOnADS"] and CrosshairShouldHide(ply, wep)
 		end
 
 	end

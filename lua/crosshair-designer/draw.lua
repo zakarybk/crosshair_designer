@@ -11,15 +11,6 @@ surface.DrawLine = _G.surface.DrawLine
 surface.DrawRect = _G.surface.DrawRect
 
 local math = table.Copy(math)
--- math.Round = _G.math.Round
--- math.sin = _G.math.sin
--- math.cos = _G.math.cos
--- math.rad = _G.math.rad
--- math.max = _G.math.max
--- math.min = _G.math.min
--- math.floor = _G.math.floor
--- math.log = _G.math.log
--- math.pow = _G.math.pow
 
 local util = {}
 util.TraceLine = _G.util.TraceLine
@@ -139,7 +130,8 @@ local unpack = unpack
 local math_Round = math.Round
 local mx, my
 local shouldDraw = true
-local screenCentre = Vector(0, 0)
+local crossCentre = Vector(0, 0)
+local crossCircleCentre = Vector(0, 0)
 local defaultColour = Color(0,0,0,255)
 local drawCol = defaultColour
 local outlineCol = defaultColour
@@ -387,18 +379,18 @@ local Crosshair = function()
 		end
 
 		local pos = traceResult.HitPos:ToScreen()
-		mx, my = pos.x - 1, pos.y
 		-- smooth out jitter caused by tracing from eyes
-		screenCentre.x = math.Round(mx)
-		screenCentre.y = math.Round(my)
+		mx, my =  math.Round(pos.x - 1), math.Round(pos.y)
 	else
 		-- Align with HL2 crosshair
 		mx = (ScrW() / 2) - 1
 		my = ScrH() / 2
-		--
-		screenCentre.x = mx
-		screenCentre.y = my
 	end
+
+	crossCentre.x = mx + cachedCross["CrossXOffset"]
+	crossCentre.y = my - cachedCross["CrossYOffset"]
+	crossCircleCentre.x = mx + cachedCross["CircleXOffset"]
+	crossCircleCentre.y = my - cachedCross["CircleYOffset"] + 1
 
 	-- Change col on target
 	if cachedCross["ColOnTarget"] then
@@ -462,8 +454,8 @@ local Crosshair = function()
 			end
 
 			-- Translate to middle of screen
-			polys = cacheTranslatePolys(polys, false, screenCentre, dynamicGap)
-			outlinePolys = cacheTranslatePolys(outlinePolys, true, screenCentre, dynamicGap)
+			polys = cacheTranslatePolys(polys, false, crossCentre, dynamicGap)
+			outlinePolys = cacheTranslatePolys(outlinePolys, true, crossCentre, dynamicGap)
 
 			-- Ignore texture set by other addons
 			draw.NoTexture()
@@ -494,8 +486,8 @@ local Crosshair = function()
 			end
 
 			-- Translate to middle of screen
-			lines = cacheTranslateLines(lines, false, screenCentre, dynamicGap)
-			outlines = cacheTranslateLines(outlines, true, screenCentre, dynamicGap)
+			lines = cacheTranslateLines(lines, false, crossCentre, dynamicGap)
+			outlines = cacheTranslateLines(outlines, true, crossCentre, dynamicGap)
 
 			-- Draw lines
 			surface.SetDrawColor(drawCol)
@@ -518,16 +510,26 @@ local Crosshair = function()
 		if cachedCross["CircleRadius"] == 1 then
 			-- Pixel perfect under the HL2 crosshair
 			draw.NoTexture()
-			surface.DrawRect(mx, my, 1, 1)
+			surface.DrawRect(crossCircleCentre.x, crossCircleCentre.y, 1, 1)
 		else
 			-- If the circle pos is based off of tracing,
 			-- then it needs updating every frame
 			if cachedCross["TraceDraw"] then
-				generateCircle(
-					ScrW()/2-1,
-					ScrH()/2+1,
+				cachedCross.circle = generateCircle(
+					0,
+					0,
 					cachedCross["CircleRadius"],
 					cachedCross["CircleSegments"]
+				)
+				if cachedCross["CircleRotation"] ~= 0 then
+					cachedCross.circle = CrosshairDesigner.RotatePoly(
+						cachedCross.circle,
+						cachedCross["CircleRotation"]
+					)
+				end
+				cachedCross.circle = CrosshairDesigner.TranslatePoly(
+					cachedCross.circle,
+					crossCircleCentre
 				)
 			end
 			draw.NoTexture()
@@ -709,12 +711,21 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 	if not data then return end
 	cachedCross[data.id] = val
 
-	if data.id == "CircleRadius" or data.id == "CircleSegments" then
-		cachedCross.circle = generateCircle(
-			ScrW()/2-1,
-			ScrH()/2+1,
-			cachedCross["CircleRadius"],
-			cachedCross["CircleSegments"]
+	if data.menuGroup == "circle" then
+		cachedCross.circle = CrosshairDesigner.TranslatePoly(
+			CrosshairDesigner.RotatePoly(
+				generateCircle(
+					0,
+					0,
+					cachedCross["CircleRadius"],
+					cachedCross["CircleSegments"]
+				),
+				cachedCross["CircleRotation"]
+			),
+			{
+				(ScrW()/2) + cachedCross["CircleXOffset"],
+				(ScrH()/2) + 1 - cachedCross["CircleYOffset"]
+			}
 		)
 	end
 
@@ -747,11 +758,20 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 		end
 	end
 
-	cachedCross.circle = generateCircle(
-		ScrW()/2-1,
-		ScrH()/2+1,
-		cachedCross["CircleRadius"],
-		cachedCross["CircleSegments"]
+	cachedCross.circle = CrosshairDesigner.TranslatePoly(
+		CrosshairDesigner.RotatePoly(
+			generateCircle(
+				0,
+				0,
+				cachedCross["CircleRadius"],
+				cachedCross["CircleSegments"]
+			),
+			cachedCross["CircleRotation"]
+		),
+		{
+			(ScrW()/2) + cachedCross["CircleXOffset"],
+			(ScrH()/2) + 1 - cachedCross["CircleYOffset"]
+		}
 	)
 
 	updateColours()
@@ -769,11 +789,20 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 end)
 
 hook.Add("CrosshairDesigner_DetectedResolutionChange", "CenterCircle", function()
-	cachedCross.circle = generateCircle(
-		ScrW()/2-1,
-		ScrH()/2+1,
-		cachedCross["CircleRadius"],
-		cachedCross["CircleSegments"]
+	cachedCross.circle = CrosshairDesigner.TranslatePoly(
+		CrosshairDesigner.RotatePoly(
+			generateCircle(
+				0,
+				0,
+				cachedCross["CircleRadius"],
+				cachedCross["CircleSegments"]
+			),
+			cachedCross["CircleRotation"]
+		),
+		{
+			(ScrW()/2) + cachedCross["CircleXOffset"],
+			(ScrH()/2) + 1 - cachedCross["CircleYOffset"]
+		}
 	)
 end)
 

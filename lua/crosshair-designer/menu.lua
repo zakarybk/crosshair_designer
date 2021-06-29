@@ -63,6 +63,41 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateStats", function(convar, val)
 	end
 end)
 
+local function sortedConvarData(tbl, typeCheck, groupOrder)
+	local sorted = {}
+
+	-- group
+	for i, group in ipairs(groupOrder) do
+		for ii, row in ipairs(tbl) do
+			if typeCheck(row) and row.menuGroup and row.menuGroup == group then
+				table.insert(sorted, row)
+			end
+		end
+	end
+
+	-- add remainder
+	for ii, row in ipairs(tbl) do
+		if typeCheck(row) and not table.HasValue(sorted, row) then
+			table.insert(sorted, row)
+		end
+	end
+
+	return sorted
+end
+
+local function createSpacer()
+	local spacer = vgui.Create("DPanel")
+	spacer:Dock(TOP)
+	spacer:DockMargin(0, 5, 0, 0)
+	spacer:SetHeight(1)
+
+	function spacer:Paint( w, h )
+	    draw.RoundedBox( 8, 0, 0, w, h, Color( 90, 90, 90 ) )
+	end
+
+	return spacer
+end
+
 CrosshairDesigner.OpenMenu = function(resolutionChanged)
 
 	-- Make the frame seem the same size regardless of aspect ratio
@@ -132,46 +167,70 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	CrosshairDesigner.ScrollPanel:Dock(FILL)
 
 	-- Create toggles
-	for i, data in pairs(convarDatas) do
-		if data.isBool then
-			local checkBox = vgui.Create("DCheckBoxLabel", CrosshairDesigner.ScrollPanel)
-	        checkBox:SetText(data.title)
-	        checkBox:SetConVar(data.var)
-	        checkBox:Dock( TOP )
-			checkBox:DockMargin( 0, 5, 0, 0 )
-			checkBox:SetTooltip(data.help)
-	    end
+	local prevGroup = 'cross'
+	local toggles = sortedConvarData(
+		convarDatas,
+		function(data) return data.isBool end,
+		{'cross', 'hide', 'cross-circle', 'cirlce'}
+	)
+	for i, data in pairs(toggles) do
+		if prevGroup ~= data.menuGroup then
+			CrosshairDesigner.ScrollPanel:AddItem(createSpacer())
+			prevGroup = data.menuGroup
+		end
+
+		local checkBox = vgui.Create("DCheckBoxLabel", CrosshairDesigner.ScrollPanel)
+        checkBox:SetText(data.title)
+        checkBox:SetFont("DermaDefaultBold")
+        checkBox:SetConVar(data.var)
+        checkBox:Dock( TOP )
+		checkBox:DockMargin( 0, 5, 0, 0 )
+		checkBox:SetTooltip(data.help)
 	end
+
+	CrosshairDesigner.ScrollPanel:AddItem(createSpacer())
 
 	CrosshairDesigner.Sliders = {}
 
 	-- Create sliders
-	for i, data in pairs(convarDatas) do
-		if not data.isBool and not data.isColour then
-			local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
-            label:SetTextColor(Color(255, 255, 255, 255))
-            label:SetText(data.title)
-            label:SetDark(1)
-            label:Dock(TOP)
-			label:DockMargin(0, 5, 0, 0)
+	local prevGroup = 'cross'
+	local slides = sortedConvarData(
+		convarDatas,
+		function(data) return not data.isBool and not data.isColour end,
+		{'cross', 'hide', 'cross-circle', 'cirlce'}
+	)
+	for i, data in pairs(slides) do
+		if prevGroup ~= data.menuGroup then
+			CrosshairDesigner.ScrollPanel:AddItem(createSpacer())
+			prevGroup = data.menuGroup
+		end
 
-		    local slider = vgui.Create("Slider", CrosshairDesigner.ScrollPanel)
-            slider:SetMin(data.min)
-            slider:SetMax(data.max)
-            slider:SetDecimals(0)
-            slider:SetConVar(data.var)
-			slider:SetValue(CrosshairDesigner.GetInt(data.var))
-			slider:Dock(TOP)
-			slider:DockMargin(0, 0, 0, 0)
-			slider.var = data.var
+		local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
+	    label:SetTextColor(Color(255, 255, 255, 255))
+	    label:SetText(data.title)
+	    label:SetFont("DermaDefaultBold")
+	    label:Dock(TOP)
+		label:DockMargin(0, 5, 0, 0)
 
-			table.insert(CrosshairDesigner.Sliders, slider)
-	    end
+	    local slider = vgui.Create("Slider", CrosshairDesigner.ScrollPanel)
+	    slider:SetMin(data.min)
+	    slider:SetMax(data.max)
+	    slider:SetDecimals(0)
+	    slider:SetConVar(data.var)
+		slider:SetValue(CrosshairDesigner.GetInt(data.var))
+		slider:Dock(TOP)
+		slider:DockMargin(0, 0, 0, 0)
+		slider.var = data.var
+
+		table.insert(CrosshairDesigner.Sliders, slider)
 	end
+
+	CrosshairDesigner.ScrollPanel:AddItem(createSpacer())
 
 	-- Colour picker for normal
 	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
     label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetFont("DermaDefaultBold")
     label:SetText("Normal crosshair colour")
     label:SetDark( 1 )
     label:Dock(TOP)
@@ -206,6 +265,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	-- Colour picker for target
 	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
     label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetFont("DermaDefaultBold")
     label:SetText("On target crosshair colour")
     label:SetDark(1)
     label:Dock(TOP)
@@ -240,6 +300,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	-- Colour picker for outline
 	local label = vgui.Create("DLabel", CrosshairDesigner.ScrollPanel)
     label:SetTextColor(Color(255, 255, 255, 255))
+    label:SetFont("DermaDefaultBold")
     label:SetText("Outline colour (requires outline enabled)")
     label:SetDark(1)
     label:Dock(TOP)
@@ -273,7 +334,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 
 	-- Saving menu now
 
-	for i=1, 10 do
+	for i=1, 16 do
 		local dPanel = vgui.Create("DPanel", CrosshairDesigner.Sheet.Saving)
 		dPanel:Dock(TOP)
 		dPanel:DockMargin(0, 5, 0, 0)
@@ -328,6 +389,29 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 			"",
 			function(text) CrosshairDesigner.Load(0, text) end,
 			function(text) end
+		)
+	end
+
+	local resetCrosshair = vgui.Create("DButton", CrosshairDesigner.Sheet.Saving)
+    resetCrosshair:SetText("Reset crosshair to default")
+    resetCrosshair:Dock(BOTTOM)
+	resetCrosshair:DockMargin(0, 5, 0, 0)
+    resetCrosshair.DoClick = function()
+    	prompt = {
+    		title="Crosshair Designer - Reset Crosshair",
+			text="Are you sure? Any unsaved changes will be lost!",
+			btn1text="Yes",
+			btn2text="Cancel",
+			btn1func=function(text) CrosshairDesigner.LoadDefaultCrosshair() end,
+			btn2func=function(text) end
+		}
+    	Derma_Query(
+			prompt.text,
+			prompt.title,
+			prompt.btn1text,
+			prompt.btn1func,
+			prompt.btn2text,
+			prompt.btn2func
 		)
 	end
 
@@ -419,7 +503,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	label:DockMargin(0, 5, 0, 0)
 	label.Recalculate = function()
 		local info = CrosshairDesigner.CalcInfo()
-		local txt = "Crosshair stats:\n"
+		local txt = "Crosshair stats (does not include circle crosshair):\n"
 		txt = txt .. "Lines: " .. info.lines .. "\n"
 		txt = txt .. "Polys: " .. info.polys .. "\n"
 		label:SetText(txt)

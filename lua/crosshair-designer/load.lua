@@ -1,5 +1,5 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.31
+CrosshairDesigner.VERSION = 3.32
 CrosshairDesigner.WSID = 590788321
 
 print("Loading crosshair designer (590788321)")
@@ -46,7 +46,8 @@ else
 			default="0",
 			help="Show the half life crosshair",
 			title="Show HL2/TFA crosshair",
-			isBool=true
+			isBool=true,
+			menuGroup="cross"
 		},
 		{
 			id="ShowCross",
@@ -54,7 +55,8 @@ else
 			default="1",
 			help="Hide the custom crosshair",
 			title="Show custom crosshair",
-			isBool=true
+			isBool=true,
+			menuGroup="cross"
 		},
 		{
 			id="HideOnADS",
@@ -62,7 +64,8 @@ else
 			default="1",
 			help="Hide the custom crosshair when aiming down sights",
 			title="Hide when aiming down sights",
-			isBool=true
+			isBool=true,
+			menuGroup="cross"
 		},
 		{
 			id="UseLine",
@@ -70,7 +73,8 @@ else
 			default="1",
 			help="Draw crosshair lines",
 			title="Show crosshair lines",
-			isBool=true
+			isBool=true,
+			menuGroup="cross"
 		},
 		{
 			id="LineStyle",
@@ -80,6 +84,7 @@ else
 			title="Line style",
 			min=0,
 			max=2,
+			menuGroup="cross"
 		},
 		{
 			id="UseCircle",
@@ -88,6 +93,7 @@ else
 			help="Add a circle to the middle of the crosshair",
 			title="Add circle crosshair",
 			isBool=true,
+			menuGroup="circle"
 		},
 
 
@@ -137,6 +143,7 @@ else
 			title="Gap in middle",
 			min=0,
 			max=100,
+			menuGroup="cross"
 		},
 		{
 			id="Length",
@@ -146,6 +153,7 @@ else
 			title="Length of lines",
 			min=2,
 			max=100,
+			menuGroup="cross"
 		},
 		{
 			id="Thickness",
@@ -155,6 +163,7 @@ else
 			title="Thickness of lines",
 			min=1,
 			max=100,
+			menuGroup="cross"
 		},
 		{
 			id="Stretch",
@@ -164,6 +173,7 @@ else
 			title="Stretch of lines",
 			min=-180,
 			max=180,
+			menuGroup="cross"
 		},
 		{
 			id="CircleRadius",
@@ -173,6 +183,7 @@ else
 			title="Circle radius",
 			min=0,
 			max=100,
+			menuGroup="circle"
 		},
 		{
 			id="CircleSegments",
@@ -182,6 +193,7 @@ else
 			title="Circle segments",
 			min=0,
 			max=100,
+			menuGroup="circle"
 		},
 
 
@@ -192,6 +204,7 @@ else
 			help="Change the colour of the crosshair when aiming at a target",
 			title="Change colour on target",
 			isBool=true,
+			menuGroup="cross-circle"
 		},
 		{
 			id="TargetRed",
@@ -237,7 +250,8 @@ else
 			default="0",
 			help="Make the crosshair dynamic",
 			title="Make dynamic",
-			isBool=true
+			isBool=true,
+			menuGroup="cross"
 		},
 		{
 			id="DynamicSize",
@@ -247,6 +261,7 @@ else
 			title="Dynamic effect size",
 			min=0,
 			max=100,
+			menuGroup="cross"
 		},
 		{
 			id="HideInVeh",
@@ -254,7 +269,8 @@ else
 			default="1",
 			help="Hide the crosshair when in a vehicle",
 			title="Hide in vehicle",
-			isBool=true
+			isBool=true,
+			menuGroup="hide"
 		},
 
 		-- NEW
@@ -264,7 +280,8 @@ else
 			default="1",
 			help="Hide the crosshair when spectating",
 			title="Hide when spectating",
-			isBool=true
+			isBool=true,
+			menuGroup="hide"
 		},
 		{
 			id="HideTTT",
@@ -272,7 +289,8 @@ else
 			default="1",
 			help="Hide the TTT crosshair",
 			title="Hide TTT crosshair",
-			isBool=true
+			isBool=true,
+			menuGroup="hide"
 		},
 		{
 			id="HideFAS",
@@ -280,7 +298,8 @@ else
 			default="1",
 			help="Hide the FA:S crosshair",
 			title="Hide FA:S crosshair",
-			isBool=true
+			isBool=true,
+			menuGroup="hide"
 		},
 		{
 			id="HideCW",
@@ -288,7 +307,8 @@ else
 			default="1",
 			help="Hide the CW 2.0 crosshair",
 			title="Hide CW crosshair",
-			isBool=true
+			isBool=true,
+			menuGroup="hide"
 		},
 		{
 			id="TraceDraw",
@@ -296,7 +316,8 @@ else
 			default="0",
 			help="Draw based on player angles",
 			title="Centre to player angles",
-			isBool=true
+			isBool=true,
+			menuGroup="cross-circle"
 		},
 
 		-- Outline
@@ -307,7 +328,8 @@ else
 			help="Outlines the crosshair",
 			title="Outline thickness",
 			min=0,
-			max=100
+			max=100,
+			menuGroup="cross"
 		},
 		{
 			id="OutlineRed",
@@ -355,6 +377,7 @@ else
 			title="Rotation",
 			min=0,
 			max=360,
+			menuGroup="cross"
 		},
 
 		-- Draw with polys instead of lines
@@ -364,7 +387,8 @@ else
 			default="0",
 			help="Draw a single shape instead of multiple lines",
 			title="Fill draw",
-			isBool=true
+			isBool=true,
+			menuGroup="cross"
 		},
 		{
 			id="Segments",
@@ -374,6 +398,7 @@ else
 			title="Segments",
 			min=1,
 			max=100,
+			menuGroup="cross"
 		},
 		{
 			id="HideInCameraView",
@@ -381,7 +406,8 @@ else
 			default="0",
 			help="Hides the crosshair when looking through a camera",
 			title="Hide in camera view",
-			isBool=true
+			isBool=true,
+			menuGroup="hide"
 		},
 		{
 			id="InvertCol",
@@ -389,7 +415,8 @@ else
 			default="0",
 			help="Inverts the colour of the crosshair",
 			title="Invert crosshair colour",
-			isBool=true
+			isBool=true,
+			menuGroup="cross-circle"
 		},
 		{
 			id="InvertOutlineCol",
@@ -397,7 +424,8 @@ else
 			default="0",
 			help="Inverts the colour of the outline",
 			title="Invert outline colour",
-			isBool=true
+			isBool=true,
+			menuGroup="cross"
 		},
 		{
 			id="HighContrastInvertedCol",
@@ -405,8 +433,60 @@ else
 			default="0",
 			help="Forces the inverted colour to be either black or white",
 			title="High contrast inverted colour",
-			isBool=true
+			isBool=true,
+			menuGroup="cross-circle"
 		},
+		{
+			id="CrossXOffset",
+			var="crosshairdesigner_crossxoffset",
+			default="0",
+			help="Offset the crosshair on the horizontal axis",
+			title="Cross X Offset",
+			min=-25,
+			max=25,
+			menuGroup="cross"
+		},
+		{
+			id="CrossYOffset",
+			var="crosshairdesigner_crossyoffset",
+			default="0",
+			help="Offset the crosshair on the vertical axis",
+			title="Cross Y Offset",
+			min=-25,
+			max=25,
+			menuGroup="cross"
+		},
+		{
+			id="CircleXOffset",
+			var="crosshairdesigner_circlexoffset",
+			default="0",
+			help="Offset the circle on the horizontal axis",
+			title="Circle X Offset",
+			min=-25,
+			max=25,
+			menuGroup="circle"
+		},
+		{
+			id="CircleYOffset",
+			var="crosshairdesigner_circleyoffset",
+			default="0",
+			help="Offset the circle on the vertical axis",
+			title="Circle Y Offset",
+			min=-25,
+			max=25,
+			menuGroup="circle"
+		},
+		{
+			id="CircleRotation",
+			var="crosshairdesigner_circlerotation",
+			default="0",
+			help="How much to rotate the circle by",
+			title="Circle Rotation",
+			min=0,
+			max=360,
+			menuGroup="circle"
+		},
+
 	})
 
 	--[[
