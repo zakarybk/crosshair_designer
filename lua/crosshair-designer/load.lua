@@ -486,7 +486,16 @@ else
 			max=360,
 			menuGroup="circle"
 		},
-
+		{
+			id="CircleOutlineThickness",
+			var="crosshairdesigner_circleoutline",
+			default="0",
+			help="Outlines the circle crosshair",
+			title="Circle Outline Thickness",
+			min=0,
+			max=100,
+			menuGroup="circle"
+		},
 	})
 
 	--[[

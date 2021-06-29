@@ -69,6 +69,39 @@ local generateCircle = function(x, y, radius, seg)
 	return cir
 end
 
+local function generateCrossCircle(x, y, radius, segments, rotation)
+	local circle = generateCircle(0, 0, radius, segments)
+
+	if rotation ~= 0 then
+		circle = CrosshairDesigner.RotatePoly(
+			circle,
+			rotation
+		)
+	end
+
+	return CrosshairDesigner.TranslatePoly(
+		circle,
+		{x, y}
+	)
+end
+
+local function updateStaticCircles()
+	cachedCross.circleOutline = generateCrossCircle(
+		(ScrW()/2) + cachedCross["CircleXOffset"],
+		(ScrH()/2) + 1 - cachedCross["CircleYOffset"],
+		cachedCross["CircleRadius"] + cachedCross["CircleOutlineThickness"],
+		cachedCross["CircleSegments"],
+		cachedCross["CircleRotation"]
+	)
+	cachedCross.circle = generateCrossCircle(
+		(ScrW()/2) + cachedCross["CircleXOffset"],
+		(ScrH()/2) + 1 - cachedCross["CircleYOffset"],
+		cachedCross["CircleRadius"],
+		cachedCross["CircleSegments"],
+		cachedCross["CircleRotation"]
+	)
+end
+
 --[[
 	Smooth dynamic crosshair (copied from old version)
 	todo - update
@@ -392,6 +425,9 @@ local Crosshair = function()
 	crossCircleCentre.x = mx + cachedCross["CircleXOffset"]
 	crossCircleCentre.y = my - cachedCross["CircleYOffset"] + 1
 
+	-- Ignore texture set by other addons
+	draw.NoTexture()
+
 	-- Change col on target
 	if cachedCross["ColOnTarget"] then
 		trace.start = ply:GetShootPos()
@@ -457,9 +493,6 @@ local Crosshair = function()
 			polys = cacheTranslatePolys(polys, false, crossCentre, dynamicGap)
 			outlinePolys = cacheTranslatePolys(outlinePolys, true, crossCentre, dynamicGap)
 
-			-- Ignore texture set by other addons
-			draw.NoTexture()
-
 			-- Draw outline
 			surface.SetDrawColor(outlineCol)
 			for k=1, #outlinePolys do
@@ -509,30 +542,33 @@ local Crosshair = function()
 		surface.SetDrawColor(drawCol)
 		if cachedCross["CircleRadius"] == 1 then
 			-- Pixel perfect under the HL2 crosshair
-			draw.NoTexture()
 			surface.DrawRect(crossCircleCentre.x, crossCircleCentre.y, 1, 1)
 		else
 			-- If the circle pos is based off of tracing,
 			-- then it needs updating every frame
 			if cachedCross["TraceDraw"] then
-				cachedCross.circle = generateCircle(
-					0,
-					0,
-					cachedCross["CircleRadius"],
-					cachedCross["CircleSegments"]
+				cachedCross.circleOutline = generateCrossCircle(
+					crossCircleCentre.x,
+					crossCircleCentre.y,
+					cachedCross["CircleRadius"] + cachedCross["CircleOutlineThickness"],
+					cachedCross["CircleSegments"],
+					cachedCross["CircleRotation"]
 				)
-				if cachedCross["CircleRotation"] ~= 0 then
-					cachedCross.circle = CrosshairDesigner.RotatePoly(
-						cachedCross.circle,
-						cachedCross["CircleRotation"]
-					)
-				end
-				cachedCross.circle = CrosshairDesigner.TranslatePoly(
-					cachedCross.circle,
-					crossCircleCentre
+				cachedCross.circle = generateCrossCircle(
+					crossCircleCentre.x,
+					crossCircleCentre.y,
+					cachedCross["CircleRadius"],
+					cachedCross["CircleSegments"],
+					cachedCross["CircleRotation"]
 				)
 			end
-			draw.NoTexture()
+			-- Draw outline
+			if cachedCross["CircleOutlineThickness"] > 0 then
+				surface.SetDrawColor(outlineCol)
+				surface.DrawPoly(cachedCross.circleOutline)
+			end
+			-- Draw inner
+			surface.SetDrawColor(drawCol)
 			surface.DrawPoly(cachedCross.circle)
 		end
 	end
@@ -604,6 +640,13 @@ CrosshairDesigner.CalcInfo = function()
 		info.lines = (cachedCross["Segments"] * math.max(cachedCross["Thickness"], 1)) +
 						(cachedCross["Segments"] * cachedCross["Outline"] * 4)
 		info.polys = 0
+	end
+
+	if cachedCross["UseCircle"] then
+		info.polys = info.polys + 1
+		if cachedCross["CircleOutlineThickness"] > 0 then
+			info.polys = info.polys + 1
+		end
 	end
 
 	return info
@@ -684,11 +727,11 @@ end
 
 local function updateColours()
 	cachedCross["Colour"] = Color(
-			cachedCross["Red"],
-			cachedCross["Green"],
-			cachedCross["Blue"],
-			cachedCross["Alpha"]
-		)
+		cachedCross["Red"],
+		cachedCross["Green"],
+		cachedCross["Blue"],
+		cachedCross["Alpha"]
+	)
 
 	cachedCross["TargetColour"] = Color(
 		cachedCross["TargetRed"],
@@ -712,21 +755,7 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 	cachedCross[data.id] = val
 
 	if data.menuGroup == "circle" then
-		cachedCross.circle = CrosshairDesigner.TranslatePoly(
-			CrosshairDesigner.RotatePoly(
-				generateCircle(
-					0,
-					0,
-					cachedCross["CircleRadius"],
-					cachedCross["CircleSegments"]
-				),
-				cachedCross["CircleRotation"]
-			),
-			{
-				(ScrW()/2) + cachedCross["CircleXOffset"],
-				(ScrH()/2) + 1 - cachedCross["CircleYOffset"]
-			}
-		)
+		updateStaticCircles()
 	end
 
 	if data.id == "Dynamic" then
@@ -758,22 +787,7 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 		end
 	end
 
-	cachedCross.circle = CrosshairDesigner.TranslatePoly(
-		CrosshairDesigner.RotatePoly(
-			generateCircle(
-				0,
-				0,
-				cachedCross["CircleRadius"],
-				cachedCross["CircleSegments"]
-			),
-			cachedCross["CircleRotation"]
-		),
-		{
-			(ScrW()/2) + cachedCross["CircleXOffset"],
-			(ScrH()/2) + 1 - cachedCross["CircleYOffset"]
-		}
-	)
-
+	updateStaticCircles()
 	updateColours()
 	updateCalculated()
 
@@ -788,22 +802,8 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 	hc_dynamiccorsshair()
 end)
 
-hook.Add("CrosshairDesigner_DetectedResolutionChange", "CenterCircle", function()
-	cachedCross.circle = CrosshairDesigner.TranslatePoly(
-		CrosshairDesigner.RotatePoly(
-			generateCircle(
-				0,
-				0,
-				cachedCross["CircleRadius"],
-				cachedCross["CircleSegments"]
-			),
-			cachedCross["CircleRotation"]
-		),
-		{
-			(ScrW()/2) + cachedCross["CircleXOffset"],
-			(ScrH()/2) + 1 - cachedCross["CircleYOffset"]
-		}
-	)
+hook.Add("OnScreenSizeChanged", "CrosshairDesignerCenterCircle", function()
+	updateStaticCircles()
 end)
 
 concommand.Add("crosshair_designer_cache_size", function()

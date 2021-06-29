@@ -41,12 +41,9 @@ local function CalculateScaleFactor(calcMenuSize, screenWidth, screenHeight)
 end
 
 -- Check for resolution changes
-timer.Create("CrosshairDesigner.ResolutionChangeCheck", 1, 0, function()
-	if ScrW() ~= screenW or ScrH() ~= screenH then
-		if IsValid(CrosshairDesigner.Menu) then
-			CrosshairDesigner.OpenMenu(true) -- Updates menu size if already open
-		end
-		hook.Run("CrosshairDesigner_DetectedResolutionChange")
+hook.Add("OnScreenSizeChanged", "CrosshairDesignerMenuResize", function()
+	if IsValid(CrosshairDesigner.Menu) then
+		CrosshairDesigner.OpenMenu(true) -- Updates menu size if already open
 	end
 end)
 
@@ -501,9 +498,10 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
     label:SetDark(1)
     label:Dock(TOP)
 	label:DockMargin(0, 5, 0, 0)
+
 	label.Recalculate = function()
 		local info = CrosshairDesigner.CalcInfo()
-		local txt = "Crosshair stats (does not include circle crosshair):\n"
+		local txt = "Crosshair stats:\n"
 		txt = txt .. "Lines: " .. info.lines .. "\n"
 		txt = txt .. "Polys: " .. info.polys .. "\n"
 		label:SetText(txt)
@@ -609,3 +607,11 @@ CrosshairDesigner.OpenSavePrompt = function(crossID)
 	end
 
 end
+
+list.Set("DesktopWindows", "CrosshairDesigner", {
+	title = "Crosshair",
+	icon = "crosshair_designer/ui/logo.png",
+	init = function(icon, window)
+		CrosshairDesigner.OpenMenu()
+	end
+})

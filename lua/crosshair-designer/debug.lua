@@ -207,7 +207,7 @@ end
 local function fileToSystemPath(savePath)
 	local dataPath = guessDataPathBasedOnAddons()
 
-	if dataPath then
+	if dataPath and system.IsWindows() then
 		savePath = dataPath .. savePath
 	else
 		savePath = "GarrysMod\\garrysmod\\data\\" .. savePath
