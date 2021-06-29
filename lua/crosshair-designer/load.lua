@@ -1,5 +1,5 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.32
+CrosshairDesigner.VERSION = 3.33
 CrosshairDesigner.WSID = 590788321
 
 print("Loading crosshair designer (590788321)")
@@ -65,7 +65,7 @@ else
 			help="Hide the custom crosshair when aiming down sights",
 			title="Hide when aiming down sights",
 			isBool=true,
-			menuGroup="cross"
+			menuGroup="hide"
 		},
 		{
 			id="UseLine",
@@ -93,7 +93,7 @@ else
 			help="Add a circle to the middle of the crosshair",
 			title="Add circle crosshair",
 			isBool=true,
-			menuGroup="circle"
+			menuGroup="cross" -- Only in this group because it makes sense in the menu
 		},
 
 
@@ -425,7 +425,7 @@ else
 			help="Inverts the colour of the outline",
 			title="Invert outline colour",
 			isBool=true,
-			menuGroup="cross"
+			menuGroup="cross-circle"
 		},
 		{
 			id="HighContrastInvertedCol",
