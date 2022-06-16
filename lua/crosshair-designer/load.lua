@@ -5,6 +5,7 @@ CrosshairDesigner.WSID = 590788321
 print("Loading crosshair designer (590788321)")
 
 if SERVER then
+	AddCSLuaFile("saves.lua")
 	AddCSLuaFile("detours.lua")
 	AddCSLuaFile("db.lua")
 	AddCSLuaFile("hide.lua")
@@ -27,6 +28,7 @@ if SERVER then
 	end)
 
 else
+	include("saves.lua")
 	include("detours.lua")
 	include("db.lua")
 	include("hide.lua")
@@ -556,9 +558,6 @@ else
 		['fnShouldHide'] = function(wep)
 			return wep:GetIronsights()
 		end,
-		['forceOnBaseClasses'] = {
-			'weapon_cs_base2'
-		}
 	})
 
 	-- If DarkRP has lower case sights, maybe some other addon has
@@ -579,6 +578,17 @@ else
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:getironsights()
+		end,
+	})
+	-- found variant in Crysis 2 weapons (1257784914)
+	-- though getIronsights doesn't actually work for that addon
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = '[g]etIron[s]ights',
+		['fnIsValid'] = function(wep)
+			return wep.getIronsights ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:getIronsights()
 		end,
 	})
 
@@ -619,15 +629,15 @@ else
 		end
 	})
 
-	-- Potentially another with IronSights
+	-- Alternative IronSights GetNWBool vs GetNetworkedBool
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'GetNetworkedBool IronSights',
 		['fnIsValid'] = function(wep)
 			return wep.Weapon ~= nil and
-				wep.Weapon:GetNetworkedBool("IronSights", nil) ~= nil
+				wep.Weapon:GetNWBool("IronSights", nil) ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
-			return wep.Weapon:GetNetworkedBool("IronSights", false)
+			return wep.Weapon:GetNWBool("IronSights", false)
 		end
 	})
 
@@ -737,6 +747,18 @@ else
 			'bobs_gun_base',
 			'bobs_shotty_base'
 		}
+	})
+
+	-- Crysis 2 weapons (1257784914)
+	-- Hackery as getIronSights doesn't work as expected
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'base_autorif',
+		['fnIsValid'] = function(wep)
+			return string.sub(wep:GetClass(), 1, #"tsp_") == "tsp_"
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetDTBool(1)
+		end,
 	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
