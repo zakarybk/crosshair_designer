@@ -1,11 +1,10 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.33
+CrosshairDesigner.VERSION = 3.34
 CrosshairDesigner.WSID = 590788321
 
 print("Loading crosshair designer (590788321)")
 
 if SERVER then
-	AddCSLuaFile("saves.lua")
 	AddCSLuaFile("detours.lua")
 	AddCSLuaFile("db.lua")
 	AddCSLuaFile("hide.lua")
@@ -28,7 +27,6 @@ if SERVER then
 	end)
 
 else
-	include("saves.lua")
 	include("detours.lua")
 	include("db.lua")
 	include("hide.lua")
@@ -759,6 +757,23 @@ else
 		['fnShouldHide'] = function(wep)
 			return wep:GetDTBool(1)
 		end,
+	})
+
+	-- ARC9 Weapon Base 2910505837
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'arc9_base',
+		['fnIsValid'] = function(wep)
+			return string.sub(wep:GetClass(), 1, #"arc9_") == "arc9_"
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetInSights() and
+			not wep:GetSight().CrosshairInSights -- akimbo support
+		end,
+		['forceOnBaseClasses'] = { -- Triggers GetIron[S|s]igns in addition otherwise
+			'arc9_base',
+			'arc9_base_nade',
+			'arc9_go_base'
+		}
 	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
