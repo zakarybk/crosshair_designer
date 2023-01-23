@@ -46,7 +46,7 @@ local DefaultSWEPShouldHide = function() return false end
 local SWEPShouldHide = DefaultSWEPShouldHide
 
 local activeWeapon = nil
-local activeWeaponBase = nil
+local holdingTFA = false
 local ply
 local wep
 local shouldHide = false
@@ -201,7 +201,7 @@ local function WeaponSwitchMonitor()
 		if IsValid(wep) then
 			if activeWeapon ~= wep then
 				activeWeapon = wep
-				activeWeaponBase = wep.Base
+				holdingTFA = wep.Base and hasPrefix(wep.Base, "tfa_")
 				UpdateSWEPCheck(ply, wep)
 				RunAnyOnSwitchListeners(wep)
 			end
@@ -219,11 +219,12 @@ hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
 	-- Hide default crosshair when disabled in the menu
 	-- Hide default crosshair when held weapon is TFA and HideWeaponCrosshair enabled
 	-- Hide our crosshair when shouldHide is true
+	-- TFA crosshair hides on CHudCrosshair - same as default HL2 crosshair
 	if name == "CHudCrosshair" and
 	(
-		(not cachedCross["ShowHL2"])
+		(not cachedCross["ShowHL2"] and not holdingTFA)
 		or
-		(cachedCross["HideWeaponCrosshair"] and activeWeaponBase and hasPrefix(activeWeaponBase, "tfa_"))
+		(cachedCross["HideWeaponCrosshair"] and holdingTFA)
 	) 
 	or 
 	(
