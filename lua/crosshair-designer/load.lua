@@ -1,6 +1,10 @@
 CrosshairDesigner = CrosshairDesigner or {}
 CrosshairDesigner.VERSION = 3.34
 CrosshairDesigner.WSID = 590788321
+CrosshairDesigner.hasPrefix = function(str, prefix)
+	return string.sub(str, 1, #prefix) == prefix
+end
+local hasPrefix = CrosshairDesigner.hasPrefix
 
 print("Loading crosshair designer (590788321)")
 
@@ -36,6 +40,12 @@ else
 	include("disable.lua")
 	include("debug.lua")
 
+	local function conVarOrZero(conVar)
+		var = GetConVar(conVar)
+		if var ~= nil then return var:GetInt() end
+		return 0
+	end
+
 	--[[
 		Setup the client convars and callbacks to verify values
 	]]--
@@ -45,7 +55,7 @@ else
 			var="toggle_crosshair_hide",
 			default="0",
 			help="Show the half life crosshair",
-			title="Show HL2/TFA crosshair",
+			title="Show HL2/default crosshair",
 			isBool=true,
 			menuGroup="cross"
 		},
@@ -292,8 +302,11 @@ else
 			isBool=true,
 			menuGroup="hide"
 		},
+		--
+		-- Do not show these two anymore in the menu -- replace with HideWeaponCrosshair
+		--
 		{
-			id="HideFAS",
+			id="HideFAS", -- unused
 			var="crosshairdesigner_hidefas",
 			default="1",
 			help="Hide the FA:S crosshair",
@@ -301,12 +314,25 @@ else
 			isBool=true,
 			menuGroup="hide"
 		},
+		-- { -- hide one of these to keep the same number of args for numbered saves
+		-- 	id="HideCW", -- unused
+		-- 	var="crosshairdesigner_hidecw",
+		-- 	default="1",
+		-- 	help="Hide the CW 2.0 crosshair",
+		-- 	title="Hide CW crosshair",
+		-- 	isBool=true,
+		-- 	menuGroup="hide"
+		-- },
+		--
+		-- /end
+		--
 		{
-			id="HideCW",
-			var="crosshairdesigner_hidecw",
-			default="1",
-			help="Hide the CW 2.0 crosshair",
-			title="Hide CW crosshair",
+			id="HideWeaponCrosshair", -- replacement
+			var="crosshairdesigner_hideweaponcross",
+			-- default always 1 due to being set in crosshairdesigner_hidefas
+			default=math.min(math.max(conVarOrZero("crosshairdesigner_hidecw"), conVarOrZero("crosshairdesigner_hidefas")), 1),
+			help="Hide weapon crosshair",
+			title="Hide FA:S, CW, MW, PWB2 crosshairs",
 			isBool=true,
 			menuGroup="hide"
 		},
@@ -522,7 +548,7 @@ else
 	-- + Scifi weapons
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'GetIronSights',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.GetIronSights ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
@@ -536,8 +562,8 @@ else
 	-- DarkRP special case for ls_sniper
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'ls_sniper',
-		['fnIsValid'] = function(wep)
-			return wep.GetIronsights ~= nil and wep:GetClass() == "ls_sniper"
+		['fnIsValid'] = function(wep, cls)
+			return wep.GetIronsights ~= nil and cls == "ls_sniper"
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetIronsights() and wep:GetScopeLevel() > 1
@@ -550,8 +576,8 @@ else
 	-- DarkRP uses lower case sights
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'GetIron[s]ights',
-		['fnIsValid'] = function(wep)
-			return wep.GetIronsights ~= nil and wep:GetClass() ~= "ls_sniper"
+		['fnIsValid'] = function(wep, cls)
+			return wep.GetIronsights ~= nil and cls ~= "ls_sniper"
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetIronsights()
@@ -562,7 +588,7 @@ else
 	-- something similar with iron, or the whole thing
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'Get[i]ron[s]ights',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.Getironsights ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
@@ -571,7 +597,7 @@ else
 	})
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = '[g]et[i]ron[s]ights',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.getironsights ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
@@ -582,7 +608,7 @@ else
 	-- though getIronsights doesn't actually work for that addon
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = '[g]etIron[s]ights',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.getIronsights ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
@@ -592,19 +618,33 @@ else
 
 	-- Modern Warfare 2459720887
 	CrosshairDesigner.AddSWEPCrosshairCheck({
-		['id'] = 'GetIsAiming',
-		['fnIsValid'] = function(wep)
-			return wep.GetIsAiming ~= nil
+		['id'] = 'Modern Warfare 2459720887',
+		['fnIsValid'] = function(wep, cls)
+			return wep.GetIsAiming ~= nil and hasPrefix(cls, "mg_")
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetIsAiming()
+		end,
+		['forceOnBaseClasses'] = { -- Triggers a bunch of others otherwise
+			'mg_base'
+		},
+		['onSwitch'] = function(wep)
+			if not wep.CrosshairDesignerDetoured then
+				local original = wep.DrawCrosshairSticks
+				wep.CrosshairDesignerDetoured = true
+				wep.DrawCrosshairSticks = function(...)
+					if not CrosshairDesigner.GetBool('HideWeaponCrosshair') then
+						return original(...)
+					end
+				end
+			end
 		end
 	})
 
 	-- ArcCW
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'ArcCW',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.Sighted ~= nil and ArcCW ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
@@ -618,7 +658,7 @@ else
 	-- DayOfDefeat weapons
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'GetNetworkedBool Iron[s]ights',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.Weapon ~= nil and
 				wep.Weapon:GetNetworkedBool("Ironsights", nil) ~= nil
 		end,
@@ -630,7 +670,7 @@ else
 	-- Alternative IronSights GetNWBool vs GetNetworkedBool
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'GetNetworkedBool IronSights',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.Weapon ~= nil and
 				wep.Weapon:GetNWBool("IronSights", nil) ~= nil
 		end,
@@ -642,7 +682,7 @@ else
 	-- FA:S
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'FA:S',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.dt ~= nil and wep.dt.Status ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
@@ -658,7 +698,7 @@ else
 
 				wep.CrosshairDesignerDetoured = true
 				wep.DrawHUD = function(...)
-					if CrosshairDesigner.GetBool('HideFAS') then
+					if CrosshairDesigner.GetBool('HideWeaponCrosshair') then
 						wep.CrossAlpha = 0
 						-- Temp set firemode to safe to force cross alpha to 0
 						-- Also temp hide grenade crosshair
@@ -683,7 +723,7 @@ else
 	-- CW 2.0
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'CW 2.0',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.dt ~= nil and wep.dt.State ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
@@ -697,7 +737,7 @@ else
 	-- M9K Legacy
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'M9K Legacy',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.GetIronSights ~= nil and
 				wep.IronSightsPos ~= nil and
 				wep.RunSightsPos ~= nil and
@@ -717,7 +757,7 @@ else
 	-- M9K Remastered -- scoped
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'M9K Remastered scoped',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep:GetNWInt("ScopeState", nil) ~= nil and
 				MMM_M9k_IsBaseInstalled
 		end,
@@ -733,7 +773,7 @@ else
 	-- M9K Remastered -- un scoped
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'M9K Remastered un scoped',
-		['fnIsValid'] = function(wep)
+		['fnIsValid'] = function(wep, cls)
 			return wep.IronSightState ~= nil and
 				MMM_M9k_IsBaseInstalled
 		end,
@@ -751,8 +791,8 @@ else
 	-- Hackery as getIronSights doesn't work as expected
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'base_autorif',
-		['fnIsValid'] = function(wep)
-			return string.sub(wep:GetClass(), 1, #"tsp_") == "tsp_"
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "tsp_")
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetDTBool(1)
@@ -761,9 +801,9 @@ else
 
 	-- ARC9 Weapon Base 2910505837
 	CrosshairDesigner.AddSWEPCrosshairCheck({
-		['id'] = 'arc9_base',
-		['fnIsValid'] = function(wep)
-			return string.sub(wep:GetClass(), 1, #"arc9_") == "arc9_"
+		['id'] = 'ARC9 Weapon Base 2910505837',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "arc9_")
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetInSights() and
@@ -774,6 +814,29 @@ else
 			'arc9_base_nade',
 			'arc9_go_base'
 		}
+	})
+
+	-- PWB 2 1470662323
+	-- GetIronSights checks are added, but never trigger
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'PWB 2 1470662323',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_pwb2") and wep:GetNWBool("Iron", nil) ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetNWBool("Iron", false)
+		end,
+		['onSwitch'] = function(wep)
+			if not wep.CrosshairDesignerDetoured then
+				local original = wep.DrawHUD
+				wep.CrosshairDesignerDetoured = true
+				wep.DrawHUD = function(...)
+					if not CrosshairDesigner.GetBool('HideWeaponCrosshair') then
+						return original(...)
+					end
+				end
+			end
+		end
 	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating

@@ -37,6 +37,8 @@
 
 ]]--
 
+local hasPrefix = CrosshairDesigner.hasPrefix
+
 local UpdateVisibility = function() end
 local UpdateSWEPCheck = function() end
 
@@ -44,6 +46,7 @@ local DefaultSWEPShouldHide = function() return false end
 local SWEPShouldHide = DefaultSWEPShouldHide
 
 local activeWeapon = nil
+local activeWeaponBase = nil
 local ply
 local wep
 local shouldHide = false
@@ -114,7 +117,7 @@ local function weaponCrossCheck(wep)
 		local fnShouldHides = {}
 
 		for k, tbl in pairs(oddCrossChecks[baseClass]) do
-			if tbl[ISVALID](wep) then
+			if tbl[ISVALID](wep, wepClass) then
 				table.insert(fnShouldHides, tbl[SHOULDHIDE])
 			end
 		end
@@ -130,7 +133,7 @@ local function weaponCrossCheck(wep)
 	local fnShouldHides = {}
 
 	for k, tbl in pairs(normCrossChecks) do
-		if tbl[ISVALID](wep) then
+		if tbl[ISVALID](wep, wepClass) then
 			table.insert(fnShouldHides, tbl[SHOULDHIDE])
 		end
 	end
@@ -198,6 +201,7 @@ local function WeaponSwitchMonitor()
 		if IsValid(wep) then
 			if activeWeapon ~= wep then
 				activeWeapon = wep
+				activeWeaponBase = wep.Base
 				UpdateSWEPCheck(ply, wep)
 				RunAnyOnSwitchListeners(wep)
 			end
@@ -210,39 +214,36 @@ local function WeaponSwitchMonitor()
 
 end
 
--- Deprecated
-CrosshairDesigner.AddSwepCheck = function(
-	name,
-	shouldUseFunc,
-	shouldDrawFunc,
-	onSet,
-	onRemove,
-	enabled)
-
-	-- Sorry if anyone was using the ply arg
-	shouldUseFunc = function(wep) return shouldUseFunc(nil, wep) end
-	shouldDrawFunc = function(wep) return shouldDrawFunc(nil, wep) end
-
-	ErrorNoHalt(
-		"Call to deprecated function CrosshairDesigner.AddSwepCheck!\n"
-		.. "Please update to use CrosshairDesigner.AddSWEPCrosshairCheck instead.\n"
-		.. "CrosshairDesigner.AddSwepCheck will be removed in July 2021"
-	)
-
-	CrosshairDesigner.AddSWEPCrosshairCheck({
-		['fnIsValid'] = shouldUseFunc,
-		['fnShouldHide'] = shouldDrawFunc
-	})
-end
 
 hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
-		-- Hide our crosshair
-	if (shouldHide and name == "CrosshairDesiger_Crosshair") or
-		--Hide HL2 (+TFA) crosshair
-		(name == "CHudCrosshair" and not cachedCross["ShowHL2"]) then
+	-- Hide default crosshair when disabled in the menu
+	-- Hide default crosshair when held weapon is TFA and HideWeaponCrosshair enabled
+	-- Hide our crosshair when shouldHide is true
+	if name == "CHudCrosshair" and
+	(
+		(not cachedCross["ShowHL2"])
+		or
+		(cachedCross["HideWeaponCrosshair"] and activeWeaponBase and hasPrefix(activeWeaponBase, "tfa_"))
+	) 
+	or 
+	(
+		shouldHide and name == "CrosshairDesiger_Crosshair"
+	) then
 		return false
 	end
 end)
+
+local function thirdpersonAddonCrosshairPatch(showDefault)
+	-- patch for https://steamcommunity.com/sharedfiles/filedetails/?id=207948202
+	-- not everyone realises this addon also disables the default crosshair with
+	-- its own option
+	if showDefault then
+		var = GetConVar("simple_thirdperson_hide_crosshair")
+		if var ~= nil and var:GetBool() then
+			RunConsoleCommand("simple_thirdperson_hide_crosshair", 0)
+		end
+	end
+end
 
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, val)
 	local data = CrosshairDesigner.GetConvarData(convar)
@@ -261,7 +262,7 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 
 	local id = CrosshairDesigner.GetConvarID(convar)
 
-	if id == "HideCW" then
+	if id == "HideWeaponCrosshair" then
 		if val then
 			CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 		else
@@ -270,6 +271,11 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 	end
 	-- TTT crosshair is being handled directly in detour.lua
 	-- TFA hides with HUDShouldDraw CHudCrosshair
+
+	-- Re-enable default crosshair if disabled elsewhere
+	if data.id == "ShowHL2" then
+		thirdpersonAddonCrosshairPatch(true)
+	end
 end)
 
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", function()
@@ -283,7 +289,7 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", func
 	end
 
 	-- Load detours if set to active
-	if cachedCross["HideCW"] then
+	if cachedCross["HideWeaponCrosshair"] then
 		CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 	else
 		CrosshairDesigner.RemoveConvarDetour("cw_crosshair")

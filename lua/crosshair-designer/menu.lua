@@ -170,19 +170,23 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 		function(data) return data.isBool end,
 		{'cross', 'hide', 'cross-circle', 'cirlce'}
 	)
+	local excludeItems = {['HideFAS']=true, ['HideCW']=true} -- temporarily hide these whilst I decide how best to remove them
 	for i, data in pairs(toggles) do
-		if prevGroup ~= data.menuGroup then
-			CrosshairDesigner.ScrollPanel:AddItem(createSpacer())
-			prevGroup = data.menuGroup
-		end
+		if excludeItems[data.id] ~= true then
 
-		local checkBox = vgui.Create("DCheckBoxLabel", CrosshairDesigner.ScrollPanel)
-        checkBox:SetText(data.title)
-        checkBox:SetFont("DermaDefaultBold")
-        checkBox:SetConVar(data.var)
-        checkBox:Dock( TOP )
-		checkBox:DockMargin( 0, 5, 0, 0 )
-		checkBox:SetTooltip(data.help)
+			if prevGroup ~= data.menuGroup then
+				CrosshairDesigner.ScrollPanel:AddItem(createSpacer())
+				prevGroup = data.menuGroup
+			end
+
+			local checkBox = vgui.Create("DCheckBoxLabel", CrosshairDesigner.ScrollPanel)
+			checkBox:SetText(data.title)
+			checkBox:SetFont("DermaDefaultBold")
+			checkBox:SetConVar(data.var)
+			checkBox:Dock( TOP )
+			checkBox:DockMargin( 0, 5, 0, 0 )
+			checkBox:SetTooltip(data.help)
+		end
 	end
 
 	CrosshairDesigner.ScrollPanel:AddItem(createSpacer())
