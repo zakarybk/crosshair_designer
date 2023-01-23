@@ -164,14 +164,30 @@ local function SWEPAddon(swepClass)
 	}
 end
 
-local function traceShouldDraw()
+local function anythingBlockingDefaultCrosshair()
+	local hooks = hook.GetTable()
+	local hideHooks = hooks["HUDShouldDraw"]
+	for k, fn in pairs(hideHooks) do
+		-- We know we're hiding it, but what about someone else?
+		if k ~= "CrosshairDesigner_ShouldHideCross" then
+			if fn("CHudCrosshair") == false then
+				return true
+			end
+		end
+	end
+	return false
+end
+CrosshairDesigner.AnythingBlockingDefaultCrosshair = anythingBlockingDefaultCrosshair
+
+local function traceShouldDraw(name)
 	local calls = {}
 	local hooks = hook.GetTable()
 	local hideHooks = hooks["HUDShouldDraw"]
+	name = name or "CrosshairDesiger_Crosshair"
 
 	for k, fn in pairs(hideHooks) do
 		-- Find hooks asking to hide our crosshair
-		local returnVal = fn("CrosshairDesiger_Crosshair")
+		local returnVal = fn(name)
 
 		if returnVal == false then
 			local debugInfo = debug.getinfo(fn)
@@ -193,6 +209,7 @@ local function traceShouldDraw()
 
 	return calls
 end
+CrosshairDesigner.TraceShouldDraw = traceShouldDraw
 
 local function any(tbl)
 	local swep = LocalPlayer():GetActiveWeapon()
@@ -227,6 +244,19 @@ local function dict_intersect(dict, selection)
 
 	return intersection
 end
+
+
+concommand.Add("crosshairdesigner_debugHUDShouldDraw", function()
+	print("--------------------------------------------------------------------")
+	print()
+	print()
+	print("It is normal for the result to show the Crosshair Designer addon itself.")
+	print("Do the other addons look sus? Feel free to send me the output - https://steamcommunity.com/sharedfiles/filedetails/?id=590788321")
+	PrintTable(traceShouldDraw("CHudCrosshair"))
+	print()
+	print()
+	print("--------------------------------------------------------------------")
+end)
 
 concommand.Add("crosshairdesigner_debugdump", function()
 	local ply = LocalPlayer()

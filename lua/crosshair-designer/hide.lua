@@ -274,8 +274,14 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 	-- TFA hides with HUDShouldDraw CHudCrosshair
 
 	-- Re-enable default crosshair if disabled elsewhere
-	if data.id == "ShowHL2" then
+	if data.id == "ShowHL2" and tobool(val) then
 		thirdpersonAddonCrosshairPatch(true)
+		-- If crosshair is still hidden, then let the user know
+		timer.Simple(1, function()
+			if CrosshairDesigner.AnythingBlockingDefaultCrosshair() then
+				chat.AddText(Color(46, 248, 48), "[CrosshairDesigner]", Color(240,240,240), " Another addon is hiding the default crosshair! Run crosshairdesigner_debugHUDShouldDraw in console for more information (will freeze game)")
+			end
+		end)
 	end
 end)
 
