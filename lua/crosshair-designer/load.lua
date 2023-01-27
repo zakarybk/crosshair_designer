@@ -1,5 +1,5 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.34
+CrosshairDesigner.VERSION = 3.35
 CrosshairDesigner.WSID = 590788321
 CrosshairDesigner.hasPrefix = function(str, prefix)
 	return string.sub(str, 1, #prefix) == prefix
@@ -44,6 +44,23 @@ else
 		var = GetConVar(conVar)
 		if var ~= nil then return var:GetInt() end
 		return 0
+	end
+
+	local function HideWeaponCrosshairHUD(fn_name, fn_forceshow)
+		fn_forceshow = fn_forceshow or function(wep) return false end
+		return function(wep)
+			-- sometimes a weapon will re-create the draw function (at least Modern Warefare weapons does)
+			local original = wep[fn_name]
+			if wep.CrosshairDesignerDetour == nil or wep.CrosshairDesignerDetour ~= wep[fn_name] then
+				wep[fn_name] = function(...)
+					if not CrosshairDesigner.GetBool('HideWeaponCrosshair') or fn_forceshow(wep) then
+						return original(...)
+					end
+				end
+				wep.CrosshairDesignerDetour = wep[fn_name]
+				wep.CrosshairDesignerDetoured = true
+			end
+		end
 	end
 
 	--[[
@@ -616,7 +633,6 @@ else
 		end,
 	})
 
-	-- Modern Warfare 2459720887
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'Modern Warfare 2459720887',
 		['fnIsValid'] = function(wep, cls)
@@ -629,19 +645,30 @@ else
 			'mg_base'
 		},
 		['onSwitch'] = function(wep)
-			if not wep.CrosshairDesignerDetoured then
-				local original = wep.DrawCrosshairSticks
-				wep.CrosshairDesignerDetoured = true
-				wep.DrawCrosshairSticks = function(...)
-					if not CrosshairDesigner.GetBool('HideWeaponCrosshair') then
-						return original(...)
+			local fn_name = 'DrawCrosshairSticks'
+			if wep.CrosshairDesignerDetour == nil or wep.CrosshairDesignerDetour ~= wep[fn_name] then
+				fn_hide = HideWeaponCrosshairHUD(fn_name)
+
+				-- Modern Warefare reloads a bunch of stuff when an attachment
+				-- is added, so we need to re-apply the patch each time, including
+				-- the trigger for the patch (SWEP:Attach)
+				local applyAttachPatch = function(reapply_fn)
+					local originalAttach = wep.Attach
+					wep.Attach = function(...)
+						local val = originalAttach(...)
+						fn_hide(wep)
+						reapply_fn(reapply_fn)
+						return val
 					end
 				end
+				applyAttachPatch(applyAttachPatch)
+				fn_hide(wep)
+
+				CrosshairDesignerDetoured = true
 			end
 		end
 	})
 
-	-- ArcCW
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'ArcCW',
 		['fnIsValid'] = function(wep, cls)
@@ -679,7 +706,6 @@ else
 		end
 	})
 
-	-- FA:S
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'FA:S',
 		['fnIsValid'] = function(wep, cls)
@@ -720,7 +746,6 @@ else
 		end
 	})
 
-	-- CW 2.0
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'CW 2.0',
 		['fnIsValid'] = function(wep, cls)
@@ -734,7 +759,6 @@ else
 		}
 	})
 
-	-- M9K Legacy
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'M9K Legacy',
 		['fnIsValid'] = function(wep, cls)
@@ -754,7 +778,6 @@ else
 		}
 	})
 
-	-- M9K Remastered -- scoped
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'M9K Remastered scoped',
 		['fnIsValid'] = function(wep, cls)
@@ -770,7 +793,6 @@ else
 		}
 	})
 
-	-- M9K Remastered -- un scoped
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'M9K Remastered un scoped',
 		['fnIsValid'] = function(wep, cls)
@@ -799,7 +821,6 @@ else
 		end,
 	})
 
-	-- ARC9 Weapon Base 2910505837
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'ARC9 Weapon Base 2910505837',
 		['fnIsValid'] = function(wep, cls)
@@ -816,7 +837,6 @@ else
 		}
 	})
 
-	-- PWB 2 1470662323
 	-- GetIronSights checks are added, but never trigger
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'PWB 2 1470662323',
@@ -826,17 +846,78 @@ else
 		['fnShouldHide'] = function(wep)
 			return wep:GetNWBool("Iron", false)
 		end,
-		['onSwitch'] = function(wep)
-			if not wep.CrosshairDesignerDetoured then
-				local original = wep.DrawHUD
-				wep.CrosshairDesignerDetoured = true
-				wep.DrawHUD = function(...)
-					if not CrosshairDesigner.GetBool('HideWeaponCrosshair') then
-						return original(...)
-					end
-				end
-			end
-		end
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD')
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Unreal Tournament SWEPs 189453748',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_ut99")
+		end,
+		['fnShouldHide'] = function(wep)
+			return false
+		end,
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
+		['forceOnBaseClasses'] = {'weapon_ut99_base'}
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'DOOM 2016/Eternal Weapons 2296325632',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_dredux")
+		end,
+		['fnShouldHide'] = function(wep)
+			return false -- no ADS in addon
+		end,
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawCrosshairElementRotated'),
+		['forceOnBaseClasses'] = {'weapon_dredux_base2', 'weapon_dredux_base3'}
+	})
+
+	-- GetIronSights checks are added, but never trigger
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Dr>Breens Private Reserve Weaponry 2506186936',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "azbr_pr") and wep.GetIsZoomedIn ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetIsZoomedIn()
+		end,
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Classic CS:S weapons for GMod 13 124725938',
+		['fnIsValid'] = function(wep, cls)
+			return wep.Base ~= nil and wep.Base == "weapon_cs_base"
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetNWBool("IronSights", false) -- duplciates others
+		end,
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
+		['forceOnBaseClasses'] = {'weapon_cs_base'}
+	})
+
+	-- Hide their hud only when not scoped / otherwise swap in our crosshair
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Team Fortress 2 Weapon Pack 949733637',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "tf_weapon")
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetNWInt("CrosshairAlpha", 255) == 0
+		end,
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep) 
+			return (wep:GetNWInt("ScopeLaserAlpha", 0) == 255 or wep:GetNWInt("ScopeAlpha", 0) == 255) -- Allow HUD for scoped weapons
+		end)
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Counter-Strike: Global Offensive Sniper Rifle Pack 1244760503',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_csgo")
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetNWInt("ScopeAlpha", 0) == 255
+		end,
 	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
