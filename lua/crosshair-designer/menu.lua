@@ -181,6 +181,7 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 
 			local checkBox = vgui.Create("DCheckBoxLabel", CrosshairDesigner.ScrollPanel)
 			checkBox:SetText(data.title)
+			checkBox:SetTextColor(Color(255, 255, 255, 255))
 			checkBox:SetFont("DermaDefaultBold")
 			checkBox:SetConVar(data.var)
 			checkBox:Dock( TOP )
