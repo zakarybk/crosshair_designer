@@ -73,7 +73,7 @@ function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
 	local fnOnSwitch = tbl['onSwitch']
 	local id = tbl['id'] or 'None'
 	table.insert(normCrossChecks, {fnIsValid, fnShouldHide, id, fnOnSwitch})
-
+	
 	if tbl['forceOnBaseClasses'] then
 		for k, class in pairs(tbl['forceOnBaseClasses']) do
 			oddCrossChecks[class] = oddCrossChecks[class] or {}
@@ -229,7 +229,9 @@ hook.Add("HUDShouldDraw", "CrosshairDesigner_ShouldHideCross", function(name)
 	or 
 	(
 		shouldHide and name == "CrosshairDesiger_Crosshair"
-	) then
+	) 
+	or not GetConVar("cl_drawhud"):GetBool() -- hide for screenshots
+	then
 		return false
 	end
 end)
