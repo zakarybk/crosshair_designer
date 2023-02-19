@@ -517,7 +517,7 @@ concommand.Add("crosshairdesigner_debughud", function()
 	-- Toggle
 	local hookId = "CrosshairDesigner_UpdateDebug"
 	if debugHUDEnabled then
-		hook.Remove("CrosshairDesinger_PlayerSwitchedWeapon", hookId)
+		-- hook.Remove("CrosshairDesinger_PlayerSwitchedWeapon", hookId)
 		hook.Remove("HUDPaint", hookId)
 		debugHUDEnabled = false
 		return
@@ -580,9 +580,9 @@ concommand.Add("crosshairdesigner_debughud", function()
 		surface.DrawText("ads checks: " .. #checks .. " (" .. checksToText(checks) .. ")" .. checksToEnabledStatus(checks, wep))
 	end)
 
-	hook.Add("CrosshairDesinger_PlayerSwitchedWeapon", hookId, function()
+	-- hook.Add("CrosshairDesinger_PlayerSwitchedWeapon", hookId, function()
 	
-	end)
+	-- end)
 
 	debugHUDEnabled = true
 end)
