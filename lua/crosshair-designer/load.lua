@@ -664,7 +664,7 @@ else
 				applyAttachPatch(applyAttachPatch)
 				fn_hide(wep)
 
-				CrosshairDesignerDetoured = true
+				wep.CrosshairDesignerDetoured = true
 			end
 		end
 	})
@@ -918,6 +918,17 @@ else
 		['fnShouldHide'] = function(wep)
 			return wep:GetNWInt("ScopeAlpha", 0) == 255
 		end,
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'CS:GO Weapons 2180833718',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_csgo") and wep.GetZoomLevel ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetZoomLevel() ~= 1 -- yes, 1 is no scope, 0 and 2 are scoped
+		end,
+		['forceOnBaseClasses'] = {'weapon_csgobase'}
 	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
