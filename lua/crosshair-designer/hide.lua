@@ -301,9 +301,11 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 		if val then
 			CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 			CrosshairDesigner.AddConvarDetour("act3_hud_crosshair_enable", 0)
+			CrosshairDesigner.AddConvarDetour("arccw_crosshair", 0)
 		else
 			CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
 			CrosshairDesigner.RemoveConvarDetour("act3_hud_crosshair_enable")
+			CrosshairDesigner.RemoveConvarDetour("arccw_crosshair", 0)
 		end
 	end
 	-- TTT crosshair is being handled directly in detour.lua
@@ -327,25 +329,6 @@ end)
 ]]--
 
 
-local function optimisedOrder(addons)
-	-- Optimised order for finding file for weapon
-	local firstSet = {}
-	local secondSet = {}
-
-	for k, v in ipairs(addons) do
-		if v.mounted then
-			if string.find(v.tags, "Weapon") then
-				table.insert(firstSet, k)
-			else
-				table.insert(secondSet, k)
-			end
-		end
-	end
-
-	return table.Add(firstSet, secondSet)
-end
-
-
 local initialCoroutine = false
 local periodicCoroutine = false
 local initialcoroutineFinished = false
@@ -366,14 +349,14 @@ local function IncludeSwepsFromAddon(title, wsid)
 end
 
 local function InitalSwepScan()
+	-- Only load obvious weapon addons in first load - search for others periodically
 	local addons = engine.GetAddons()
-	local order = optimisedOrder(addons)
 
-	for k, _ in pairs(order) do
-		selected = addons[k]
-
-		coroutine.yield()
-		IncludeSwepsFromAddon(selected.title, selected.wsid)
+	for k, addon in pairs(addons) do
+		if addon.mounted and string.find(addon.tags, "Weapon") then
+			coroutine.yield()
+			IncludeSwepsFromAddon(addon.title, addon.wsid)
+		end
 	end
 
 	initialcoroutineFinished = true
@@ -409,7 +392,9 @@ hook.Add("Think", "CrosshairDesigner_SWEPScan", function()
 		initialCoroutine = coroutine.create(InitalSwepScan)
 		periodicCoroutine = coroutine.create(PeriodicSwepScan)
 		timer.Create("CrosshairDesigner_PeriodicSWEPScan", 1, 0, function()
-			coroutine.resume(periodicCoroutine)
+			if initialcoroutineFinished then
+				coroutine.resume(periodicCoroutine)
+			end
 		end)
 	end
 
@@ -430,9 +415,11 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", func
 	if cachedCross["HideWeaponCrosshair"] then
 		CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
 		CrosshairDesigner.AddConvarDetour("act3_hud_crosshair_enable", 0)
+		CrosshairDesigner.AddConvarDetour("arccw_crosshair", 0)
 	else
 		CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
 		CrosshairDesigner.RemoveConvarDetour("act3_hud_crosshair_enable")
+		CrosshairDesigner.RemoveConvarDetour("arccw_crosshair", 0)
 	end
 
 	hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", WeaponSwitchMonitor)

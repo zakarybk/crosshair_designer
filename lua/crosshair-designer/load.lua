@@ -1048,7 +1048,7 @@ else
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'ACT3: Arctic\'s Customizable Thirdperson (Weapons) 3.0 1631362949',
 		['fnIsValid'] = function(wep, cls)
-			return hasPrefix(cls, "act3") and wep.State != nil and ACT3_STATE_INSIGHTS != nil
+			return wep.ACT3Weapon ~= nil and wep.State != nil and ACT3_STATE_INSIGHTS != nil
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep.State == ACT3_STATE_INSIGHTS
