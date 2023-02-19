@@ -912,18 +912,73 @@ else
 		end)
 	})
 
+	-- CrosshairDesigner.AddSWEPCrosshairCheck({
+	-- 	['id'] = 'Counter-Strike: Global Offensive Sniper Rifle Pack 1244760503, 2180833718, 1257243225',
+	-- 	['fnIsValid'] = function(wep, cls)
+	-- 		return hasPrefix(cls, "weapon_csgo")
+	-- 	end,
+	-- 	['fnShouldHide'] = function(wep)
+	-- 		return wep:GetNWInt("ScopeAlpha", 0) == 255
+	-- 	end,
+	-- 	['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
+	-- 		return (wep:GetNWInt("ScopeAlpha", 0) == 255) -- Allow HUD for scoped weapons
+	-- 	end)
+	-- })
+
 	CrosshairDesigner.AddSWEPCrosshairCheck({
-		['id'] = 'Counter-Strike: Global Offensive Sniper Rifle Pack 1244760503, 2180833718, 1257243225',
+		['id'] = 'CS:GO Weapons 2180833718',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_csgo")
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.GetZoomLevel and wep:GetZoomLevel() ~= 1
+		end,
+		['forceOnWSID'] = {2180833718},
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Counter-Strike: Global Offensive Operation Breakout Weapon Pack 1257243225, 1239501421',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_csgo_breakout")
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetNWInt("ScopeAlpha", 0) == 255 or wep:GetNWInt("ScopeAlpha", 0) == 1
+		end,
+		['forceOnWSID'] = {1257243225},
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
+			return wep:GetNWInt("ScopeAlpha", 0) == 255
+		end)
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Counter-Strike: Global Offensive Assault Rifle Pack 1239501421',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_csgo")
+		end,
+		['fnShouldHide'] = function(wep)
+			return tonumber(wep:GetNWInt("ScopeAlpha", 0)) == 1
+		end,
+		['forceOnWSID'] = {1239501421},
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
+			return tonumber(wep:GetNWInt("ScopeAlpha", 0)) == 1
+		end)
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Counter-Strike: Global Offensive Sniper Rifle Pack 1244760503',
 		['fnIsValid'] = function(wep, cls)
 			return hasPrefix(cls, "weapon_csgo")
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetNWInt("ScopeAlpha", 0) == 255
 		end,
-		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
-			return (wep:GetNWInt("ScopeAlpha", 0) == 255) -- Allow HUD for scoped weapons
-		end)
+		['forceOnWSID'] = {1244760503},
 	})
+
+
+			-- ['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
+		-- 	return (wep:GetNWInt("ScopeAlpha", 0) == 255) -- Allow HUD for scoped weapons
+		-- end)
 
 	-- CrosshairDesigner.AddSWEPCrosshairCheck({
 	-- 	['id'] = 'CS:GO Weapons 2180833718 + 1257243225',
