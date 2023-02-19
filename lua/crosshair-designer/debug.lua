@@ -84,8 +84,6 @@ local function pathsToFileOrFolder(path, dir, fileOrFolderToFind)
 		searchPath = path .. '/*'
 	end
 
-	-- print(searchPath)
-
 	local files, folders = file.Find(searchPath, dir)
 
 	if files then
@@ -427,4 +425,176 @@ concommand.Add("crosshairdesigner_patchdrawhooks", function()
 		print("If you can now see the crosshair then please send me the below conflict information")
 		PrintTable(tbl)
 	end
+end)
+
+local function table1dValDiff(tbl1, tbl2)
+	-- Return value diff - ignore missing keys
+	local diffs = {}
+
+	for key, value in pairs(tbl1) do
+		if tbl2[key] ~= nil then
+			diffs[key] = {from=value, to=tbl2[key]}
+		end
+	end
+
+	return diffs
+end
+
+local function tableEqual(tbl1, tbl2)
+	-- only 1d diff
+	if tbl1 == nil or tbl2 == nil then return false end
+
+	for key, value in pairs(tbl1) do
+		if value ~= tbl2[key] then return false end
+	end
+
+	return true
+end
+
+concommand.Add("crosshairdesigner_diffads", function()
+	-- Turns out this only works for CS:GO weapons - likely need to actually
+	-- use keys for other addons a.k.a simulate pressing SECONDARY_FIRE
+	if not game.SinglePlayer() then
+		print("Cannot run this command in multiplayer due to being a potential exploit")
+		return
+	end
+	
+	local ply = LocalPlayer()
+	local getNW = function() return ply:GetActiveWeapon():GetNWVarTable() end
+	local ads = function() ply:GetActiveWeapon():SecondaryAttack() end
+
+	local noADSValues = getNW()
+	local lastScopedValue = getNW()
+	local newScopedValue = nil
+	local scopedDiffs = {}
+	local count = 0
+
+	while (count == 0 or !tableEqual(lastScopedValue, noADSValues)) do
+		ads()
+		local newScopedValue = getNW()
+
+		tag = ""
+
+		if count == 0 then
+			tag = count .. "-" .. "unscoped->scoped"
+		elseif tableEqual(lastScopedValue, noADSValues) then
+			tag = count .. "-" .. "scoped->unscoped"
+		else
+			tag = count .. "-" .. "scoped->scoped"
+		end
+
+		scopedDiffs[tag] = table1dValDiff(lastScopedValue, newScopedValue)
+
+		count = count + 1
+		lastScopedValue = newScopedValue
+	end
+
+	PrintTable(scopedDiffs)
+end)
+
+
+local function optimisedOrder(addons)
+	-- Optimised order for finding file for weapon
+	local firstSet = {}
+	local secondSet = {}
+
+	for k, v in ipairs(addons) do
+		if v.mounted then
+			if string.find(v.tags, "Weapon") then
+				table.insert(firstSet, k)
+			else
+				table.insert(secondSet, k)
+			end
+		end
+	end
+
+	return table.Add(firstSet, secondSet)
+end
+
+
+local createdCoroutine = false
+local coroutineFinished = false
+local swepToWSID = {}
+-- TODO: scan for new mounts
+
+local function IncludeSwepsFromAddon(title, wsid)
+	local files, folders = file.Find('lua/weapons/*', title)
+
+	for i, file in pairs(files or {}) do
+		swepToWSID[string.StripExtension(file)] = wsid
+	end
+	for i, folder in pairs(folders or {}) do
+		swepToWSID[folder] = wsid
+	end
+end
+
+local function ScanForSweps()
+	local addons = engine.GetAddons()
+	local order = optimisedOrder(addons)
+
+	for k, _ in pairs(order) do
+		selected = addons[k]
+
+		coroutine.yield()
+		IncludeSwepsFromAddon(selected.title, selected.wsid)
+	end
+
+	coroutineFinished = true
+end
+
+hook.Add("Think", "CrosshairDesigner_ScanSWEPS", function()
+	if coroutineFinished then
+		hook.Remove("Think", "CrosshairDesigner_ScanSWEPS")
+		return
+	end
+
+	if not createdCoroutine then
+		createdCoroutine = coroutine.create(ScanForSweps)
+	end
+
+	coroutine.resume(createdCoroutine)
+end)
+
+local function addonContainsWeapon(addonTitle, fileOrFolder)
+	local files, folders = file.Find('lua/weapons/*', addonTitle)
+	local fileOrFolder_lua = fileOrFolder .. ".lua"
+
+	for i, file in pairs(files or {}) do
+		if file == fileOrFolder_lua then
+			return true
+		end
+	end
+
+	for i, folder in pairs(folders or {}) do
+		if folder == fileOrFolder then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function WeaponWSID(swepClass)
+	if swepToWSID[swepClass] ~= nil then return swepToWSID[swepClass] end
+
+	-- Fall back on slow loading
+	local addons = engine.GetAddons()
+	local order = optimisedOrder(addons)
+	local selected = nil
+	local paths = nil
+
+	for k, _ in pairs(order) do
+		selected = addons[k]
+		isAddon = addonContainsWeapon(selected.title, swepClass)
+		
+		if isAddon then
+			return selected.wsid
+		end
+	end
+end
+
+
+concommand.Add("fast", function()
+	local wep = LocalPlayer():GetActiveWeapon():GetClass()
+	print(WeaponWSID(wep))
 end)
