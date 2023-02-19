@@ -207,7 +207,7 @@ local function WeaponSwitchMonitor()
 			end
 			shouldHide = (cachedCross["HideOnADS"] and SWEPShouldHide(wep)) or CrosshairShouldHide(ply, wep)
 		else
-			shouldHide = cachedCross["HideOnADS"] or CrosshairShouldHide(ply, wep)
+			shouldHide = CrosshairShouldHide(ply, wep)
 		end
 
 	end
