@@ -126,8 +126,7 @@ local function weaponCrossCheck(wep)
 	if wep.BaseWeaponWSID and wsidCrossChecks[wep.BaseWeaponWSID] then
 		cachedCrossChecks[baseClass] = {wsidCrossChecks[wep.BaseWeaponWSID][SHOULDHIDE]}
 		return cachedCrossChecks[baseClass]
-	end
-	if wep.WeaponWSID and wsidCrossChecks[wep.WeaponWSID] then
+	elseif wep.WeaponWSID and wsidCrossChecks[wep.WeaponWSID] then
 		cachedCrossChecks[wepClass] = {wsidCrossChecks[wep.WeaponWSID][SHOULDHIDE]}
 		return cachedCrossChecks[wepClass]
 	end
@@ -355,10 +354,10 @@ local function IncludeSwepsFromAddon(title, wsid)
 	local files, folders = file.Find('lua/weapons/*', title)
 
 	for i, file in pairs(files or {}) do
-		swepToWSID[string.StripExtension(file)] = wsid
+		swepToWSID[string.StripExtension(file)] = tonumber(wsid)
 	end
 	for i, folder in pairs(folders or {}) do
-		swepToWSID[folder] = wsid
+		swepToWSID[folder] = tonumber(wsid)
 	end
 
 	processedAddons[wsid] = true
