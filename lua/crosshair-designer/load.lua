@@ -704,6 +704,7 @@ else
 		['forceOnBaseClasses'] = {
 			'arccw_base'
 		}
+		-- detour manually handles in hide.lua
 	})
 
 	-- DayOfDefeat weapons
@@ -1055,6 +1056,21 @@ else
 		end,
 		['forceOnWSID'] = {1631362949},
 		-- detour manually handles in hide.lua
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Call of Duty 4: Modern Warfare 1510230490',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_cod4") and wep:GetNWBool("Crosshair", nil) ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetNWBool("Crosshair", true) == false
+		end,
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
+			return wep:GetNWBool("Scope", false) == true
+		end),
+		['forceOnWSID'] = {1606353301, 1506867125, 1601712255, 1598900546,
+		1537777119, 1510224023},
 	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
