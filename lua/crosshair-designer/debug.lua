@@ -396,6 +396,11 @@ concommand.Add("crosshairdesigner_debugaddondump", function()
 end)
 
 concommand.Add("crosshairdesigner_patchdrawhooks", function()
+	if not game.SinglePlayer() then
+		print("Cannot run this command in multiplayer due to being a potential exploit")
+		return
+	end
+
 	local problems = traceShouldDraw()
 
 	if #problems == 0 then
