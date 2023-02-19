@@ -485,8 +485,9 @@ concommand.Add("crosshairdesigner_diffads", function()
 	local newScopedValue = nil
 	local scopedDiffs = {}
 	local count = 0
+	local maxCount = 3
 
-	while (count == 0 or !tableEqual(lastScopedValue, noADSValues)) do
+	while ((count == 0 or !tableEqual(lastScopedValue, noADSValues)) and maxCount > count) do
 		ads()
 		local newScopedValue = getNW()
 

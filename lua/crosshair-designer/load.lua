@@ -634,6 +634,28 @@ else
 			return wep:getIronsights()
 		end,
 	})
+	-- Varient found in Sanctum 2 Weapons 391683214
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'GetIronSight',
+		['fnIsValid'] = function(wep, cls)
+			return wep.GetIronSight ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetIronSight()
+		end,
+		['forceOnWSID'] = {391683214}
+	})
+	-- Varient found in Titanfall Heavy Weapons 840091742
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Iron',
+		['fnIsValid'] = function(wep, cls)
+			return wep:GetNWInt("Iron", nil) ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetNWInt("Iron", nil) == 1
+		end,
+		['forceOnWSID'] = {840091742}
+	})
 
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'Modern Warfare 2459720887',
@@ -848,7 +870,10 @@ else
 		['fnShouldHide'] = function(wep)
 			return wep:GetNWBool("Iron", false)
 		end,
-		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD')
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
+		['forceOnWSID'] = {916201112, 921842698, 922433152, 913618147, 917779957, 
+		914808995, 918900571, 923515273, 1498694632, 1492190276, 1470662323, 
+		1469422668, 1468151297}, 
 	})
 
 	CrosshairDesigner.AddSWEPCrosshairCheck({
@@ -860,7 +885,8 @@ else
 			return false
 		end,
 		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
-		['forceOnBaseClasses'] = {'weapon_ut99_base'}
+		['forceOnBaseClasses'] = {'weapon_ut99_base'},
+		['forceOnWSID'] = {189453748}
 	})
 
 	CrosshairDesigner.AddSWEPCrosshairCheck({
@@ -872,7 +898,8 @@ else
 			return false -- no ADS in addon
 		end,
 		['onSwitch'] = HideWeaponCrosshairHUD('DrawCrosshairElementRotated'),
-		['forceOnBaseClasses'] = {'weapon_dredux_base2', 'weapon_dredux_base3'}
+		['forceOnBaseClasses'] = {'weapon_dredux_base2', 'weapon_dredux_base3'},
+		['forceOnWSID'] = {2296325632}
 	})
 
 	-- GetIronSights checks are added, but never trigger
@@ -882,8 +909,9 @@ else
 			return hasPrefix(cls, "azbr_pr") and wep.GetIsZoomedIn ~= nil
 		end,
 		['fnShouldHide'] = function(wep)
-			return wep:GetIsZoomedIn()
+			return wep.GetIsZoomedIn and wep:GetIsZoomedIn()
 		end,
+		['forceOnWSID'] = {2506186936}
 	})
 
 	CrosshairDesigner.AddSWEPCrosshairCheck({
@@ -895,7 +923,8 @@ else
 			return wep:GetNWBool("IronSights", false) -- duplciates others
 		end,
 		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
-		['forceOnBaseClasses'] = {'weapon_cs_base'}
+		['forceOnBaseClasses'] = {'weapon_cs_base'},
+		['forceOnWSID'] = {124725938}
 	})
 
 	-- Hide their hud only when not scoped / otherwise swap in our crosshair
@@ -909,7 +938,8 @@ else
 		end,
 		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep) 
 			return (wep:GetNWInt("ScopeLaserAlpha", 0) == 255 or wep:GetNWInt("ScopeAlpha", 0) == 255) -- Allow HUD for scoped weapons
-		end)
+		end),
+		['forceOnWSID'] = {949733637}
 	})
 
 	-- CrosshairDesigner.AddSWEPCrosshairCheck({
@@ -931,13 +961,17 @@ else
 			return hasPrefix(cls, "weapon_csgo")
 		end,
 		['fnShouldHide'] = function(wep)
-			return wep.GetZoomLevel and wep:GetZoomLevel() ~= 1
+			return (
+				(wep.GetZoomLevel and wep:GetZoomLevel() ~= 1)
+				or
+				(wep.GetIronsights and wep:GetIronsights()) -- specific to weapon_csgo_rif_sg553
+			)
 		end,
 		['forceOnWSID'] = {2180833718},
 	})
 
 	CrosshairDesigner.AddSWEPCrosshairCheck({
-		['id'] = 'Counter-Strike: Global Offensive Operation Breakout Weapon Pack 1257243225, 1239501421',
+		['id'] = 'Counter-Strike: Global Offensive Operation Breakout Weapon Pack 1257243225',
 		['fnIsValid'] = function(wep, cls)
 			return hasPrefix(cls, "weapon_csgo_breakout")
 		end,
@@ -975,25 +1009,53 @@ else
 		['forceOnWSID'] = {1244760503},
 	})
 
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'DOOM 3 SWEPs 210267782',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_doom3")
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.GetIronSights and wep:GetIronSights()
+		end,
+		['forceOnWSID'] = {210267782},
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
+	})
 
-			-- ['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
-		-- 	return (wep:GetNWInt("ScopeAlpha", 0) == 255) -- Allow HUD for scoped weapons
-		-- end)
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'DOOM 3 SWEPs 1218893879',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_l4d")
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.GetIronSights and wep:GetIronSights() -- actually no ADS in this pack
+		end,
+		['forceOnWSID'] = {1218893879},
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
+	})
 
-	-- CrosshairDesigner.AddSWEPCrosshairCheck({
-	-- 	['id'] = 'CS:GO Weapons 2180833718 + 1257243225',
-	-- 	['fnIsValid'] = function(wep, cls)
-	-- 		return hasPrefix(cls, "weapon_csgo")
-	-- 	end,
-	-- 	['fnShouldHide'] = function(wep)
-	-- 		-- Support snipers + allow crosshair to be hidden for normal
-	-- 		return wep.GetZoomLevel ~= nil and wep:GetZoomLevel() ~= 1 -- yes, 1 is no scope, 0 and 2 are scoped
-	-- 	end,
-	-- 	['forceOnBaseClasses'] = {'weapon_csgobase'},
-	-- 	['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
-	-- 		return (wep:GetZoomLevel() == 1) -- Allow HUD for scoped weapons
-	-- 	end)
-	-- })
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Quake 4 SWEPs 1341861055',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "weapon_quake4")
+		end,
+		['fnShouldHide'] = function(wep)
+			return false --wep:GetNWInt("Ironsights", 0) == 1 -- needs crosshair always visible
+		end,
+		['forceOnWSID'] = {1341861055},
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD'),
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'ACT3: Arctic\'s Customizable Thirdperson (Weapons) 3.0 1631362949',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "act3") and wep.State != nil and ACT3_STATE_INSIGHTS != nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep.State == ACT3_STATE_INSIGHTS
+		end,
+		['forceOnWSID'] = {1631362949},
+		-- detour manually handles in hide.lua
+	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
 	local gm = engine.ActiveGamemode()

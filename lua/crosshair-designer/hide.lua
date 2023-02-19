@@ -115,13 +115,6 @@ local function weaponCrossCheck(wep)
 	local wepClass = wep:GetClass()
 	local baseClass = wep.Base
 
-	-- Use cached
-	if cachedCrossChecks[wepClass] then
-		return cachedCrossChecks[wepClass]
-	elseif cachedCrossChecks[baseClass] then
-		return cachedCrossChecks[baseClass]
-	end
-
 	-- Find specific to addon using WSID
 	if wep.BaseWeaponWSID and wsidCrossChecks[wep.BaseWeaponWSID] then
 		cachedCrossChecks[baseClass] = {wsidCrossChecks[wep.BaseWeaponWSID][SHOULDHIDE]}
@@ -129,6 +122,13 @@ local function weaponCrossCheck(wep)
 	elseif wep.WeaponWSID and wsidCrossChecks[wep.WeaponWSID] then
 		cachedCrossChecks[wepClass] = {wsidCrossChecks[wep.WeaponWSID][SHOULDHIDE]}
 		return cachedCrossChecks[wepClass]
+	end
+
+	-- Use cached
+	if cachedCrossChecks[wepClass] then
+		return cachedCrossChecks[wepClass]
+	elseif cachedCrossChecks[baseClass] then
+		return cachedCrossChecks[baseClass]
 	end
 
 	-- Find weapon specific
@@ -300,8 +300,10 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 	if id == "HideWeaponCrosshair" then
 		if val then
 			CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
+			CrosshairDesigner.AddConvarDetour("act3_hud_crosshair_enable", 0)
 		else
 			CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
+			CrosshairDesigner.RemoveConvarDetour("act3_hud_crosshair_enable")
 		end
 	end
 	-- TTT crosshair is being handled directly in detour.lua
@@ -427,8 +429,10 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", func
 	-- Load detours if set to active
 	if cachedCross["HideWeaponCrosshair"] then
 		CrosshairDesigner.AddConvarDetour("cw_crosshair", 0)
+		CrosshairDesigner.AddConvarDetour("act3_hud_crosshair_enable", 0)
 	else
 		CrosshairDesigner.RemoveConvarDetour("cw_crosshair")
+		CrosshairDesigner.RemoveConvarDetour("act3_hud_crosshair_enable")
 	end
 
 	hook.Add("Think", "CrosshairDesigner_WeaponSwitchMonitor", WeaponSwitchMonitor)
