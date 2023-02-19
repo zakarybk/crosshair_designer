@@ -283,7 +283,8 @@ concommand.Add("crosshairdesigner_debugdump", function()
 			['Checks'] = CrosshairDesigner.IndexesOfCrossChecks(CrosshairDesigner.WeaponCrossCheck(swep))
 		},
 		['VERSION'] = CrosshairDesignerVersion(),
-		['HUDShouldDraw'] = traceShouldDraw()
+		['HUDShouldDraw'] = traceShouldDraw(),
+		['CrosshairDesignerDetoured'] = swep.CrosshairDesignerDetoured ~= nil
 	}
 
 	if swep.Base then
