@@ -1,6 +1,8 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.35
+CrosshairDesigner.VERSION = 3.36
 CrosshairDesigner.WSID = 590788321
+CrosshairDesigner.FinishLoad = nil -- support auto reload
+CrosshairDesigner.StartLoad = SysTime()
 CrosshairDesigner.hasPrefix = function(str, prefix)
 	return string.sub(str, 1, #prefix) == prefix
 end
@@ -911,25 +913,32 @@ else
 	})
 
 	CrosshairDesigner.AddSWEPCrosshairCheck({
-		['id'] = 'Counter-Strike: Global Offensive Sniper Rifle Pack 1244760503',
+		['id'] = 'Counter-Strike: Global Offensive Sniper Rifle Pack 1244760503, 2180833718, 1257243225',
 		['fnIsValid'] = function(wep, cls)
 			return hasPrefix(cls, "weapon_csgo")
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetNWInt("ScopeAlpha", 0) == 255
 		end,
+		['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
+			return (wep:GetNWInt("ScopeAlpha", 0) == 255) -- Allow HUD for scoped weapons
+		end)
 	})
 
-	CrosshairDesigner.AddSWEPCrosshairCheck({
-		['id'] = 'CS:GO Weapons 2180833718',
-		['fnIsValid'] = function(wep, cls)
-			return hasPrefix(cls, "weapon_csgo") and wep.GetZoomLevel ~= nil
-		end,
-		['fnShouldHide'] = function(wep)
-			return wep:GetZoomLevel() ~= 1 -- yes, 1 is no scope, 0 and 2 are scoped
-		end,
-		['forceOnBaseClasses'] = {'weapon_csgobase'}
-	})
+	-- CrosshairDesigner.AddSWEPCrosshairCheck({
+	-- 	['id'] = 'CS:GO Weapons 2180833718 + 1257243225',
+	-- 	['fnIsValid'] = function(wep, cls)
+	-- 		return hasPrefix(cls, "weapon_csgo")
+	-- 	end,
+	-- 	['fnShouldHide'] = function(wep)
+	-- 		-- Support snipers + allow crosshair to be hidden for normal
+	-- 		return wep.GetZoomLevel ~= nil and wep:GetZoomLevel() ~= 1 -- yes, 1 is no scope, 0 and 2 are scoped
+	-- 	end,
+	-- 	['forceOnBaseClasses'] = {'weapon_csgobase'},
+	-- 	['onSwitch'] = HideWeaponCrosshairHUD('DrawHUD', function(wep)
+	-- 		return (wep:GetZoomLevel() == 1) -- Allow HUD for scoped weapons
+	-- 	end)
+	-- })
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
 	local gm = engine.ActiveGamemode()
@@ -947,6 +956,3 @@ else
 		file.CreateDir( "crosshair_designer/debug", "DATA" )
 	end
 end
-
-print("Finished loading crosshair designer (590788321)")
-hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)

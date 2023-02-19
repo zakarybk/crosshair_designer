@@ -631,6 +631,14 @@ CrosshairDesigner.CalcMemoryUsage = function()
 end
 
 CrosshairDesigner.CalcInfo = function()
+	-- If menu is opened before crosshair finished loading
+	if CrosshairDesigner.FinishLoad == nil then
+		return {
+			lines=0,
+			polys=0
+		} 
+	end
+
 	info = {}
 
 	if cachedCross["FillDraw"] then

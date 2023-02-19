@@ -12,7 +12,8 @@
 	CrosshairDesigner.AddSWEPCrosshairCheck( -- see load.lua for examples
 		['fnIsValid'] = function(swep) <your code> return end,
 		['fnShouldHide'] = function(swep) <your code> return end,
-		['forceOnBaseClasses'] = ['some_base_class', 'some_other']
+		['forceOnBaseClasses'] = {'some_base_class', 'some_other'},
+		['forceOnWSID'] = {123456, 666666}
 	)
 
 	fnIsValid will be called whenever the player swaps SWEPs or changes
@@ -59,6 +60,7 @@ local IsValid = IsValid
 local GetViewEntity = GetViewEntity
 
 local oddCrossChecks = {} -- When weapon packs do not conform to the norm
+local wsidCrossChecks = {} -- Target specific weapon packs
 local normCrossChecks = {} -- For everything else which can be generic
 local cachedCrossChecks = {}
 
@@ -78,6 +80,12 @@ function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
 		for k, class in pairs(tbl['forceOnBaseClasses']) do
 			oddCrossChecks[class] = oddCrossChecks[class] or {}
 			table.insert(oddCrossChecks[class], {fnIsValid, fnShouldHide, id, fnOnSwitch})
+		end
+	end
+
+	if tbl['forceOnWSID'] then
+		for k, wsid in pairs(tbl['forceOnWSID']) do
+			wsidCrossChecks[wsid] = {fnIsValid, fnShouldHide, id, fnOnSwitch}
 		end
 	end
 end
@@ -110,6 +118,18 @@ local function weaponCrossCheck(wep)
 	-- Use cached
 	if cachedCrossChecks[wepClass] then
 		return cachedCrossChecks[wepClass]
+	elseif cachedCrossChecks[baseClass] then
+		return cachedCrossChecks[baseClass]
+	end
+
+	-- Find specific to addon using WSID
+	if wep.BaseWeaponWSID and wsidCrossChecks[wep.BaseWeaponWSID] then
+		cachedCrossChecks[baseClass] = {wsidCrossChecks[wep.BaseWeaponWSID][SHOULDHIDE]}
+		return cachedCrossChecks[baseClass]
+	end
+	if wep.WeaponWSID and wsidCrossChecks[wep.WeaponWSID] then
+		cachedCrossChecks[wepClass] = {wsidCrossChecks[wep.WeaponWSID][SHOULDHIDE]}
+		return cachedCrossChecks[wepClass]
 	end
 
 	-- Find weapon specific
@@ -124,7 +144,7 @@ local function weaponCrossCheck(wep)
 
 		if #fnShouldHides >=1 then
 			cachedCrossChecks[wepClass] = fnShouldHides
-			return fnShouldHides
+			return cachedCrossChecks[wepClass]
 		end
 
 	end
@@ -149,6 +169,15 @@ local function weaponCrossCheck(wep)
 
 end
 CrosshairDesigner.WeaponCrossCheck = weaponCrossCheck
+
+CrosshairDesigner.RunSWEPCheckById = function(id, wep)
+	for k, v in pairs(normCrossChecks) do
+		if v[ID] == id then
+			return v[SHOULDHIDE](wep) and true or false
+		end
+	end
+	return false
+end
 
 local UpdateSWEPCheck = function(ply, wep) -- local
 	local checks = weaponCrossCheck(wep)
@@ -202,8 +231,12 @@ local function WeaponSwitchMonitor()
 			if activeWeapon ~= wep then
 				activeWeapon = wep
 				holdingTFA = wep.Base and hasPrefix(wep.Base, "tfa_")
+				wep.WeaponWSID = CrosshairDesigner.WeaponWSID(wep:GetClass())
+				wep.BaseWeaponWSID = CrosshairDesigner.WeaponWSID(wep.Base)
 				UpdateSWEPCheck(ply, wep)
 				RunAnyOnSwitchListeners(wep)
+				-- Run hook for any external addons / for our menu
+				hook.Run("CrosshairDesinger_PlayerSwitchedWeapon", ply, wep)
 			end
 			shouldHide = (cachedCross["HideOnADS"] and SWEPShouldHide(wep)) or CrosshairShouldHide(ply, wep)
 		else
@@ -285,6 +318,101 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateSWEPCheck", function(convar, v
 			end
 		end)
 	end
+end)
+
+
+--[[
+	WSID finder
+]]--
+
+
+local function optimisedOrder(addons)
+	-- Optimised order for finding file for weapon
+	local firstSet = {}
+	local secondSet = {}
+
+	for k, v in ipairs(addons) do
+		if v.mounted then
+			if string.find(v.tags, "Weapon") then
+				table.insert(firstSet, k)
+			else
+				table.insert(secondSet, k)
+			end
+		end
+	end
+
+	return table.Add(firstSet, secondSet)
+end
+
+
+local initialCoroutine = false
+local periodicCoroutine = false
+local initialcoroutineFinished = false
+local swepToWSID = {}
+local processedAddons = {}
+
+local function IncludeSwepsFromAddon(title, wsid)
+	local files, folders = file.Find('lua/weapons/*', title)
+
+	for i, file in pairs(files or {}) do
+		swepToWSID[string.StripExtension(file)] = wsid
+	end
+	for i, folder in pairs(folders or {}) do
+		swepToWSID[folder] = wsid
+	end
+
+	processedAddons[wsid] = true
+end
+
+local function InitalSwepScan()
+	local addons = engine.GetAddons()
+	local order = optimisedOrder(addons)
+
+	for k, _ in pairs(order) do
+		selected = addons[k]
+
+		coroutine.yield()
+		IncludeSwepsFromAddon(selected.title, selected.wsid)
+	end
+
+	initialcoroutineFinished = true
+end
+
+local function PeriodicSwepScan()
+	while true do
+		for k, addon in pairs(engine.GetAddons()) do
+			if k%50 == 0 then coroutine.yield() end -- 50 at a time
+			if addon.mounted and processedAddons[addon.wsid] == nil then
+				IncludeSwepsFromAddon(addon.title, addon.wsid)
+			end
+		end
+	end
+end
+
+local function WeaponWSID(swepClass)
+	if swepToWSID[swepClass] ~= nil then return swepToWSID[swepClass] end
+end
+CrosshairDesigner.WeaponWSID = WeaponWSID
+
+hook.Add("Think", "CrosshairDesigner_SWEPScan", function()
+	if initialcoroutineFinished then
+		CrosshairDesigner.FinishLoad = SysTime()
+		time = math.Round(CrosshairDesigner.FinishLoad - CrosshairDesigner.StartLoad, 2)
+		print("Finished loading crosshair designer (590788321) in " .. time .. " seconds")
+		hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)
+		hook.Remove("Think", "CrosshairDesigner_SWEPScan")
+		return
+	end
+
+	if not initialCoroutine then
+		initialCoroutine = coroutine.create(InitalSwepScan)
+		periodicCoroutine = coroutine.create(PeriodicSwepScan)
+		timer.Create("CrosshairDesigner_PeriodicSWEPScan", 1, 0, function()
+			coroutine.resume(periodicCoroutine)
+		end)
+	end
+
+	coroutine.resume(initialCoroutine)
 end)
 
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", function()

@@ -515,6 +515,91 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 	CrosshairDesigner.Sheet.Advanced.Info.Recalculate()
 
 
+	CrosshairDesigner.Sheet.Advanced:Add(createSpacer())
+
+	--[[
+		Held SWEP info
+	]]--
+	local getWep = function() return LocalPlayer():GetActiveWeapon() end
+	local validWep = IsValid(LocalPlayer()) and IsValid(getWep())
+
+	local getWSIDorOther = function()
+		return (validWep and getWep().WeaponWSID ~= nil) and getWep().WeaponWSID or "Unknown" 
+	end
+
+	local getBaseWSIDorOther = function()
+		return (validWep and getWep().BaseWeaponWSID ~= nil) and getWep().BaseWeaponWSID or "Unknown" 
+	end
+
+	local dPanel = vgui.Create("DPanel", CrosshairDesigner.Sheet.Advanced)
+	dPanel:Dock(TOP)
+	dPanel:DockMargin(0, 5, 0, 0)
+	dPanel.Paint = function() end
+	
+	local wepText = vgui.Create("DLabel", dPanel)
+	wepText:Dock(FILL)
+	wepText:SetTextColor(Color(255, 255, 255, 255))
+	wepText:SetText("Held SWEP WSID: " .. getWSIDorOther())
+
+	local loadButton = vgui.Create("DButton", dPanel)
+	loadButton:SetText("Open Workshop")
+	loadButton:Dock(FILL)
+	loadButton:DockMargin(250, 0, 0, 0)
+	loadButton.DoClick = function()
+		if getWSIDorOther() == "Unknown" then
+			Derma_Message("No SWEP found on Workshop (could be locally installed addon)", "Crosshair Designer", "OK")
+		else
+			gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=" .. getWSIDorOther())
+		end
+	end
+	--
+
+	local dPanel = vgui.Create("DPanel", CrosshairDesigner.Sheet.Advanced)
+	dPanel:Dock(TOP)
+	dPanel:DockMargin(0, 5, 0, 0)
+	dPanel.Paint = function() end
+	
+	local wepBaseText = vgui.Create("DLabel", dPanel)
+	wepBaseText:Dock(FILL)
+	wepBaseText:SetTextColor(Color(255, 255, 255, 255))
+	wepBaseText:SetText("Held SWEP Base WSID: " .. getBaseWSIDorOther())
+
+	local loadButton = vgui.Create("DButton", dPanel)
+	loadButton:SetText("Open Workshop")
+	loadButton:Dock(FILL)
+	loadButton:DockMargin(250, 0, 0, 0)
+	loadButton.DoClick = function()
+		if getBaseWSIDorOther() == "Unknown" then
+			Derma_Message("No base SWEP found on Workshop (could be locally installed addon)", "Crosshair Designer", "OK")
+		else
+			gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=" .. getBaseWSIDorOther())
+		end
+	end
+
+	hook.Add("CrosshairDesinger_PlayerSwitchedWeapon", "UpdateMenu", function(ply, wep)
+		if wepText and wepBaseText then
+			wepText:SetText("Held SWEP WSID: " .. getWSIDorOther())
+			wepBaseText:SetText("Held SWEP Base WSID: " .. getBaseWSIDorOther())
+		end
+	end)
+
+	local dPanel = vgui.Create("DPanel", CrosshairDesigner.Sheet.Advanced)
+	dPanel:Dock(TOP)
+	dPanel:DockMargin(0, 5, 0, 0)
+	dPanel.Paint = function() end
+
+	local loadButton = vgui.Create("DButton", dPanel)
+	loadButton:SetText("Request weapon pack support/compatibility")
+	loadButton:Dock(FILL)
+	loadButton:DockMargin(0, 0, 0, 0)
+	loadButton.DoClick = function()
+		problemWSID = (getWSIDorOther() ~= "Unknown") and getWSIDorOther() or getBaseWSIDorOther()
+		problemURL = "https://steamcommunity.com/sharedfiles/filedetails/?id="
+		SetClipboardText(problemURL .. problemWSID)
+		LocalPlayer():ChatPrint("Set clipboard text to " .. problemURL .. problemWSID)
+		gui.OpenURL("https://steamcommunity.com/workshop/filedetails/discussion/590788321/3780246026239811661/")
+	end
+
 	-- Always at bottom
 	hook.Run("CrosshairDesigner_MenuOpened", CrosshairDesigner.Menu)
 

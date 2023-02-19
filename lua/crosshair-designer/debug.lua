@@ -1,3 +1,18 @@
+local NO_DEBUG_REASON = "Cannot run this command in multiplayer due to being a potential exploit"
+local canRunDebug = function()
+	if game.SinglePlayer() then return true end
+
+	local ply = LocalPlayer()
+	if ply:IsSuperAdmin() then return true end
+
+	-- Default is true fyi - located in lua/autorun/crosshair-designer-load.lua
+	if GetConvar("CrosshairDesigner_AllowAuthorDebug"):GetBool() and ply:SteamID() == "STEAM_0:1:50714411" then 
+		return true 
+	end
+
+	return false
+end
+
 -- Format used by Steam Workshop
 local function formatToSteamTime(time)
 	return os.date("%d %b, %Y @ %I:%M%p", time)
@@ -245,6 +260,8 @@ end
 
 
 concommand.Add("crosshairdesigner_debugHUDShouldDraw", function()
+	if !canRunDebug() then print(NO_DEBUG_REASON) return end
+
 	print("--------------------------------------------------------------------")
 	print()
 	print()
@@ -257,6 +274,8 @@ concommand.Add("crosshairdesigner_debugHUDShouldDraw", function()
 end)
 
 concommand.Add("crosshairdesigner_debugdump", function()
+	if !canRunDebug() then print(NO_DEBUG_REASON) return end
+
 	local ply = LocalPlayer()
 	local swep = LocalPlayer():GetActiveWeapon()
 
@@ -302,6 +321,8 @@ concommand.Add("crosshairdesigner_debugdump", function()
 end)
 
 concommand.Add("crosshairdesigner_debugswepdump", function()
+	if !canRunDebug() then print(NO_DEBUG_REASON) return end
+
 	local addons = {}
 
 	local saveKeys = {
@@ -349,6 +370,8 @@ concommand.Add("crosshairdesigner_debugswepdump", function()
 end)
 
 concommand.Add("crosshairdesigner_debugaddondump", function()
+	if !canRunDebug() then print(NO_DEBUG_REASON) return end
+
 	local workshopAddons = {}
 	local localAddons = {}
 
@@ -395,10 +418,7 @@ concommand.Add("crosshairdesigner_debugaddondump", function()
 end)
 
 concommand.Add("crosshairdesigner_patchdrawhooks", function()
-	if not game.SinglePlayer() then
-		print("Cannot run this command in multiplayer due to being a potential exploit")
-		return
-	end
+	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 
 	local problems = traceShouldDraw()
 
@@ -454,10 +474,7 @@ end
 concommand.Add("crosshairdesigner_diffads", function()
 	-- Turns out this only works for CS:GO weapons - likely need to actually
 	-- use keys for other addons a.k.a simulate pressing SECONDARY_FIRE
-	if not game.SinglePlayer() then
-		print("Cannot run this command in multiplayer due to being a potential exploit")
-		return
-	end
+	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 	
 	local ply = LocalPlayer()
 	local getNW = function() return ply:GetActiveWeapon():GetNWVarTable() end
@@ -493,108 +510,79 @@ concommand.Add("crosshairdesigner_diffads", function()
 end)
 
 
-local function optimisedOrder(addons)
-	-- Optimised order for finding file for weapon
-	local firstSet = {}
-	local secondSet = {}
+local debugHUDEnabled = false
+concommand.Add("crosshairdesigner_debughud", function()
+	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 
-	for k, v in ipairs(addons) do
-		if v.mounted then
-			if string.find(v.tags, "Weapon") then
-				table.insert(firstSet, k)
-			else
-				table.insert(secondSet, k)
-			end
-		end
-	end
-
-	return table.Add(firstSet, secondSet)
-end
-
-
-local createdCoroutine = false
-local coroutineFinished = false
-local swepToWSID = {}
--- TODO: scan for new mounts
-
-local function IncludeSwepsFromAddon(title, wsid)
-	local files, folders = file.Find('lua/weapons/*', title)
-
-	for i, file in pairs(files or {}) do
-		swepToWSID[string.StripExtension(file)] = wsid
-	end
-	for i, folder in pairs(folders or {}) do
-		swepToWSID[folder] = wsid
-	end
-end
-
-local function ScanForSweps()
-	local addons = engine.GetAddons()
-	local order = optimisedOrder(addons)
-
-	for k, _ in pairs(order) do
-		selected = addons[k]
-
-		coroutine.yield()
-		IncludeSwepsFromAddon(selected.title, selected.wsid)
-	end
-
-	coroutineFinished = true
-end
-
-hook.Add("Think", "CrosshairDesigner_ScanSWEPS", function()
-	if coroutineFinished then
-		hook.Remove("Think", "CrosshairDesigner_ScanSWEPS")
+	-- Toggle
+	local hookId = "CrosshairDesigner_UpdateDebug"
+	if debugHUDEnabled then
+		hook.Remove("CrosshairDesinger_PlayerSwitchedWeapon", hookId)
+		hook.Remove("HUDPaint", hookId)
+		debugHUDEnabled = false
 		return
 	end
 
-	if not createdCoroutine then
-		createdCoroutine = coroutine.create(ScanForSweps)
-	end
-
-	coroutine.resume(createdCoroutine)
-end)
-
-local function addonContainsWeapon(addonTitle, fileOrFolder)
-	local files, folders = file.Find('lua/weapons/*', addonTitle)
-	local fileOrFolder_lua = fileOrFolder .. ".lua"
-
-	for i, file in pairs(files or {}) do
-		if file == fileOrFolder_lua then
-			return true
+	local function checksToText(checks) 
+		local indexIds = CrosshairDesigner.IndexesOfCrossChecks(checks)
+		s = ""
+		for k, check in pairs(indexIds) do
+			s = s .. check.id .. ", "
 		end
+		return s
 	end
 
-	for i, folder in pairs(folders or {}) do
-		if folder == fileOrFolder then
-			return true
+	local function checksToEnabledStatus(checks, wep)
+		local indexIds = CrosshairDesigner.IndexesOfCrossChecks(checks)
+		local vals = "("
+		for k, check in pairs(indexIds) do
+			vals = vals .. tostring(CrosshairDesigner.RunSWEPCheckById(check.id, wep)) .. ","
 		end
+		return vals .. ")"
 	end
 
-	return false
-end
-
-local function WeaponWSID(swepClass)
-	if swepToWSID[swepClass] ~= nil then return swepToWSID[swepClass] end
-
-	-- Fall back on slow loading
-	local addons = engine.GetAddons()
-	local order = optimisedOrder(addons)
-	local selected = nil
-	local paths = nil
-
-	for k, _ in pairs(order) do
-		selected = addons[k]
-		isAddon = addonContainsWeapon(selected.title, swepClass)
-		
-		if isAddon then
-			return selected.wsid
+	local function usingWorkshopVersion()
+		for k, addon in pairs(engine.GetAddons()) do
+			if addon.wsid == 590788321 then
+				return addon.mounted
+			end
 		end
+		return false
 	end
-end
 
+	hook.Add("HUDPaint", hookId, function()
+		local ply = LocalPlayer()
+		local wep = ply:GetActiveWeapon()
+		local gap = 30
 
-concommand.Add("fast", function()
-	local wep = LocalPlayer():GetActiveWeapon():GetClass()
-	print(WeaponWSID(wep))
+		surface.SetFont( "DermaLarge" )
+		surface.SetTextColor( 255, 255, 255 )
+
+		if !IsValid(wep) then return end
+
+		surface.SetTextPos( 128, 120-gap ) 
+		surface.DrawText("workshop version: " .. tostring(usingWorkshopVersion()) .. " (" .. CrosshairDesigner.VERSION .. ")")
+
+		surface.SetTextPos( 128, 120 ) 
+		surface.DrawText("wep: " .. (wep:GetClass() or "Unknown") .. " (" .. (wep.WeaponWSID or "Unknown") .. ")")
+
+		surface.SetTextPos( 128, 120+gap ) 
+		surface.DrawText("base: " .. (wep.Base or "Unknown") .. " (" .. (wep.WeaponBaseWSID or "Unknown") .. ")")
+	
+		surface.SetTextPos( 128, 120+gap*2 ) 
+		surface.DrawText("detoured: " .. (wep.CrosshairDesignerDetoured and "true" or "false"))
+
+		surface.SetTextPos( 128, 120+gap*3 ) 
+		surface.DrawText("should hide: " .. (CrosshairDesigner.CrosshairShouldHide(ply, wep) and "true" or "false"))
+
+		surface.SetTextPos( 128, 120+gap*4 ) 
+		local checks = CrosshairDesigner.WeaponCrossCheck(wep)
+		surface.DrawText("ads checks: " .. #checks .. " (" .. checksToText(checks) .. ")" .. checksToEnabledStatus(checks, wep))
+	end)
+
+	hook.Add("CrosshairDesinger_PlayerSwitchedWeapon", hookId, function()
+	
+	end)
+
+	debugHUDEnabled = true
 end)
