@@ -356,7 +356,7 @@ local function PeriodicSwepScan()
 	end
 
 	CrosshairDesigner.FinishLoad = SysTime()
-	time = math.Round(CrosshairDesigner.FinishLoad - CrosshairDesigner.StartLoad, 2)
+	local time = math.Round(CrosshairDesigner.FinishLoad - CrosshairDesigner.StartLoad, 2)
 	print("Finished loading crosshair designer (590788321) in " .. time .. " seconds")
 	hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)
 
@@ -378,9 +378,7 @@ local function WeaponWSID(swepClass)
 end
 CrosshairDesigner.WeaponWSID = WeaponWSID
 
-if not periodicCoroutine then
-	periodicCoroutine = coroutine.create(PeriodicSwepScan)
-end
+local periodicCoroutine = coroutine.create(PeriodicSwepScan)
 hook.Add("Think", "CrosshairDesigner_SWEPScan", function()
 	coroutine.resume(periodicCoroutine)
 end)
