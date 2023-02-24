@@ -1,5 +1,5 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.36
+CrosshairDesigner.VERSION = 3.37
 CrosshairDesigner.WSID = 590788321
 CrosshairDesigner.FinishLoad = nil -- support auto reload
 CrosshairDesigner.StartLoad = SysTime()
