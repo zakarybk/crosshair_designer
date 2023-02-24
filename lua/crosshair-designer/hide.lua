@@ -329,9 +329,7 @@ end)
 ]]--
 
 
-local initialCoroutine = false
 local periodicCoroutine = false
-local initialcoroutineFinished = false
 local swepToWSID = {}
 local processedAddons = {}
 
@@ -348,24 +346,26 @@ local function IncludeSwepsFromAddon(title, wsid)
 	processedAddons[wsid] = true
 end
 
-local function InitalSwepScan()
-	-- Only load obvious weapon addons in first load - search for others periodically
-	local addons = engine.GetAddons()
-
-	for k, addon in pairs(addons) do
+local function PeriodicSwepScan()
+	-- Initial load
+	for k, addon in pairs(engine.GetAddons()) do
 		if addon.mounted and string.find(addon.tags, "Weapon") then
-			coroutine.yield()
+			for i=1, 5 do coroutine.yield() end
 			IncludeSwepsFromAddon(addon.title, addon.wsid)
 		end
 	end
 
-	initialcoroutineFinished = true
-end
+	CrosshairDesigner.FinishLoad = SysTime()
+	time = math.Round(CrosshairDesigner.FinishLoad - CrosshairDesigner.StartLoad, 2)
+	print("Finished loading crosshair designer (590788321) in " .. time .. " seconds")
+	hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)
 
-local function PeriodicSwepScan()
+	coroutine.yield()
+
+	-- Periodic load
 	while true do
 		for k, addon in pairs(engine.GetAddons()) do
-			if k%50 == 0 then coroutine.yield() end -- 50 at a time
+			for i=1, 5 do coroutine.yield() end
 			if addon.mounted and processedAddons[addon.wsid] == nil then
 				IncludeSwepsFromAddon(addon.title, addon.wsid)
 			end
@@ -378,27 +378,11 @@ local function WeaponWSID(swepClass)
 end
 CrosshairDesigner.WeaponWSID = WeaponWSID
 
+if not periodicCoroutine then
+	periodicCoroutine = coroutine.create(PeriodicSwepScan)
+end
 hook.Add("Think", "CrosshairDesigner_SWEPScan", function()
-	if initialcoroutineFinished then
-		CrosshairDesigner.FinishLoad = SysTime()
-		time = math.Round(CrosshairDesigner.FinishLoad - CrosshairDesigner.StartLoad, 2)
-		print("Finished loading crosshair designer (590788321) in " .. time .. " seconds")
-		hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)
-		hook.Remove("Think", "CrosshairDesigner_SWEPScan")
-		return
-	end
-
-	if not initialCoroutine then
-		initialCoroutine = coroutine.create(InitalSwepScan)
-		periodicCoroutine = coroutine.create(PeriodicSwepScan)
-		timer.Create("CrosshairDesigner_PeriodicSWEPScan", 1, 0, function()
-			if initialcoroutineFinished then
-				coroutine.resume(periodicCoroutine)
-			end
-		end)
-	end
-
-	coroutine.resume(initialCoroutine)
+	coroutine.resume(periodicCoroutine)
 end)
 
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", function()
