@@ -471,11 +471,9 @@ local function PeriodicSwepScan()
 	swepToWSID = swepCache.mounted()
 
 	local function check(addon)
-		if shouldCheckAddon(addon) then
-			if swepCache.needsUpdating(addon.wsid, addon.updated) then
-				sweps = IncludeSwepsFromAddon(addon.title, addon.wsid)
-				swepCache.update(addon.wsid, sweps)
-			end
+		if shouldCheckAddon(addon) and swepCache.needsUpdating(addon.wsid, addon.updated) then
+			sweps = IncludeSwepsFromAddon(addon.title, addon.wsid)
+			swepCache.update(addon.wsid, sweps)
 		end
 	end
 
