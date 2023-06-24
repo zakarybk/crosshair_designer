@@ -554,6 +554,15 @@ else
 			max=100,
 			menuGroup="circle"
 		},
+		{
+			id="HideWithHands",
+			var="crosshairdesigner_hidewithhands",
+			default="0",
+			help="Hides the crosshair when using a hand swep",
+			title="Hide with hands",
+			isBool=true,
+			menuGroup="hide"
+		},
 	})
 
 	--[[
@@ -1071,6 +1080,22 @@ else
 		end),
 		['forceOnWSID'] = {1606353301, 1506867125, 1601712255, 1598900546,
 		1537777119, 1510224023},
+	})
+
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = 'Hide with hands',
+		['fnIsValid'] = function(wep, cls)
+			return table.HasValue({"weapon_hand", "climb_swep", "ohandsswep"}, cls)
+		end,
+		['fnShouldHide'] = function(wep)
+			return CrosshairDesigner.GetBool('HideWithHands')
+		end,
+		['forceOnWSID'] = {
+			852703807, -- hands
+			113495466, -- climb swep
+			105225353, -- slappers
+			2778482614 -- outlast hands swep
+		},
 	})
 
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
