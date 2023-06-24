@@ -1,5 +1,5 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.37
+CrosshairDesigner.VERSION = 3.38
 CrosshairDesigner.WSID = 590788321
 CrosshairDesigner.FinishLoad = nil -- support auto reload
 CrosshairDesigner.StartLoad = SysTime()
@@ -7,8 +7,21 @@ CrosshairDesigner.hasPrefix = function(str, prefix)
 	return string.sub(str, 1, #prefix) == prefix
 end
 local hasPrefix = CrosshairDesigner.hasPrefix
+CrosshairDesigner.Print = function(...)
+	local green = Color(40, 189, 43)
+	local gray = Color(26, 26, 26)
+	local blue = Color(37, 136, 136)
+	local white = Color(240, 240, 240)
+	local id = {blue, "(", green, "CrosshairDesigner 590788321", blue, ") "}
+	local fullmsg = {}
+	table.Add(fullmsg, id)
+	table.Add(fullmsg, {white})
+	table.Add(fullmsg, {...})
+	table.Add(fullmsg, {"\n"})
+	MsgC(table.unpack(fullmsg))
+end
 
-print("Loading crosshair designer (590788321)")
+CrosshairDesigner.Print("Loading...")
 
 if SERVER then
 	AddCSLuaFile("detours.lua")

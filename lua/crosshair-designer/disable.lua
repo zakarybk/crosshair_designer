@@ -17,7 +17,7 @@ CrosshairDesigner.DisableFeature = function(id, forceVal, reason)
 			)
 		end
 	else
-		print("Feature: " .. id .. " not found! CrosshairDesigner")
+		CrosshairDesigner.Print("Disable feature failed. Feature: " .. id .. " not found!")
 	end
 end
 

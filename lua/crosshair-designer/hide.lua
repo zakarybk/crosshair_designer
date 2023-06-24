@@ -90,6 +90,12 @@ function CrosshairDesigner.AddSWEPCrosshairCheck(tbl)
 	end
 end
 
+function CrosshairDesigner.IsAddonSupported(wsid)
+	-- Not 100% true due to checks being able to be applied for other packs
+	-- if fnIsValid passes + not all supported addons and linked with wsid
+	return wsidCrossChecks[wsid] ~= nil
+end
+
 function CrosshairDesigner.IndexesOfCrossChecks(checks)
 	local function indexOfCheck(check)
 		for i, tbl in pairs(normCrossChecks) do
@@ -325,50 +331,185 @@ end)
 
 
 --[[
-	WSID finder
+	WSID swep cache
+
+	Reduce filesystem reads to greatly increase subsequent loading times 
+
+	{
+		addons: {wsid: lastUpdated},
+		sweps: {class: [wsid,...]}  -- on load, filter wsid by mounted
+	}
 ]]--
 
+local wsidCacheFile = "crosshair_designer/swep_cache.json"
 
-local periodicCoroutine = false
-local swepToWSID = {}
-local processedAddons = {}
-
-local function IncludeSwepsFromAddon(title, wsid)
-	local files, folders = file.Find('lua/weapons/*', title)
-
-	for i, file in pairs(files or {}) do
-		swepToWSID[string.StripExtension(file)] = tonumber(wsid)
-	end
-	for i, folder in pairs(folders or {}) do
-		swepToWSID[folder] = tonumber(wsid)
-	end
-
-	processedAddons[wsid] = true
+local function shouldCheckAddon(addon)
+	return addon.mounted and string.find(addon.tags, "Weapon")
 end
 
-local function PeriodicSwepScan()
-	-- Initial load
-	for k, addon in pairs(engine.GetAddons()) do
-		if addon.mounted and string.find(addon.tags, "Weapon") then
-			for i=1, 5 do coroutine.yield() end
-			IncludeSwepsFromAddon(addon.title, addon.wsid)
+local function SWEPCache(filePath)
+	local uncommitted = 0
+	local cached = file.Exists(filePath, "DATA") and util.JSONToTable(file.Read(filePath, "DATA")) or {addons = {}, sweps = {}}
+
+	local function mountedWSID()
+		local mounts = {}
+		for k, addon in pairs(engine.GetAddons()) do
+			if shouldCheckAddon(addon) then
+				mounts[tonumber(addon.wsid)] = addon.updated
+			end
+		end
+		return mounts
+	end
+
+	local function isUnCommitted()
+		return uncommitted >= 1
+	end
+
+	local function unCommittedCount()
+		return uncommitted
+	end
+
+	local function commit()
+		if isUnCommitted() then
+			local mounts = mountedWSID()
+			for wsid, updated in pairs(mounts) do
+				cached['addons'][tonumber(wsid)] = updated
+			end
+			file.Write(filePath, util.TableToJSON(cached))
+			uncommitted = 0
 		end
 	end
 
-	CrosshairDesigner.FinishLoad = SysTime()
-	local time = math.Round(CrosshairDesigner.FinishLoad - CrosshairDesigner.StartLoad, 2)
-	print("Finished loading crosshair designer (590788321) in " .. time .. " seconds")
-	hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)
+	local function filterSWEPsByMounted(sweps, mounts)
+		local mountedSWEPs = {}
+
+		for class, wsids in pairs(sweps) do
+			for k, wsid in pairs(wsids) do
+				if mounts[wsid] then
+					mountedSWEPs[class] = wsid
+					break  -- only ever return first match - a game should never have two sweps of the same class
+				end
+			end
+		end
+
+		return mountedSWEPs
+	end
+
+	local function mounted()
+		local mounts = mountedWSID()
+		return filterSWEPsByMounted(cached['sweps'], mounts)
+	end
+
+	local function needsUpdating(wsid, lastUpdated)
+		return cached['addons'][tonumber(wsid)] ~= lastUpdated
+	end
+
+	local function update(wsid, sweps)
+		local wsid = tonumber(wsid)
+		-- Handle added
+		for k, swep in pairs(sweps) do
+			if cached['sweps'][swep] then
+				if not table.HasValue(cached['sweps'][swep], wsid) then
+					table.insert(cached['sweps'][swep], wsid)
+					uncommitted = uncommitted + 1
+				end
+			else
+				cached['sweps'][swep] = {wsid}
+				uncommitted = uncommitted + 1
+			end
+		end
+
+		-- Handle removed
+		for swep, wsids in pairs(cached['sweps']) do
+			if table.HasValue(wsids, wsid) and not table.HasValue(sweps, swep) then
+				table.RemoveByValue(cached['sweps'][swep], wsid)
+				if #cached['sweps'][swep] == 0 then
+					cached['sweps'][swep] = nil
+				end
+				uncommitted = uncommitted + 1
+			end
+		end
+	end
+
+	return {
+		update = update,
+		needsUpdating = needsUpdating,
+		commit = commit,
+		mounted = mounted,
+		mountedWSID = mountedWSID,
+		isUnCommitted = isUnCommitted,
+		unCommittedCount = unCommittedCount
+	}
+end
+
+
+--[[
+	WSID finder
+]]--
+local periodicCoroutine = false
+local swepToWSID = {}
+
+local function IncludeSwepsFromAddon(title, wsid)
+	local sweps = {}
+	local files, folders = file.Find('lua/weapons/*', title)
+
+	for i, file in pairs(files or {}) do
+		table.insert(sweps, string.StripExtension(file))
+	end
+	for i, folder in pairs(folders or {}) do
+		table.insert(sweps, folder)
+	end
+
+	return sweps
+end
+
+local function PeriodicSwepScan()
+	local swepCache = SWEPCache(wsidCacheFile)
+	global_SWEPCACHE = swepCache
+	local sweps = {}
+
+	swepToWSID = swepCache.mounted()
+
+	local function check(addon)
+		if shouldCheckAddon(addon) then
+			if swepCache.needsUpdating(addon.wsid, addon.updated) then
+				sweps = IncludeSwepsFromAddon(addon.title, addon.wsid)
+				swepCache.update(addon.wsid, sweps)
+			end
+		end
+	end
+
+	-- Initial load -- will be slowest if first time
+	for k, addon in pairs(engine.GetAddons()) do
+		for i=1, 5 do coroutine.yield() end
+		check(addon)
+	end
+
+	if swepCache.isUnCommitted() then
+		local changes = swepCache.unCommittedCount()
+		swepToWSID = swepCache.mounted()
+		swepCache.commit()
+		CrosshairDesigner.Print("Updated swep wsid cache with " .. tostring(changes) .. " changes")
+	else
+		CrosshairDesigner.Print("Used purely cached swep wsid matching")
+	end
 
 	coroutine.yield()
 
-	-- Periodic load
+	CrosshairDesigner.FinishLoad = SysTime()
+	local time = math.Round(CrosshairDesigner.FinishLoad - CrosshairDesigner.StartLoad, 2)
+	CrosshairDesigner.Print("Finished loading in " .. time .. " seconds")
+	hook.Run("CrosshairDesigner_FullyLoaded", CrosshairDesigner)
+
+	-- Periodic load for sweps mounted during game
 	while true do
 		for k, addon in pairs(engine.GetAddons()) do
 			for i=1, 5 do coroutine.yield() end
-			if addon.mounted and processedAddons[addon.wsid] == nil then
-				IncludeSwepsFromAddon(addon.title, addon.wsid)
-			end
+			check(addon)
+		end
+		if swepCache.isUnCommitted() then
+			swepToWSID = swepCache.mounted()
+			swepCache.commit()
 		end
 	end
 end
@@ -380,7 +521,12 @@ CrosshairDesigner.WeaponWSID = WeaponWSID
 
 local periodicCoroutine = coroutine.create(PeriodicSwepScan)
 hook.Add("Think", "CrosshairDesigner_SWEPScan", function()
-	coroutine.resume(periodicCoroutine)
+	local success, err = coroutine.resume(periodicCoroutine)
+
+	if not success then
+		CrosshairDesigner.Print("Errored", err)
+		hook.Remove("Think", "CrosshairDesigner_SWEPScan")
+	end
 end)
 
 hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDetours", function()

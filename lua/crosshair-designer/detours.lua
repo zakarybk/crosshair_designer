@@ -18,9 +18,9 @@ CrosshairDesigner.AddConvarDetour = function(convar, value)
 	cvars.RemoveChangeCallback(convar, "CrosshairDesigner_DetourWarning")
 
 	cvars.AddChangeCallback(convar, function(name, oldVal, newVal)
-    	print(name .. " convar is currently being detoured by CrosshairDesigner")
-    	print("Set this value to false in the menu to remove the detour.")
-    	print("If this script has been reloaded then you may need to rejoin the game.")
+    	CrosshairDesigner.Print(name .. " convar is currently being detoured")
+    	CrosshairDesigner.Print("Set this value to false in the menu to remove the detour.")
+    	CrosshairDesigner.Print("If this script has been reloaded then you may need to rejoin the game.")
 	end,
 	"CrosshairDesigner_DetourWarning")
 end

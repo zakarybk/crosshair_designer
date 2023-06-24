@@ -259,7 +259,7 @@ local function dict_intersect(dict, selection)
 end
 
 
-concommand.Add("crosshairdesigner_debugHUDShouldDraw", function()
+concommand.Add("crosshairdesigner_debug_HUDShouldDraw", function()
 	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 
 	print("--------------------------------------------------------------------")
@@ -320,7 +320,7 @@ concommand.Add("crosshairdesigner_debugdump", function()
 	print("--------------------------------------------------------------------")
 end)
 
-concommand.Add("crosshairdesigner_debugswepdump", function()
+concommand.Add("crosshairdesigner_debug_swepdump", function()
 	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 
 	local addons = {}
@@ -369,7 +369,7 @@ concommand.Add("crosshairdesigner_debugswepdump", function()
 	print("--------------------------------------------------------------------")
 end)
 
-concommand.Add("crosshairdesigner_debugaddondump", function()
+concommand.Add("crosshairdesigner_debug_addondump", function()
 	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 
 	local workshopAddons = {}
@@ -417,7 +417,7 @@ concommand.Add("crosshairdesigner_debugaddondump", function()
 	print("--------------------------------------------------------------------")
 end)
 
-concommand.Add("crosshairdesigner_patchdrawhooks", function()
+concommand.Add("crosshairdesigner_debug_patchdrawhooks", function()
 	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 
 	local problems = traceShouldDraw()
@@ -471,7 +471,7 @@ local function tableEqual(tbl1, tbl2)
 	return true
 end
 
-concommand.Add("crosshairdesigner_diffads", function()
+concommand.Add("crosshairdesigner_debug_diffads", function()
 	-- Turns out this only works for CS:GO weapons - likely need to actually
 	-- use keys for other addons a.k.a simulate pressing SECONDARY_FIRE
 	if !canRunDebug() then print(NO_DEBUG_REASON) return end
@@ -512,7 +512,7 @@ end)
 
 
 local debugHUDEnabled = false
-concommand.Add("crosshairdesigner_debughud", function()
+concommand.Add("crosshairdesigner_debug_debughud", function()
 	if !canRunDebug() then print(NO_DEBUG_REASON) return end
 
 	-- Toggle
@@ -580,10 +580,6 @@ concommand.Add("crosshairdesigner_debughud", function()
 		local checks = CrosshairDesigner.WeaponCrossCheck(wep)
 		surface.DrawText("ads checks: " .. #checks .. " (" .. checksToText(checks) .. ")" .. checksToEnabledStatus(checks, wep))
 	end)
-
-	-- hook.Add("CrosshairDesinger_PlayerSwitchedWeapon", hookId, function()
-	
-	-- end)
 
 	debugHUDEnabled = true
 end)
