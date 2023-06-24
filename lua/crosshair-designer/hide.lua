@@ -341,6 +341,7 @@ end)
 	}
 ]]--
 
+local exampleCaheFile = "lua/crosshair-designer/data/swep_cache.lua"  -- includes common addons - not many update often
 local wsidCacheFile = "crosshair_designer/swep_cache.json"
 
 local function shouldCheckAddon(addon)
@@ -349,7 +350,9 @@ end
 
 local function SWEPCache(filePath)
 	local uncommitted = 0
-	local cached = file.Exists(filePath, "DATA") and util.JSONToTable(file.Read(filePath, "DATA")) or {addons = {}, sweps = {}}
+	local cached = file.Exists(filePath, "DATA") and util.JSONToTable(file.Read(filePath, "DATA"))
+	 or file.Exists(exampleCaheFile, "GAME") and util.JSONToTable(file.Read(exampleCaheFile, "GAME"))
+	 or {addons = {}, sweps = {}}
 
 	local function mountedWSID()
 		local mounts = {}
