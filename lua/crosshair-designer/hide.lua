@@ -401,6 +401,9 @@ local function SWEPCache(filePath)
 	end
 
 	local function needsUpdating(wsid, lastUpdated)
+		-- always use int because GMod always converts string keys which look like
+		-- numbers, to ints when parsing JSON - no matter if the source was
+		-- int or str
 		return cached['addons'][tonumber(wsid)] ~= lastUpdated
 	end
 
