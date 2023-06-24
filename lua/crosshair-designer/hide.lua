@@ -410,8 +410,13 @@ local function SWEPCache(filePath)
 		return cached['addons'][tonumber(wsid)] ~= lastUpdated
 	end
 
-	local function update(wsid, sweps)
+	local function update(wsid, lastUpdated, sweps)
 		local wsid = tonumber(wsid)
+		-- Handle updatedTime change
+		if needsUpdating(wsid, lastUpdated) then
+			uncommitted = uncommitted + 1
+		end
+
 		-- Handle added
 		for k, swep in pairs(sweps) do
 			if cached['sweps'][swep] then
