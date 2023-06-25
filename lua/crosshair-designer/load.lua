@@ -18,7 +18,7 @@ CrosshairDesigner.Print = function(...)
 	table.Add(fullmsg, {white})
 	table.Add(fullmsg, {...})
 	table.Add(fullmsg, {"\n"})
-	MsgC(table.unpack(fullmsg))
+	MsgC(unpack(fullmsg))
 end
 
 CrosshairDesigner.Print("Loading...")
