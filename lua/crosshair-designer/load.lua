@@ -1,5 +1,5 @@
 CrosshairDesigner = CrosshairDesigner or {}
-CrosshairDesigner.VERSION = 3.38
+CrosshairDesigner.VERSION = 3.39
 CrosshairDesigner.WSID = 590788321
 CrosshairDesigner.FinishLoad = nil -- support auto reload
 CrosshairDesigner.StartLoad = SysTime()
@@ -20,8 +20,21 @@ CrosshairDesigner.Print = function(...)
 	table.Add(fullmsg, {"\n"})
 	MsgC(unpack(fullmsg))
 end
+CrosshairDesigner.IsOfficialRelease = (function()
+	local strwsid = tostring(CrosshairDesigner.WSID)
+	for k, addon in pairs(engine.GetAddons()) do
+		if addon.wsid == strwsid then
+			return addon.mounted
+		end
+	end
+	return false
+ end
+)()
 
 CrosshairDesigner.Print("Loading...")
+if CrosshairDesigner.IsOfficialRelease then
+	CrosshairDesigner.Print("Unofficial release being used! Stuff may break!")
+end
 
 if SERVER then
 	AddCSLuaFile("detours.lua")

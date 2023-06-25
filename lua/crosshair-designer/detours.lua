@@ -133,28 +133,56 @@ GetConVar = function(name, ...)
 	return convar
 end
 
--- Hacky detour to hide TTT crosshair without making permanent changes to the convar
-local convarCache = {}
+-- error handling for creating covars to correctly report addons causing issues
+-- Hide Crosshair Designer from error logs
 local convarMeta = FindMetaTable("ConVar")
+local clientConVarQueue = nil -- queue will only ever be 1
 detours.CreateConVar = CrosshairDesigner.Detours.CreateConVar or CreateConVar
 
-CreateConVar = function(name, ...)
-	local convar = detours.CreateConVar(name, ...)
+local function tryCreateConVar()
+	while true do
+		local vars = clientConVarQueue
+		local name = vars[1]
+		local convar = detours.CreateConVar(unpack(vars))
 
-	if name == "ttt_disable_crosshair" then
-		local wrapper = {}
+		-- Hacky detour to hide TTT crosshair without making permanent changes to the convar
+		if name == "ttt_disable_crosshair" then
+			local wrapper = {}
 
-		for name, func in pairs(convarMeta) do
-			if name != "GetBool" then
-				wrapper[name] = func
+			for name, func in pairs(convarMeta) do
+				if name != "GetBool" then
+					wrapper[name] = func
+				end
 			end
-		end
-		wrapper.GetBool = function() return CrosshairDesigner.GetBool("HideTTT") end
+			wrapper.GetBool = function() return CrosshairDesigner.GetBool("HideTTT") end
 
-		return wrapper
+			coroutine.yield(wrapper)
+		else
+			coroutine.yield(convar)
+		end
+	end
+end
+detours.CreateConVarCoroutine = coroutine.create(tryCreateConVar)
+
+CreateConVar = function(...)
+	clientConVarQueue = {...}
+	local success, res = coroutine.resume(detours.CreateConVarCoroutine)
+
+	if not success then
+		CrosshairDesigner.Print("-- This below error message is caused by another addon --")
+		ErrorNoHalt(
+			"-- This below error message isn't caused by Crosshair Designer --"
+			.. "\n" ..
+			res
+			.. "\n" ..
+			debug.getinfo(2).short_src .. "\n"
+		)
+		-- Create new coroutine since last failed with error
+		detours.CreateConVarCoroutine = coroutine.create(tryCreateConVar)
+		return -- nothing to create
 	end
 
-	return convar
+	return res
 end
 
 -- Always place at end

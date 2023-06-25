@@ -13,6 +13,68 @@ local canRunDebug = function()
 	return false
 end
 
+local Path = {}
+Path.__index = Path
+
+function Path:new(path)
+	local vals = {}
+	if getmetatable(path) == Path then
+		vals = {path = path.path}
+	else
+		vals = {path = path}
+	end
+	setmetatable(vals, Path)
+	return vals
+end
+
+function Path:__tostring()
+	return self.path
+end
+
+function Path:__eq(other)
+	return self.path == other.path
+end
+
+function Path:parts()
+	return string.Split(self.path, "/") -- (self._parts = self._parts or self.path.split("/"))
+end
+
+function Path:parent()
+	return Path(table.concat({unpack(self:parts(), 1, #self:parts()-1)}, "/"))
+end
+
+function Path:inFolder(folder)
+	local folderParts = folder:parts()
+	local selfParentParts = self:parent():parts()
+
+	for i = 1, #folderParts do
+		if folderParts[i] ~= selfParentParts[i] then
+			return false
+		end
+	end
+
+	return true
+end
+
+function Path:join(path)
+	return Path(self.path .. "/" .. path)
+end
+
+function Path:StripExtension()
+	return Path(string.StripExtension(self.path))
+end
+
+function Path:name(path)
+	return self:parts()[#self:parts()]
+end
+
+function Path:starSearch()
+	return #self.path == 0 and '*' or self.path .. '/*'
+end
+
+setmetatable(Path, { __call = Path.new })
+_G.Path = Path
+
 -- Format used by Steam Workshop
 local function formatToSteamTime(time)
 	return os.date("%d %b, %Y @ %I:%M%p", time)
@@ -91,52 +153,51 @@ end
 local function pathsToFileOrFolder(path, dir, fileOrFolderToFind)
 	local candidates = {}
 
-	if #path == 0 then
-		searchPath = path .. '*'
-	elseif path[#path] == '/' then
-		searchPath = path .. '*'
-	else
-		searchPath = path .. '/*'
-	end
+	local files, folders = file.Find(path:starSearch(), dir)
 
-	local files, folders = file.Find(searchPath, dir)
-
-	if files then
+	if files and fileOrFolderToFind:inFolder(path) then
 		for i, _file in pairs(files) do
-			-- print("file", joinPath(path, _file))
-			if _file == fileOrFolderToFind
-				or string.StripExtension(_file) == fileOrFolderToFind then
-				table.insert(candidates, joinPath(path, _file))
+			if path:join(_file):StripExtension() == fileOrFolderToFind then
+				table.insert(candidates, path:join(_file))
 			end
 		end
 	end
 
 	if folders then
 		for i, folder in pairs(folders) do
-			-- print("folder", joinPath(path, folder))
-			if folder == fileOrFolderToFind then
-				table.insert(candidates, joinPath(path, folder))
-			end
-			table.Add(
-				candidates,
-				pathsToFileOrFolder(
-					joinPath(path, folder),
-					dir,
-					fileOrFolderToFind
+			if fileOrFolderToFind:inFolder(path:join(folder)) or path:join(folder) == fileOrFolderToFind then
+				if path:join(folder) == fileOrFolderToFind then
+					table.insert(candidates, path:join(folder))
+				end
+				table.Add(
+					candidates,
+					pathsToFileOrFolder(
+						path:join(folder),
+						dir,
+						fileOrFolderToFind
+					)
 				)
-			)
+			end
 		end
 	end
 
 	return candidates
 end
 
-local function workshopAddonsContainingLuaFolder(fileOrFolderToFind)
+local function workshopAddonsContainingLuaFolder(fileOrFolderToFind, asRoutine)
 	local addons = {}
 
+	-- see if we alreay know where it is
+	local wsid = false
+	if string.StartsWith(tostring(fileOrFolderToFind), "lua/weapons") then
+		wsid = CrosshairDesigner.WeaponWSID(fileOrFolderToFind:name())
+	end
+
 	for k, v in pairs(engine.GetAddons()) do
+		if wsid and tonumber(v.wsid) ~= wsid then continue end
+
 		if v.mounted then
-			paths = pathsToFileOrFolder('', v.title, fileOrFolderToFind)
+			paths = pathsToFileOrFolder(fileOrFolderToFind:parent(), v.title, fileOrFolderToFind)
 			if #paths > 0 then
 				local addonInfo = v
 				addonInfo['updated'] = formatToSteamTime(addonInfo['updated'])
@@ -158,6 +219,46 @@ local function workshopAddonsContainingLuaFolder(fileOrFolderToFind)
 	return addons
 end
 
+--local function FindAddon()
+
+local function localAddonFolders()
+	local _, folders = file.Find("addons/*", "GAME")
+	return folders
+end
+
+local function localAddonsContainingLuaFolder(path)
+	local folders = localAddonFolders()
+	local paths = {}
+
+	for k, folder in pairs(folders) do
+		paths = pathsToFileOrFolder(
+			Path('addons'):join(folder),
+			'GAME',
+			Path('addons'):join(folder):join(tostring(path))
+		)
+		if #paths > 0 then
+			break
+		end
+	end
+
+	return paths
+end
+
+local function FindAddonForFile(path)
+	local path = Path(path)
+	local workshopMatches = workshopAddonsContainingLuaFolder(path)
+	local localMatches = "Skipped local check - found Workshop version"
+	if #workshopMatches == 0 then
+		localMatches = localAddonsContainingLuaFolder(path)
+	end
+
+	return {
+		['Workshop Addons'] = workshopMatches,
+		['Local Addons'] = localMatches
+	}
+end
+CrosshairDesigner.FindAddonForFile = FindAddonForFile
+
 local function SWEPAddon(swepClass)
 	-- folder or file.lua
 	local fileOrFolderToFind = swepClass
@@ -167,14 +268,8 @@ local function SWEPAddon(swepClass)
 	-- but if they're in different directories, then you can.
 	-- Although this should not be a problem when looking up SWEPs
 
-	local workshopMatches = workshopAddonsContainingLuaFolder(fileOrFolderToFind)
-
-	local localMatches = pathsToFileOrFolder('addons', 'GAME', fileOrFolderToFind)
-
-	return {
-		['Workshop Addons'] = workshopMatches,
-		['Local Addons'] = localMatches
-	}
+	local searchPath = Path("lua/weapons/" .. fileOrFolderToFind)
+	return FindAddonForFile(searchPath)
 end
 
 local function anythingBlockingDefaultCrosshair()
@@ -204,15 +299,15 @@ local function traceShouldDraw(name)
 
 		if returnVal == false then
 			local debugInfo = debug.getinfo(fn)
-			local fileName = string.GetFileFromFilename(debugInfo['short_src'])
+			local filePath = Path(debugInfo['short_src'])
 			table.insert(
 				calls,
 				{
 					['Hook'] = {'HUDShouldDraw', k},
 					['File'] = (debugInfo['short_src'] or 'Unknown'),
 					['References'] = {
-						['Workshop'] = workshopAddonsContainingLuaFolder(fileName),
-						['Local'] = pathsToFileOrFolder('addons', 'GAME', fileName)
+						['Workshop'] = workshopAddonsContainingLuaFolder(filePath),
+						['Local'] = pathsToFileOrFolder('addons', 'GAME', filePath)
 					},
 					['Func'] = debugInfo['func']
 				}

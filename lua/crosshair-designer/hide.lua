@@ -529,8 +529,15 @@ end
 CrosshairDesigner.WeaponWSID = WeaponWSID
 
 local periodicCoroutine = coroutine.create(PeriodicSwepScan)
+local startTime = CurTime()
+local runFor = 15*60 -- 15 mins
 hook.Add("Think", "CrosshairDesigner_SWEPScan", function()
 	local success, err = coroutine.resume(periodicCoroutine)
+
+	if startTime + runFor < CurTime() then
+		CrosshairDesigner.Print("Stopping periodic swep scan for new mounts after 15 mins")
+		hook.Remove("Think", "CrosshairDesigner_SWEPScan")
+	end
 
 	if not success then
 		CrosshairDesigner.Print("Errored", err)

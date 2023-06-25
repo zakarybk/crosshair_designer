@@ -126,11 +126,13 @@ CrosshairDesigner.OpenMenu = function(resolutionChanged)
 		return
 	end
 
+	local markIfUnofficial = not CrosshairDesigner.IsOfficialRelease and " (unofficial release)" or ""
+
 	CrosshairDesigner.Menu = vgui.Create( "DFrame" )
 	CrosshairDesigner.Menu:SetSize(frameW, frameH)
 	CrosshairDesigner.Menu:SetPos(frameX, frameY)
 	CrosshairDesigner.Menu:MakePopup(false)
-	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer " .. CrosshairDesigner.VERSION )
+	CrosshairDesigner.Menu:SetTitle( "Crosshair Designer " .. CrosshairDesigner.VERSION .. markIfUnofficial )
 	CrosshairDesigner.Menu.btnClose.DoClick = function(button)
 		CrosshairDesigner.Menu:SetVisible(false)
 		hook.Run("CrosshairDesigner_MenuClosed", CrosshairDesigner.Menu)
