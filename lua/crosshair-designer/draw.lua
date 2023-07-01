@@ -756,13 +756,14 @@ local function updateColours()
 	)
 end
 
+CrosshairDesigner.FullyLoaded = false
 -- Update cached values
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, val)
 	local data = CrosshairDesigner.GetConvarData(convar)
 	if not data then return end
 	cachedCross[data.id] = val
 
-	if data.menuGroup == "circle" then
+	if data.menuGroup == "circle" and CrosshairDesigner.FullyLoaded then
 		updateStaticCircles()
 	end
 
@@ -773,13 +774,16 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 				dynamic = 0
 			end
 		else
-			hc_dynamiccorsshair()
+			if CrosshairDesigner.FullyLoaded then
+				hc_dynamiccorsshair()
+			end
 		end
 	end
 
-	ply = LocalPlayer()
-	updateColours()
-	updateCalculated()
+	if CrosshairDesigner.FullyLoaded then
+		updateColours()
+		updateCalculated()
+	end
 end)
 
 -- Load cached values
@@ -808,6 +812,7 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 
 	hook.Add("HUDPaint", "CrosshairDesigner_DrawCrosshair", Crosshair)
 	hc_dynamiccorsshair()
+	CrosshairDesigner.FullyLoaded = true
 end)
 
 hook.Add("OnScreenSizeChanged", "CrosshairDesignerCenterCircle", function()
