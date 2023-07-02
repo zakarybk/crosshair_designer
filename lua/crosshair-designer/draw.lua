@@ -22,6 +22,7 @@ local table = {}
 table.RemoveByValue = _G.table.RemoveByValue
 table.insert = _G.table.insert
 table.Count = _G.table.Count
+table.remove = _G.table.remove
 
 -- Pause cache stats on menu open
 local menuOpenState = 0
@@ -188,8 +189,7 @@ local function cacheAdjustPolysByDynamicGap(polys, isOutline, dynamic, rotation)
 		table.insert(cache2Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache2Ordered > cacheDepth then
-			miss_key = cache2Ordered[#cache2Ordered]
-			table.RemoveByValue(cache2Ordered, miss_key)
+			miss_key = table.remove(cache2Ordered, #cache2Ordered)
 			cache2[miss_key] = nil
 		end
 		cacheHits = cacheHits + 1 - menuOpenState
@@ -201,8 +201,7 @@ local function cacheAdjustPolysByDynamicGap(polys, isOutline, dynamic, rotation)
 		table.insert(cache2Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache2Ordered > cacheDepth then
-			miss_key = cache2Ordered[#cache2Ordered]
-			table.RemoveByValue(cache2Ordered, miss_key)
+			miss_key = table.remove(cache2Ordered, #cache2Ordered)
 			cache2[miss_key] = nil
 		end
 		cacheMisses = cacheMisses + 1 - menuOpenState
@@ -223,8 +222,7 @@ local function cacheTranslatePolys(polys, isOutline, screenCentre, dynamic)
 		table.insert(cache3Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache3Ordered > cacheDepth then
-			miss_key = cache3Ordered[#cache3Ordered]
-			table.RemoveByValue(cache3Ordered, miss_key)
+			miss_key = table.remove(cache3Ordered, #cache3Ordered)
 			cache3[miss_key] = nil
 		end
 		cacheHits = cacheHits + 1 - menuOpenState
@@ -236,8 +234,7 @@ local function cacheTranslatePolys(polys, isOutline, screenCentre, dynamic)
 		table.insert(cache3Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache3Ordered > cacheDepth then
-			miss_key = cache3Ordered[#cache3Ordered]
-			table.RemoveByValue(cache3Ordered, miss_key)
+			miss_key = table.remove(cache3Ordered, #cache3Ordered)
 			cache3[miss_key] = nil
 		end
 		cacheMisses = cacheMisses + 1 - menuOpenState
@@ -258,8 +255,7 @@ local function cacheAdjustLinesByDynamicGap(lines, dynamic)
 		table.insert(cache4Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache4Ordered > cacheDepth then
-			miss_key = cache4Ordered[#cache4Ordered]
-			table.RemoveByValue(cache4Ordered, miss_key)
+			miss_key = table.remove(cache4Ordered, #cache4Ordered)
 			cache4[miss_key] = nil
 		end
 		cacheHits = cacheHits + 1 - menuOpenState
@@ -271,8 +267,7 @@ local function cacheAdjustLinesByDynamicGap(lines, dynamic)
 		table.insert(cache4Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache4Ordered > cacheDepth then
-			miss_key = cache4Ordered[#cache4Ordered]
-			table.RemoveByValue(cache4Ordered, miss_key)
+			miss_key = table.remove(cache4Ordered, #cache4Ordered)
 			cache4[miss_key] = nil
 		end
 		cacheMisses = cacheMisses + 1 - menuOpenState
@@ -293,8 +288,7 @@ local function cacheAdjustOutlinesByDynamicGap(outlines, dynamic)
 		table.insert(cache5Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache5Ordered > (cacheDepth / 2) then
-			miss_key = cache5Ordered[#cache5Ordered]
-			table.RemoveByValue(cache5Ordered, miss_key)
+			miss_key = table.remove(cache5Ordered, #cache5Ordered)
 			cache5[miss_key] = nil
 		end
 		cacheHits = cacheHits + 1 - menuOpenState
@@ -306,8 +300,7 @@ local function cacheAdjustOutlinesByDynamicGap(outlines, dynamic)
 		table.insert(cache5Ordered, 1, key)
 		-- remove a miss from the end
 		if #cache5Ordered > (cacheDepth / 2) then
-			miss_key = cache5Ordered[#cache5Ordered]
-			table.RemoveByValue(cache5Ordered, miss_key)
+			miss_key = table.remove(cache5Ordered, #cache5Ordered)
 			cache5[miss_key] = nil
 		end
 		cacheMisses = cacheMisses + 1 - menuOpenState
@@ -327,9 +320,8 @@ local function cacheTranslateLines(lines, isOutline, screenCentre, dynamic)
 		table.RemoveByValue(cache6Ordered, key)
 		table.insert(cache6Ordered, 0, key)
 		-- remove a miss from the end
-		if #cache6Ordered > (cacheDepth / 2) then
-			miss_key = cache6Ordered[#cache5Ordered]
-			table.RemoveByValue(cache6Ordered, miss_key)
+		if #cache6Ordered > cacheDepth then
+			miss_key = table.remove(cache6Ordered, #cache6Ordered)
 			cache6[miss_key] = nil
 		end
 		cacheHits = cacheHits + 1 - menuOpenState
@@ -340,9 +332,8 @@ local function cacheTranslateLines(lines, isOutline, screenCentre, dynamic)
 		cache6[key] = result
 		table.insert(cache6Ordered, 0, key)
 		-- remove a miss from the end
-		if #cache6Ordered > (cacheDepth / 2) then
-			miss_key = cache6Ordered[#cache5Ordered]
-			table.RemoveByValue(cache6Ordered, miss_key)
+		if #cache6Ordered > cacheDepth then
+			miss_key = table.remove(cache6Ordered, #cache6Ordered)
 			cache6[miss_key] = nil
 		end
 		cacheMisses = cacheMisses + 1 - menuOpenState
@@ -756,14 +747,13 @@ local function updateColours()
 	)
 end
 
-CrosshairDesigner.FullyLoaded = false
 -- Update cached values
 hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, val)
 	local data = CrosshairDesigner.GetConvarData(convar)
 	if not data then return end
 	cachedCross[data.id] = val
 
-	if data.menuGroup == "circle" and CrosshairDesigner.FullyLoaded then
+	if data.menuGroup == "circle" and CrosshairDesigner.FinishLoad ~= nil then
 		updateStaticCircles()
 	end
 
@@ -774,13 +764,13 @@ hook.Add("CrosshairDesigner_ValueChanged", "UpdateCrosshair", function(convar, v
 				dynamic = 0
 			end
 		else
-			if CrosshairDesigner.FullyLoaded then
+			if CrosshairDesigner.FinishLoad ~= nil then
 				hc_dynamiccorsshair()
 			end
 		end
 	end
 
-	if CrosshairDesigner.FullyLoaded then
+	if CrosshairDesigner.FinishLoad ~= nil then
 		updateColours()
 		updateCalculated()
 	end
@@ -812,20 +802,8 @@ hook.Add("CrosshairDesigner_FullyLoaded", "CrosshairDesigner_SetupDrawing", func
 
 	hook.Add("HUDPaint", "CrosshairDesigner_DrawCrosshair", Crosshair)
 	hc_dynamiccorsshair()
-	CrosshairDesigner.FullyLoaded = true
 end)
 
 hook.Add("OnScreenSizeChanged", "CrosshairDesignerCenterCircle", function()
 	updateStaticCircles()
-end)
-
-concommand.Add("crosshair_designer_cache_size", function()
-	size = table.Count(cache2) + table.Count(cache3) + table.Count(cache4) + table.Count(cache5) + table.Count(cache6)
-	print(size)
-end)
-
-concommand.Add("crosshairdesigner_cache_hit_ratio", function()
-	local accuracy = math.Round(CrosshairDesigner.CacheHitPercent(), 2)
-	print(accuracy)
-	print(CrosshairDesigner.FormatBytes(CrosshairDesigner.CalcMemoryUsage()))
 end)
