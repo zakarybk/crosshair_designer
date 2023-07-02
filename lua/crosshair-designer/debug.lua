@@ -307,7 +307,7 @@ local function traceShouldDraw(name)
 					['File'] = (debugInfo['short_src'] or 'Unknown'),
 					['References'] = {
 						['Workshop'] = workshopAddonsContainingLuaFolder(filePath),
-						['Local'] = pathsToFileOrFolder('addons', 'GAME', filePath)
+						['Local'] = localAddonsContainingLuaFolder(filePath)
 					},
 					['Func'] = debugInfo['func']
 				}
