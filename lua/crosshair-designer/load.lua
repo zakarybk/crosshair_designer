@@ -695,10 +695,10 @@ else
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'Modern Warfare 2459720887',
 		['fnIsValid'] = function(wep, cls)
-			return wep.GetIsAiming ~= nil and hasPrefix(cls, "mg_")
+			return wep.GetAimDelta ~= nil and hasPrefix(cls, "mg_")
 		end,
 		['fnShouldHide'] = function(wep)
-			return wep:GetIsAiming()
+			return wep:GetAimDelta() > 0.5
 		end,
 		['forceOnBaseClasses'] = { -- Triggers a bunch of others otherwise
 			'mg_base'
