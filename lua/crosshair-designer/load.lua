@@ -1111,6 +1111,17 @@ else
 		},
 	})
 
+	CrosshairDesigner.AddSWEPCrosshairCheck({
+		['id'] = '[TacRP] Tactical RP Weapons 2588031232',
+		['fnIsValid'] = function(wep, cls)
+			return hasPrefix(cls, "tacrp_") and wep.GetSightAmount ~= nil
+		end,
+		['fnShouldHide'] = function(wep)
+			return wep:GetSightAmount() > 0.5
+		end,
+		['forceOnWSID'] = {2588031232},
+	})
+
 	-- Disable Target Cross for Prop Hunt and Guess Who to stop cheating
 	local gm = engine.ActiveGamemode()
 	if gm == "prop_hunt" then
