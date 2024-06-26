@@ -884,7 +884,7 @@ else
 	CrosshairDesigner.AddSWEPCrosshairCheck({
 		['id'] = 'ARC9 Weapon Base 2910505837',
 		['fnIsValid'] = function(wep, cls)
-			return table.HasValue({'arc9_base', 'arc9_base_nade', 'arc9_go_base'}, wep.Base)
+			return hasPrefix(cls, "arc9_") or table.HasValue({'arc9_base', 'arc9_base_nade', 'arc9_go_base'}, wep.Base)
 		end,
 		['fnShouldHide'] = function(wep)
 			return wep:GetInSights() and
